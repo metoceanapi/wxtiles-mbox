@@ -2,17 +2,63 @@
 
 precision highp float;
 
-varying vec2 vTexCoord;
-uniform sampler2D uTexture;
+varying vec2 vTexCoordC;
+varying vec2 vTexCoordR;
+varying vec2 vTexCoordD;
+
+uniform sampler2D dataTex;
+uniform sampler2D CLUTTex;
+
+uniform float dataMin;
+uniform float dataDif;
+uniform float clutMin;
+uniform float clutDif;
+
+// Consts
+
+// Func Protos
+float GetRawData(vec2);
+float RawToCLUT(float);
+vec4 CLUT(float);
+int ISO(float);
 
 void main() {
-    vec4 color = texture2D(uTexture, vTexCoord);
+    float rawDataC = GetRawData(vTexCoordC); // central
+    float clutPosC = RawToCLUT(rawDataC);
+    vec4 colorC = CLUT(clutPosC);
+    // int isoC = ISO(clutPosC);
 
-    gl_FragColor = vec4(color.r, color.g, color.b, 1);
+    // float rawDataR = GetRawData(vTexCoordR); // central
+    // float clutPosR = RawToCLUT(rawDataR);
+    // int isoR = ISO(clutPosR);
+
+    // float rawDataD = GetRawData(vTexCoordD); // central
+    // float clutPosD = RawToCLUT(rawDataD);
+    // int isoD = ISO(clutPosD);
+
+    gl_FragColor = colorC;
+    // if(isoC != isoD || isoC != isoR) {
+    //     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    // }
+
 }
 
-// void main() {
-//     vec2 cen = vec2(0.5, 0.5) - vTexCoord;
-//     vec2 mcen = -0.07 * log(length(cen)) * normalize(cen);
-//     gl_FragColor = texture2D(uTexture, vTexCoord - mcen);
-// }
+float GetRawData(vec2 texCoord) {
+    vec4 dataTex = texture2D(dataTex, texCoord);
+    float textureData = dataTex.r / 255.0 + dataTex.g;
+    float rawData = textureData * dataDif + dataMin;
+    return rawData;
+}
+
+float RawToCLUT(float realData) {
+    float pos = (realData - clutMin) / clutDif;
+    return pos;
+}
+
+vec4 CLUT(float pos) {
+    return texture2D(CLUTTex, vec2(pos, 0.0));
+}
+
+int ISO(float pos) {
+    return int(texture2D(CLUTTex, vec2(pos, 1.0)).r * 255.0);
+}

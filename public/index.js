@@ -14,8 +14,8 @@ const map = new mapboxgl.Map({
 		sources: {},
 		layers: [],
 	},
-	center: [145, -16],
-	zoom: 0,
+	center: [0, 0],
+	zoom: 2,
 });
 
 map.on('load', () => {

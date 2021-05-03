@@ -1,26 +1,21 @@
 import mapboxgl from 'mapbox-gl';
+import { loadTexture, createCLUT, loadImage } from './textures';
 
 import vsSource from './shaders/wxlayer.vs';
 import fsSource from './shaders/wxlayer.fs';
 
-interface LayerProgram {
-	program: WebGLProgram;
-	aPos: number;
-	uMatrix: WebGLUniformLocation;
-	uTexture: WebGLUniformLocation;
-	vertexBuffer: WebGLBuffer;
+interface MapEx extends mapboxgl.Map {
+	style: any;
+	painter: any;
 }
-
 export class WxTileLayer {
 	id: string;
 	sourceID: string;
 	type: string = 'custom';
 	renderingMode: string = '2d';
 
-	map!: mapboxgl.Map;
-	// gl!: WebGLRenderingContext;
+	map!: MapEx;
 	layerProgram!: LayerProgram;
-	// tileSource!: mapboxgl.AnySourceImpl; //RasterSource;
 
 	sourceCache: any;
 
@@ -31,10 +26,8 @@ export class WxTileLayer {
 		this.sourceID = this.id + 'Source';
 	}
 
-	onAdd(map: mapboxgl.Map, gl: WebGLRenderingContext) {
-		this.map = map;
-		// this.gl = gl;
-
+	onAdd(map: MapEx, gl: WebGLRenderingContext) {
+		this.map = <MapEx>map;
 		this.layerProgram = setupLayer(gl);
 
 		map.on('move', this.move.bind(this));
@@ -46,10 +39,10 @@ export class WxTileLayer {
 			maxzoom: 4,
 			minzoom: 0,
 			tileSize: 256,
-			attribution: '',
+			attribution: 'WxTiles',
 		});
 
-		const tileSource = map.getSource(this.sourceID);
+		const tileSource = map.getSource(this.sourceID) as mapboxgl.AnySourceImpl & { on: any };
 		tileSource.on('data', this.onData.bind(this));
 
 		this.sourceCache = map.style._otherSourceCaches[this.sourceID];
@@ -93,22 +86,44 @@ export class WxTileLayer {
 
 function render(gl: WebGLRenderingContext, matrix: Array<number>, layerProgram: LayerProgram, tiles: Array<any>) {
 	gl.useProgram(layerProgram.program);
+
+	// data tex uniform
+	gl.uniform1i(layerProgram.dataTex, 0);
+
+	// CLUT texture (1)
+	gl.activeTexture(gl.TEXTURE1);
+	gl.bindTexture(gl.TEXTURE_2D, layerProgram.textureCLUT);
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	gl.uniform1i(layerProgram.CLUTTex, 1);
+
+	// minmax's
+	gl.uniform1f(layerProgram.dataMin, 0.0);
+	gl.uniform1f(layerProgram.dataDif, 1.0);
+	gl.uniform1f(layerProgram.clutMin, 0.0);
+	gl.uniform1f(layerProgram.clutDif, 1.0);
+	// vertex buffer
+	gl.bindBuffer(gl.ARRAY_BUFFER, layerProgram.vertexBuffer);
+	gl.enableVertexAttribArray(layerProgram.vertexPosition);
+	gl.vertexAttribPointer(layerProgram.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+
 	tiles.forEach((tile) => {
 		if (!tile.texture) return;
+
+		// model matrix
+		gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.posMatrix);
+
+		// data texture (0)
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, tile.texture.texture);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		// gl.uniform1i(layerProgram.dataTex, 0);
 
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-		gl.bindBuffer(gl.ARRAY_BUFFER, layerProgram.vertexBuffer);
-		gl.enableVertexAttribArray(layerProgram.aPos);
-		gl.vertexAttribPointer(layerProgram.aPos, 2, gl.FLOAT, false, 0, 0);
-
-		gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.posMatrix);
-		gl.uniform1i(layerProgram.uTexture, 0);
 		// gl.depthFunc(gl.LESS);
 		//gl.enable(gl.BLEND);
 		//gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -116,6 +131,23 @@ function render(gl: WebGLRenderingContext, matrix: Array<number>, layerProgram: 
 		// gl.drawArrays(gl.TRIANGLES, 0, 6);
 		gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 	});
+}
+
+interface LayerProgram {
+	program: WebGLProgram;
+	vertexPosition: number;
+	uMatrix: WebGLUniformLocation;
+	vertexBuffer: WebGLBuffer;
+
+	textureCLUT: WebGLTexture;
+
+	dataTex: WebGLUniformLocation;
+	CLUTTex: WebGLUniformLocation;
+
+	dataMin: WebGLUniformLocation;
+	dataDif: WebGLUniformLocation;
+	clutMin: WebGLUniformLocation;
+	clutDif: WebGLUniformLocation;
 }
 
 function setupLayer(gl: WebGLRenderingContext): LayerProgram {
@@ -139,11 +171,23 @@ function setupLayer(gl: WebGLRenderingContext): LayerProgram {
 	gl.linkProgram(program);
 	gl.validateProgram(program);
 
-	const aPos = gl.getAttribLocation(program, 'aPos');
+	const vertexPosition = gl.getAttribLocation(program, 'vertexPosition');
 	const uMatrix = gl.getUniformLocation(program, 'uMatrix');
 	if (!uMatrix) throw '!uMatrix';
-	const uTexture = gl.getUniformLocation(program, 'uTexture');
-	if (!uTexture) throw '!uTexture';
+	const dataTex = gl.getUniformLocation(program, 'dataTex');
+	if (!dataTex) throw '!dataTex';
+
+	const CLUTTex = gl.getUniformLocation(program, 'CLUTTex');
+	if (!CLUTTex) throw '!CLUTTex';
+
+	const dataMin = gl.getUniformLocation(program, 'dataMin');
+	if (!dataMin) throw '!dataMin';
+	const dataDif = gl.getUniformLocation(program, 'dataDif');
+	if (!dataDif) throw '!dataDif';
+	const clutMin = gl.getUniformLocation(program, 'clutMin');
+	if (!clutMin) throw '!clutMin';
+	const clutDif = gl.getUniformLocation(program, 'clutDif');
+	if (!clutDif) throw '!clutDif';
 
 	// const vertexArray = new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]);
 	const vertexArray = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
@@ -154,5 +198,22 @@ function setupLayer(gl: WebGLRenderingContext): LayerProgram {
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
 
-	return { program, aPos, uMatrix, uTexture, vertexBuffer };
+	const textureCLUT = loadTexture(gl, loadImage('clut.png'));
+
+	return {
+		program,
+		vertexPosition,
+		uMatrix,
+		vertexBuffer,
+
+		textureCLUT,
+
+		dataTex,
+		CLUTTex,
+
+		dataMin,
+		dataDif,
+		clutMin,
+		clutDif,
+	};
 }
