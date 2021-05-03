@@ -1,0 +1,37 @@
+{
+	"name": "@metservice/wxtilembox",
+	"version": "0.0.1",
+	"description": "WxTile MapBox lib to render wxtiles datalayers",
+	"main": "dist/es/bundle.js",
+	"types": "dist/es/index.d.ts",
+	"scripts": {
+		"build": "rm -rf dist/ && node build.js && tsc",
+		"start": "DISABLE_HOT_RELOAD=true node watch-public.js",
+		"preversion": "npm run build && bump-changelog-version $npm_package_version && git add CHANGELOG.md"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/metocean/wxtilembox.git"
+	},
+	"author": "Sergei Melman",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/metocean/wxtilembox/issues"
+	},
+	"homepage": "https://github.com/metocean/wxtilembox#readme",
+	"prettier": "@metservice/prettier",
+	"devDependencies": {
+		"@metservice/mov-tools": "^1.4.0",
+		"@metservice/prettier": "^1.1.0",
+		"@types/mapbox-gl": "^2.1.1",
+		"cors": "^2.8.5",
+		"esbuild": "^0.11.16",
+		"esbuild-plugin-sass": "^0.5.0",
+		"express": "^4.17.1",
+		"mapbox-gl": "^2.2.0",
+		"open": "^8.0.7",
+		"prettier": "^2.2.1",
+		"pretty-quick": "^3.1.0",
+		"typescript": "^4.2.4"
+	}
+}

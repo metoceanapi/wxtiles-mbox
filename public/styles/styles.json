@@ -1,0 +1,417 @@
+{
+	"Direction": {
+		"name": "Direction",
+		"fill": "none",
+		"colorScheme": "none",
+		"vectorColor": "#555",
+		"vectorType": "arrows",
+		"isolineColor": "none"
+	},
+	"CurDirection": {
+		"name": "Current direction",
+		"fill": "none",
+		"colorScheme": "none",
+		"vectorColor": "#555",
+		"vectorType": "arrows",
+		"isolineColor": "none",
+		"addDegrees": 180
+	},
+	"Significant.wave.height": {
+		"name": "Significant wave height",
+		"fill": "gradient",
+		"isolineColor": "inverted",
+		"vectorColor": "none",
+		"vectorType": "none",
+		"showBelowMin": true,
+		"showAboveMax": true,
+		"colorScheme": "rainbow",
+		"blurRadius": 0,
+		"addDegrees": 0,
+		"colors": ["#AC6EA4FF", "#8E92BDFF", "#ACD4DEFF", "#E9DC8EFF", "#E7A97DFF", "#E59074FF", "#BE7E68FF", "#A88F86FF"],
+		"levels": [0, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 20]
+	},
+	"Wave.Period": {
+		"name": "Wave Period"
+	},
+	"Wind.speed": {
+		"name": "Wind speed",
+		"fill": "gradient",
+		"isolineColor": "inverted",
+		"vectorType": "arrows",
+		"vectorColor": "inverted",
+		"streamLineColor": "#777",
+		"streamLineSpeedFactor": 1,
+		"showBelowMin": true,
+		"showAboveMax": true,
+		"colorScheme": "rainbow",
+		"colors": null,
+		"colorMap": null,
+		"levels": [0, 10, 20, 30, 40, 50],
+		"blurRadius": 0,
+		"addDegrees": 0,
+		"units": ""
+	},
+	"Current.speed": {
+		"name": "Current speed",
+		"fill": "gradient",
+		"isolineColor": "inverted",
+		"showBelowMin": true,
+		"showAboveMax": true,
+		"colors": ["#5E6472FF", "#AED9E0FF", "#B3E6E3FF", "#B8F2E6FF", "#FAF3DDFF", "#FFA69EFF"],
+		"levels": [0, 0.25, 0.75, 1.0, 1.5, 2],
+		"blurRadius": 0,
+		"addDegrees": 0,
+		"vectorColor": "inverted",
+		"vectorType": "arrows",
+		"streamLineColor": "#888",
+		"streamLineSpeedFactor": 3
+	},
+	"Sea.surface.temperature": {
+		"name": "Sea surface temperature",
+		"fill": "gradient",
+		"isolineColor": "inverted",
+		"vectorColor": "none",
+		"vectorType": "none",
+		"showBelowMin": true,
+		"showAboveMax": true,
+		"colorScheme": "rainbow",
+		"colors": [
+			"#00B3FFFF",
+			"#1D9ACFFF",
+			"#277DA1FF",
+			"#577590FF",
+			"#4D908EFF",
+			"#43AA8BFF",
+			"#90BE6DFF",
+			"#F9C74FFF",
+			"#F9844AFF",
+			"#F8961EFF",
+			"#F3722CFF",
+			"#F94144FF",
+			"#FD0C10FF"
+		],
+		"levels": [0, 4, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28],
+		"blurRadius": 0,
+		"addDegrees": 0
+	},
+	"wind.speed.arrow-fill": {
+		"parent": "base-vector",
+		"name": "Wind speed color fill"
+	},
+	"wind.speed-arrow": {
+		"parent": "wind.speed.arrow-fill",
+		"name": "Wind speed arrows",
+		"fill": "none",
+		"isolineColor": "none",
+		"vectorColor": "fill",
+		"vectorType": "arrows"
+	},
+	"wind.speed-barb": {
+		"parent": "wind.speed-arrow",
+		"name": "Wind speed barbs",
+		"vectorType": "barbs"
+	},
+	"wave.height": {
+		"parent": "base",
+		"name": "Significant wave height",
+		"fill": "gradient",
+		"isolineColor": "inverted",
+		"vectorColor": "none",
+		"vectorType": "none",
+		"showBelowMin": true,
+		"showAboveMax": true,
+		"colorScheme": "rainbow",
+		"blurRadius": 0,
+		"addDegrees": 0,
+		"colors": ["#AC6EA4FF", "#8E92BDFF", "#ACD4DEFF", "#E9DC8EFF", "#E7A97DFF", "#E59074FF", "#BE7E68FF", "#A88F86FF"],
+		"levels": [0, 0.5, 1, 2, 3, 4, 6, 8]
+	},
+	"wave.direction-arrow": {
+		"parent": "base",
+		"name": "Wave direction",
+		"fill": "none",
+		"colorScheme": "none",
+		"vectorColor": "#555",
+		"vectorType": "arrows",
+		"isolineColor": "none"
+	},
+	"wave.period": {
+		"parent": "base",
+		"name": "Wave period"
+	},
+	"air.temperature": {
+		"parent": "base",
+		"name": "Air temperature (uncomlete style!)",
+		"units": "degC"
+	},
+	"air.pressure": {
+		"parent": "base",
+		"name": "Air Pressure",
+		"fill": "gradient",
+		"isolineColor": "inverted",
+		"vectorColor": "none",
+		"vectorType": "none",
+		"showBelowMin": true,
+		"showAboveMax": true,
+		"blurRadius": 0,
+		"addDegrees": 0,
+		"colors": [
+			"#1C008EFF",
+			"#392490FF",
+			"#54478CFF",
+			"#2C699AFF",
+			"#048BA8FF",
+			"#0DB39EFF",
+			"#16DB93FF",
+			"#83E377FF",
+			"#B9E769FF",
+			"#EFEA5AFF",
+			"#F1C453FF",
+			"#F29E4CFF",
+			"#FE7E00FF"
+		],
+		"levels": [94, 95, 96, 97, 98, 99, 100, 101, 102, 102.5, 103, 104],
+		"units": "hPa"
+	},
+	"air.pressure-isolines": {
+		"parent": "air.pressure",
+		"name": "Air Pressure isolines",
+		"fill": "none",
+		"isolineColor": "#aaa"
+	},
+	"sea.temperature": {
+		"parent": "base",
+		"name": "Sea Surface Temperature",
+		"fill": "gradient",
+		"isolineColor": "inverted",
+		"vectorColor": "none",
+		"vectorType": "none",
+		"showBelowMin": true,
+		"showAboveMax": true,
+		"colorScheme": "rainbow",
+		"colors": [
+			"#00B3FFFF",
+			"#1D9ACFFF",
+			"#277DA1FF",
+			"#577590FF",
+			"#4D908EFF",
+			"#43AA8BFF",
+			"#90BE6DFF",
+			"#F9C74FFF",
+			"#F9844AFF",
+			"#F8961EFF",
+			"#F3722CFF",
+			"#F94144FF",
+			"#FD0C10FF"
+		],
+		"levels": [0, 4, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28],
+		"blurRadius": 0,
+		"addDegrees": 0
+	},
+	"sea.salinity": {
+		"parent": "base",
+		"name": "Sea salinity"
+	},
+	"current.speed": {
+		"parent": "base-vector",
+		"name": "Current Speed",
+		"fill": "gradient",
+		"isolineColor": "inverted",
+		"showBelowMin": true,
+		"showAboveMax": true,
+		"colors": ["#5E6472FF", "#AED9E0FF", "#B3E6E3FF", "#B8F2E6FF", "#FAF3DDFF", "#FFA69EFF"],
+		"levels": [0, 0.25, 0.75, 1.0, 1.5, 2],
+		"blurRadius": 0,
+		"addDegrees": 0,
+		"vectorColor": "inverted",
+		"vectorType": "arrows",
+		"streamLineColor": "#888",
+		"streamLineSpeedFactor": 3
+	},
+	"precipitation": {
+		"parent": "base",
+		"name": "Air precipitation",
+		"fill": "none",
+		"isolineColor": "none",
+		"colorScheme": "none"
+	},
+	"rain.base": {
+		"parent": "base",
+		"name": "Rain reflectivity basic style",
+		"fill": "gradient",
+		"isolineColor": "none",
+		"blurRadius": 0,
+		"showBelowMin": false,
+		"showAboveMax": true,
+		"units": "dBz"
+	},
+	"rain.radar": {
+		"parent": "rain.base",
+		"name": "Rain Radar reflectivity",
+		"colors": [
+			"#323200FF",
+			"#FFFF00FF",
+			"#FFFF00FF",
+			"#FF8700FF",
+			"#0032A0FF",
+			"#0050FFFF",
+			"#006496FF",
+			"#00FFFFFF",
+			"#640000FF",
+			"#FF1010FF",
+			"#490D7DFF",
+			"#9632FFFF",
+			"#BEBEBEFF",
+			"#FFFFFFFF",
+			"#006400FF",
+			"#00FF00FF",
+			"#640064FF",
+			"#FF00FFFF"
+		],
+		"levels": [0, 16, 16, 20, 20, 30, 30, 40, 40, 45, 45, 50, 50, 55, 55, 60, 60, 72]
+	},
+	"rain.EWIS": {
+		"parent": "rain.base",
+		"name": "Rain Radar reflectivity EWIS",
+		"colorMap": [
+			[0, "#323200ff"],
+			[16, "#ffff00ff"],
+			[20, "#ffff00ff"],
+			[20, "#0032a0ff"],
+			[30, "#0050ffff"],
+			[30, "#006496ff"],
+			[40, "#00ffffff"],
+			[40, "#640000ff"],
+			[45, "#ff0000ff"],
+			[45, "#501980ff"],
+			[50, "#9632ffff"],
+			[50, "#bebebeff"],
+			[55, "#ffffffff"],
+			[55, "#006400ff"],
+			[60, "#00ff00ff"],
+			[60, "#640064ff"],
+			[72, "#ff00ffff"]
+		]
+	},
+	"rain.Classic.IRIS": {
+		"parent": "rain.base",
+		"name": "Rain Radar Classic IRIS",
+		"colorMap": [
+			[2, "#003cff"],
+			[7, "#00c7c7"],
+			[12, "#00a8ac"],
+			[18, "#008261"],
+			[21, "#009637"],
+			[23, "#00c027"],
+			[28, "#00e80a"],
+			[34, "#24ff24"],
+			[37, "#ffff1e"],
+			[39, "#ffe600"],
+			[44, "#ffbc00"],
+			[50, "#ff9800"],
+			[53, "#ff5e00"],
+			[55, "#f20f00"],
+			[60, "#bb003a"],
+			[66, "#f0f"],
+			[72, "#f0f"]
+		]
+	},
+	"rain.radar.metocean": {
+		"parent": "rain.base",
+		"name": "Rain Radar metocean",
+		"colorMap": [
+			[10, "#88EDEE"],
+			[15, "#88EDEE"],
+
+			[15, "#0797CC"],
+			[20, "#0797CC"],
+
+			[20, "#0877AC"],
+			[26, "#0877AC"],
+
+			[26, "#075589"],
+			[35, "#075589"],
+
+			[35, "#FEEF0D"],
+			[40, "#FEEF0D"],
+
+			[40, "#FEAA04"],
+			[45, "#FEAA04"],
+
+			[45, "#FD7803"],
+			[50, "#FD7803"],
+
+			[50, "#FE4102"],
+			[55, "#FE4102"],
+
+			[55, "#FE2303"],
+			[60, "#FE2303"],
+
+			[60, "#FD0403"],
+			[65, "#FD0403"],
+
+			[65, "#FFFFFF"],
+			[85, "#FFFFFF"],
+
+			[85, "#FF35FE"],
+			[100, "#FF35FE"]
+		]
+	},
+	"rain.radar.metocean.gradient": {
+		"parent": "rain.base",
+		"name": "Rain Radar metocean gradient",
+		"colorMap": [
+			[10, "#88EDEE"],
+			[15, "#0797CC"],
+			[20, "#0877AC"],
+			[26, "#075589"],
+			[35, "#FEEF0D"],
+			[40, "#FEAA04"],
+			[45, "#FD7803"],
+			[50, "#FE4102"],
+			[55, "#FE2303"],
+			[60, "#FD0403"],
+			[65, "#FFFFFF"],
+			[85, "#FF35FE"]
+		]
+	},
+	"rain.radar.metservice": {
+		"parent": "rain.base",
+		"name": "Rain Radar metservice",
+		"colorMap": [
+			[0, "#323200ff"],
+			[16, "#ffff00ff"],
+			[20, "#ffff00ff"],
+			[20, "#0032a0ff"],
+			[30, "#0050ffff"],
+			[30, "#006496ff"],
+			[40, "#00ffffff"],
+			[40, "#640000ff"],
+			[45, "#ff0000ff"],
+			[45, "#501980ff"],
+			[50, "#9632ffff"],
+			[50, "#bebebeff"],
+			[55, "#ffffffff"],
+			[55, "#006400ff"],
+			[60, "#00ff00ff"],
+			[60, "#640064ff"],
+			[72, "#ff00ffff"]
+		]
+	},
+	"rain.radar.metservice.gradient": {
+		"parent": "rain.base",
+		"name": "Rain Radar metservice gradient",
+		"colorMap": [
+			[0, "#323200ff"],
+			[16, "#ffff00ff"],
+			[20, "#0032a0ff"],
+			[30, "#006496ff"],
+			[40, "#640000ff"],
+			[45, "#501980ff"],
+			[50, "#bebebeff"],
+			[55, "#006400ff"],
+			[60, "#640064ff"],
+			[72, "#ff00ffff"]
+		]
+	}
+}
