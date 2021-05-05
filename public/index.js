@@ -24,6 +24,7 @@ map.on('load', async () => {
 		// URI could be hardcoded, but tiles-DB is alive!
 		const URI = dataServer + dataSet + instance + variable + time + '/{z}/{x}/{y}.png';
 
+		// TODO: No-data pixels should be transparent
 		// TODO: setTime()
 		// TODO: vector data sources
 		// TODO: isoline text labels
