@@ -18,28 +18,28 @@ uniform float clutDif;
 
 // Func Protos
 float GetRawData(vec2);
-float RawToCLUT(float);
+float RawToPos(float);
 vec4 CLUT(float);
 int ISO(float);
 
 void main() {
-    float rawDataC = GetRawData(vTexCoordC); // central
-    float clutPosC = RawToCLUT(rawDataC);
-    vec4 colorC = CLUT(clutPosC);
-    // int isoC = ISO(clutPosC);
+    float rawC = GetRawData(vTexCoordC); // central
+    float posC = RawToPos(rawC);
+    vec4 colorC = CLUT(posC);
+    int isoC = ISO(posC);
 
-    // float rawDataR = GetRawData(vTexCoordR); // central
-    // float clutPosR = RawToCLUT(rawDataR);
-    // int isoR = ISO(clutPosR);
+    float rawR = GetRawData(vTexCoordR); // central
+    float posR = RawToPos(rawR);
+    int isoR = ISO(posR);
 
-    // float rawDataD = GetRawData(vTexCoordD); // central
-    // float clutPosD = RawToCLUT(rawDataD);
-    // int isoD = ISO(clutPosD);
+    float rawD = GetRawData(vTexCoordD); // central
+    float posD = RawToPos(rawD);
+    int isoD = ISO(posD);
 
     gl_FragColor = colorC;
-    // if(isoC != isoD || isoC != isoR) {
-    //     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    // }
+    if(isoC != isoD || isoC != isoR) {
+        gl_FragColor = vec4(1.0 - colorC.r, 1.0 - colorC.g, 1.0 - colorC.b, colorC.a);
+    }
 
 }
 
@@ -50,7 +50,7 @@ float GetRawData(vec2 texCoord) {
     return rawData;
 }
 
-float RawToCLUT(float realData) {
+float RawToPos(float realData) {
     float pos = (realData - clutMin) / clutDif;
     return pos;
 }

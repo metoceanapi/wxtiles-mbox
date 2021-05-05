@@ -15,13 +15,15 @@ const float Extent = 8192.0; // some magic number
 const float tileSz = 256.0;
 const float tileSzExInv = 1.0 / 258.0;
 const vec2 one = vec2(1.0, 1.0);
-const vec2 addR = vec2(1.0, 0.0) * tileSzExInv;
-const vec2 addD = vec2(0.0, 1.0) * tileSzExInv;
+
+uniform float zoom;
 
 void main() {
     gl_Position = uMatrix * vec4(vertexPosition * Extent, 0, 1);
 
     vTexCoordC = (vertexPosition * tileSz + one) * tileSzExInv;
-    vTexCoordR = vTexCoordC + addR;
-    vTexCoordD = vTexCoordC + addD;
+
+    float shift = 2.0 * tileSzExInv / (zoom + 1.0);
+    vTexCoordR = vTexCoordC + vec2(shift, 0.0);
+    vTexCoordD = vTexCoordC + vec2(0.0, shift);
 }

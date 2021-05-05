@@ -22,7 +22,7 @@ esbuild
 		outfile: 'public/wxtilembox/wxtilembox.js',
 		globalName: 'wxtilembox',
 		sourcemap: true,
-		minify: false,
+		// minify: false,
 		watch: {
 			onRebuild(error, result) {
 				if (error) {

@@ -1,33 +1,37 @@
-import mapboxgl from 'mapbox-gl';
 import { loadTexture, createCLUT, loadImage } from './textures';
 
 import vsSource from './shaders/wxlayer.vs';
 import fsSource from './shaders/wxlayer.fs';
 
+// import mapboxgl from 'mapbox-gl';
+const mapboxgl = window.mapboxgl;
+
 interface MapEx extends mapboxgl.Map {
 	style: any;
 	painter: any;
 }
-export class WxTileLayer {
+export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 	id: string;
 	sourceID: string;
-	type: string = 'custom';
-	renderingMode: string = '2d';
+	type: 'custom' = 'custom';
+	renderingMode: '2d' = '2d';
+
+	URI: string;
 
 	map!: MapEx;
 	layerProgram!: LayerProgram;
 
+	// durty hacks
 	sourceCache: any;
 
-	constructor(id: string) {
+	constructor(id: string, URI: string) {
 		this.id = id;
-		this.type = 'custom';
-		this.renderingMode = '2d';
 		this.sourceID = this.id + 'Source';
+		this.URI = URI;
 	}
 
 	onAdd(map: MapEx, gl: WebGLRenderingContext) {
-		this.map = <MapEx>map;
+		this.map = map;
 		this.layerProgram = setupLayer(gl);
 
 		map.on('move', this.move.bind(this));
@@ -35,7 +39,7 @@ export class WxTileLayer {
 
 		map.addSource(this.sourceID, {
 			type: 'raster',
-			tiles: ['https://tiles.metoceanapi.com/data/gfs.global/2021-05-02T12:00:00Z/air.temperature.at-2m/2021-05-02T12:00:00Z/{z}/{x}/{y}.png'],
+			tiles: [this.URI],
 			maxzoom: 4,
 			minzoom: 0,
 			tileSize: 256,
@@ -57,80 +61,75 @@ export class WxTileLayer {
 		//   render: () => {},
 		// });
 	}
+
 	move(/* e */) {
 		this.updateTiles();
 	}
+
 	zoom(/* e */) {}
+
 	onData(e: { sourceDataType: string }) {
-		if (e.sourceDataType == 'content') this.updateTiles();
+		if (e.sourceDataType == 'content') {
+			this.updateTiles();
+		}
 	}
+
 	updateTiles() {
-		this.sourceCache.update(this.map.painter.transform);
+		//this.sourceCache.update(this.map.painter.transform);
 	}
-	prerender(/* gl: WebGLRenderingContext, matrix: Array<number> */) {
-		/*     if (this.preRenderCallback)
-      this.preRenderCallback(
-        gl,
-        matrix,
-        this.sourceCache
-          .getVisibleCoordinates()
-          .map((tileid) => this.sourceCache.getTile(tileid))
-      ); */
-	}
+
+	// prerender(gl: WebGLRenderingContext, matrix: Array<number>) {
+	// 	if (this.preRenderCallback)
+	// 		this.preRenderCallback(
+	// 			gl,
+	// 			matrix,
+	// 			this.sourceCache.getVisibleCoordinates().map((tileid) => this.sourceCache.getTile(tileid))
+	// 		);
+	// }
+
 	render(gl: WebGLRenderingContext, matrix: Array<number>) {
 		const coords = this.sourceCache.getVisibleCoordinates();
 		const tiles = coords.map((tileid: any) => this.sourceCache.getTile(tileid));
-		render(gl, matrix, this.layerProgram, tiles);
+		if (tiles.length === 0) return;
+		const { layerProgram } = this;
+		gl.useProgram(layerProgram.program);
+
+		// data tex uniform
+		gl.uniform1i(layerProgram.dataTex, 0);
+
+		// CLUT texture (1)
+		gl.activeTexture(gl.TEXTURE1);
+		gl.bindTexture(gl.TEXTURE_2D, layerProgram.textureCLUT);
+		gl.uniform1i(layerProgram.CLUTTex, 1);
+
+		// zoom
+		gl.uniform1f(layerProgram.zoom, this.map.getZoom());
+
+		// minmax's (mock at now)
+		gl.uniform1f(layerProgram.dataMin, 0);
+		gl.uniform1f(layerProgram.dataDif, 1);
+		gl.uniform1f(layerProgram.clutMin, 0);
+		gl.uniform1f(layerProgram.clutDif, 1);
+
+		// vertex buffer
+		gl.bindBuffer(gl.ARRAY_BUFFER, layerProgram.vertexBuffer);
+		gl.enableVertexAttribArray(layerProgram.vertexPosition);
+		gl.vertexAttribPointer(layerProgram.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+
+		for (let i = 0; i < tiles.length; ++i) {
+			const tile = tiles[i];
+			if (!tile.texture) return;
+
+			// model matrix
+			gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.posMatrix);
+
+			// data texture (0)
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, tile.texture.texture);
+
+			gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+		}
 	}
-}
-
-function render(gl: WebGLRenderingContext, matrix: Array<number>, layerProgram: LayerProgram, tiles: Array<any>) {
-	gl.useProgram(layerProgram.program);
-
-	// data tex uniform
-	gl.uniform1i(layerProgram.dataTex, 0);
-
-	// CLUT texture (1)
-	gl.activeTexture(gl.TEXTURE1);
-	gl.bindTexture(gl.TEXTURE_2D, layerProgram.textureCLUT);
-	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.uniform1i(layerProgram.CLUTTex, 1);
-
-	// minmax's
-	gl.uniform1f(layerProgram.dataMin, 0.0);
-	gl.uniform1f(layerProgram.dataDif, 1.0);
-	gl.uniform1f(layerProgram.clutMin, 0.0);
-	gl.uniform1f(layerProgram.clutDif, 1.0);
-	// vertex buffer
-	gl.bindBuffer(gl.ARRAY_BUFFER, layerProgram.vertexBuffer);
-	gl.enableVertexAttribArray(layerProgram.vertexPosition);
-	gl.vertexAttribPointer(layerProgram.vertexPosition, 2, gl.FLOAT, false, 0, 0);
-
-	tiles.forEach((tile) => {
-		if (!tile.texture) return;
-
-		// model matrix
-		gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.posMatrix);
-
-		// data texture (0)
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, tile.texture.texture);
-		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		// gl.uniform1i(layerProgram.dataTex, 0);
-
-		// gl.depthFunc(gl.LESS);
-		//gl.enable(gl.BLEND);
-		//gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-		// gl.drawArrays(gl.TRIANGLES, 0, 6);
-		gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-	});
 }
 
 interface LayerProgram {
@@ -143,6 +142,8 @@ interface LayerProgram {
 
 	dataTex: WebGLUniformLocation;
 	CLUTTex: WebGLUniformLocation;
+
+	zoom: WebGLUniformLocation;
 
 	dataMin: WebGLUniformLocation;
 	dataDif: WebGLUniformLocation;
@@ -180,6 +181,9 @@ function setupLayer(gl: WebGLRenderingContext): LayerProgram {
 	const CLUTTex = gl.getUniformLocation(program, 'CLUTTex');
 	if (!CLUTTex) throw '!CLUTTex';
 
+	const zoom = gl.getUniformLocation(program, 'zoom');
+	if (!zoom) throw '!zoom';
+
 	const dataMin = gl.getUniformLocation(program, 'dataMin');
 	if (!dataMin) throw '!dataMin';
 	const dataDif = gl.getUniformLocation(program, 'dataDif');
@@ -210,6 +214,8 @@ function setupLayer(gl: WebGLRenderingContext): LayerProgram {
 
 		dataTex,
 		CLUTTex,
+
+		zoom,
 
 		dataMin,
 		dataDif,
