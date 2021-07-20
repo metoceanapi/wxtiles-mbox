@@ -36,18 +36,19 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 
 		map.on('move', this.move.bind(this));
 		map.on('zoom', this.zoom.bind(this));
+		map.on('click', (e) => console.log(e.lngLat));
 
 		map.addSource(this.sourceID, {
 			type: 'raster',
 			tiles: [this.URI],
-			maxzoom: 4,
+			maxzoom: 2,
 			minzoom: 0,
 			tileSize: 256,
 			attribution: 'WxTiles',
 		});
 
-		const tileSource = map.getSource(this.sourceID) as mapboxgl.AnySourceImpl & { on: any };
-		tileSource.on('data', this.onData.bind(this));
+		const tileSource = map.getSource(this.sourceID) as mapboxgl.RasterSource & mapboxgl.Evented; //{ on: any };
+		tileSource.on('data', (e: any) => e.sourceDataType === 'content' && this.updateTiles());
 
 		this.sourceCache = map.style._otherSourceCaches[this.sourceID];
 		// !IMPORTANT! hack to make mapbox mark the sourceCache as 'used' so it will initialise tiles.
@@ -67,12 +68,6 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 	}
 
 	zoom(/* e */) {}
-
-	onData(e: { sourceDataType: string }) {
-		if (e.sourceDataType == 'content') {
-			this.updateTiles();
-		}
-	}
 
 	updateTiles() {
 		//this.sourceCache.update(this.map.painter.transform);
@@ -96,6 +91,8 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 
 		// data tex uniform
 		gl.uniform1i(layerProgram.dataTex, 0);
+		// data tex2 uniform
+		gl.uniform1i(layerProgram.dataTex2, 2);
 
 		// CLUT texture (1)
 		gl.activeTexture(gl.TEXTURE1);
@@ -108,7 +105,7 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 		// minmax's (mock at now)
 		gl.uniform1f(layerProgram.dataMin, 0);
 		gl.uniform1f(layerProgram.dataDif, 1);
-		gl.uniform1f(layerProgram.clutMin, 0);
+		gl.uniform1f(layerProgram.clutMin, 0.0);
 		gl.uniform1f(layerProgram.clutDif, 1);
 
 		// vertex buffer
@@ -125,6 +122,12 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 
 			// data texture (0)
 			gl.activeTexture(gl.TEXTURE0);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.bindTexture(gl.TEXTURE_2D, tile.texture.texture);
+			
+			// data texture2 (2)
+			gl.activeTexture(gl.TEXTURE2);
+			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 			gl.bindTexture(gl.TEXTURE_2D, tile.texture.texture);
 
 			gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
@@ -141,6 +144,7 @@ interface LayerProgram {
 	textureCLUT: WebGLTexture;
 
 	dataTex: WebGLUniformLocation;
+	dataTex2: WebGLUniformLocation;
 	CLUTTex: WebGLUniformLocation;
 
 	zoom: WebGLUniformLocation;
@@ -173,10 +177,14 @@ function setupLayer(gl: WebGLRenderingContext): LayerProgram {
 	gl.validateProgram(program);
 
 	const vertexPosition = gl.getAttribLocation(program, 'vertexPosition');
+
 	const uMatrix = gl.getUniformLocation(program, 'uMatrix');
 	if (!uMatrix) throw '!uMatrix';
+
 	const dataTex = gl.getUniformLocation(program, 'dataTex');
 	if (!dataTex) throw '!dataTex';
+	const dataTex2 = gl.getUniformLocation(program, 'dataTex2');
+	if (!dataTex2) throw '!dataTex2';
 
 	const CLUTTex = gl.getUniformLocation(program, 'CLUTTex');
 	if (!CLUTTex) throw '!CLUTTex';
@@ -193,14 +201,11 @@ function setupLayer(gl: WebGLRenderingContext): LayerProgram {
 	const clutDif = gl.getUniformLocation(program, 'clutDif');
 	if (!clutDif) throw '!clutDif';
 
-	// const vertexArray = new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]);
-	const vertexArray = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
-
 	const vertexBuffer = gl.createBuffer();
 	if (!vertexBuffer) throw '!vertexBuffer';
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]), gl.STATIC_DRAW);
 
 	const textureCLUT = loadTexture(gl, loadImage('clut.png'));
 
@@ -213,6 +218,7 @@ function setupLayer(gl: WebGLRenderingContext): LayerProgram {
 		textureCLUT,
 
 		dataTex,
+		dataTex2,
 		CLUTTex,
 
 		zoom,

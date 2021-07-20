@@ -8,7 +8,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzN
 const mapEl = document.getElementById('map');
 if (!mapEl) throw '!mapEl';
 
-const map = new mapboxgl.Map({ container: mapEl, style: { version: 8, name: 'Empty', sources: {}, layers: [] }, center: [0, 0], zoom: 0 });
+const map = new mapboxgl.Map({ container: mapEl, style: { version: 8, name: 'Empty', sources: {}, layers: [] }, center: [-209.2, -34.26], zoom: 4 });
 map.showTileBoundaries = true;
 
 map.on('load', async () => {
@@ -16,8 +16,8 @@ map.on('load', async () => {
 		// get a workable URI (could be hardcoded, but tiles-DB is alive!)
 		const fetchJson = async (url) => (await fetch(url)).json(); // json loader helper
 		const dataServer = 'https://tiles.metoceanapi.com/demo/data/';
-		const dataSet = 'ecwmf.global/'; /* 'obs-radar.rain.nzl.national/' */
-		const variable = 'air.humidity.at-2m/'; /* 'reflectivity/' */
+		const dataSet = 'ww3-gfs.global/'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+		const variable = 'wave.height/'; /* 'current.speed.northward.at-sea-surface/';  */ /* 'air.humidity.at-2m/';  */ /* 'reflectivity/'; */
 		const instance = (await fetchJson(dataServer + dataSet + 'instances.json')).reverse()[0] + '/';
 		const { times } = await fetchJson(dataServer + dataSet + instance + 'meta.json');
 		const time = times.find((t) => new Date(t).getTime() >= Date.now()) || times[times.length - 1];

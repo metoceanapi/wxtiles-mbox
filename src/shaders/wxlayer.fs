@@ -7,6 +7,7 @@ varying vec2 vTexCoordR;
 varying vec2 vTexCoordD;
 
 uniform sampler2D dataTex;
+uniform sampler2D dataTex2; // TODO: bind non lenear texture and if r===0 -> transparent!
 uniform sampler2D CLUTTex;
 
 uniform float dataMin;
@@ -23,30 +24,37 @@ vec4 CLUT(float);
 int ISO(float);
 
 void main() {
+
+    vec4 tex2 = texture2D(dataTex2, vTexCoordC);
+    if(tex2.g + tex2.r == 0.0) {
+        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+        return;
+    }
+
     float rawC = GetRawData(vTexCoordC); // central
     float posC = RawToPos(rawC);
     vec4 colorC = CLUT(posC);
     int isoC = ISO(posC);
 
-    float rawR = GetRawData(vTexCoordR); // central
+    float rawR = GetRawData(vTexCoordR); // Right
     float posR = RawToPos(rawR);
     int isoR = ISO(posR);
 
-    float rawD = GetRawData(vTexCoordD); // central
+    float rawD = GetRawData(vTexCoordD); // Bottom
     float posD = RawToPos(rawD);
     int isoD = ISO(posD);
 
     gl_FragColor = colorC;
     if(isoC != isoD || isoC != isoR) {
         gl_FragColor = vec4(1.0 - colorC.r, 1.0 - colorC.g, 1.0 - colorC.b, colorC.a);
+        // gl_FragColor = vec4(colorC.r, colorC.g, colorC.b, colorC.a);
     }
-
 }
 
 float GetRawData(vec2 texCoord) {
-    vec4 dataTex = texture2D(dataTex, texCoord);
-    float textureData = dataTex.r / 255.0 + dataTex.g;
-    float rawData = textureData * dataDif + dataMin;
+    vec4 tex = texture2D(dataTex, texCoord);
+    float texData = tex.r / 255.0 + tex.g;
+    float rawData = texData * dataDif + dataMin;
     return rawData;
 }
 
