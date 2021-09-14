@@ -1,8 +1,6 @@
 const esbuild = require('esbuild');
-const sassPlugin = require('esbuild-plugin-sass');
-const open = require('open');
+// const sassPlugin = require('esbuild-plugin-sass');
 const express = require('express');
-const cors = require('cors');
 
 let watchResponse;
 const disableHotReload = process.env.DISABLE_HOT_RELOAD === 'true';
@@ -11,13 +9,14 @@ esbuild
 	.build({
 		entryPoints: ['src/index.ts'],
 		bundle: true,
-		plugins: [sassPlugin()],
+		// plugins: [sassPlugin()],
 		loader: {
-			'.woff': 'file',
+			'.ttf': 'base64',
+			'.woff': 'base64',
 			'.fs': 'text',
 			'.vs': 'text',
 		},
-		target: 'es6',
+		// target: 'es2017',
 		format: 'iife',
 		outfile: 'public/wxtilembox/wxtilembox.js',
 		globalName: 'wxtilembox',
@@ -36,7 +35,6 @@ esbuild
 	})
 	.then((result) => {
 		const app = express();
-		app.use(cors());
 		app.use(express.static('public'));
 
 		const PORT = 3002;
@@ -49,10 +47,9 @@ esbuild
 			});
 		});
 
-		const url = `http://localhost:${PORT}`;
+		const url = `http://0.0.0.0:${PORT}`;
 		app.listen(PORT, () => {
 			console.log(`Dev is running at ${url}`);
 		});
-		open(url);
 	})
 	.catch((e) => console.error(e.message));
