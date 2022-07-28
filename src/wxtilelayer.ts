@@ -3,8 +3,8 @@ import { loadTexture, createCLUT, loadImage } from './textures';
 import vsSource from './shaders/wxlayer.vs';
 import fsSource from './shaders/wxlayer.fs';
 
-// import mapboxgl from 'mapbox-gl';
-const mapboxgl = window.mapboxgl;
+// const mapboxgl = window.mapboxgl;
+import mapboxgl from 'mapbox-gl';
 
 interface MapEx extends mapboxgl.Map {
 	style: any;
@@ -70,7 +70,7 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 	zoom(/* e */) {}
 
 	updateTiles() {
-		//this.sourceCache.update(this.map.painter.transform);
+		// this.sourceCache.update(this.map.painter.transform);
 	}
 
 	// prerender(gl: WebGLRenderingContext, matrix: Array<number>) {
@@ -124,7 +124,7 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 			gl.activeTexture(gl.TEXTURE0);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			gl.bindTexture(gl.TEXTURE_2D, tile.texture.texture);
-			
+
 			// data texture2 (2)
 			gl.activeTexture(gl.TEXTURE2);
 			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);

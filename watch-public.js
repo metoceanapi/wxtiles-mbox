@@ -1,5 +1,4 @@
 const esbuild = require('esbuild');
-// const sassPlugin = require('esbuild-plugin-sass');
 const express = require('express');
 
 let watchResponse;
