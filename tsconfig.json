@@ -1,5 +1,5 @@
 {
-	"include": ["src"],
+	"include": ["src", "src_example/index.ts"],
 	"compilerOptions": {
 		"outDir": "dist/es",
 		"allowSyntheticDefaultImports": true,
@@ -11,7 +11,7 @@
 		"strictNullChecks": true,
 		"strictFunctionTypes": true,
 		"strictPropertyInitialization": true,
-		"lib": ["es2016", "dom"],
+		"lib": ["es2017", "dom"],
 		"allowJs": true,
 		"sourceMap": true,
 		"resolveJsonModule": true

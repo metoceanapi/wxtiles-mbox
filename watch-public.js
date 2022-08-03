@@ -6,7 +6,7 @@ const disableHotReload = process.env.DISABLE_HOT_RELOAD === 'true';
 
 esbuild
 	.build({
-		entryPoints: ['src/index.ts'],
+		entryPoints: ['src_example/index.ts'],
 		bundle: true,
 		// plugins: [sassPlugin()],
 		loader: {
@@ -15,12 +15,18 @@ esbuild
 			'.fs': 'text',
 			'.vs': 'text',
 		},
-		// target: 'es2017',
+		target: 'es2017',
+		bundle: true,
 		format: 'iife',
 		outfile: 'public/wxtilembox/wxtilembox.js',
 		globalName: 'wxtilembox',
+
 		sourcemap: true,
 		// minify: false,
+		minifyWhitespace: false,
+		minifyIdentifiers: false,
+		minifySyntax: false,
+		// keepNames: true,
 		watch: {
 			onRebuild(error, result) {
 				if (error) {

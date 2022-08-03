@@ -1,6 +1,20 @@
-async function fetchJson(url: string, init?: RequestInit | undefined): Promise<any> {
-	return (await fetch(url, init)).json(); // json loader helper
-}
+import './wxtiles.css';
+
+import { __colorSchemes_default_preset } from '../defaults/colorschemes';
+import { __colorStyles_default_preset } from '../defaults/styles';
+import { __units_default_preset } from '../defaults/uconv';
+import {
+	ColorSchemes,
+	ColorStylesWeakMixed,
+	Units,
+	fetchJson,
+	AbortableCacheableURILoaderPromiseFunc,
+	loadImageDataCachedAbortable,
+	loadImageData,
+	cacheUriPromise,
+	UriLoaderPromiseFunc,
+	DataPicture,
+} from '../utils/wxtools';
 
 type wxDataSetsNames = Array<string>;
 
@@ -106,58 +120,69 @@ export class wxDataSet {
 		return this.meta.boundaries;
 	}
 
-	getURI({ variableName, time, ext = 'png' }: { variableName?: string; time?: string | number | Date; ext?: string }): string {
-		let url = this.wxapi.dataServerURL;
-		url += this.name + '/' + this.instance + '/';
-		if (!variableName || !this.meta.variablesMeta[variableName]) return url;
-		url += variableName + '/' + (time ? this.getValidTime(time) : '{time}') + '/{z}/{x}/{y}.' + ext;
-		return url;
+	getURI({ variable, time, ext = 'png' }: { variable: string; time?: string | number | Date; ext?: string }): string {
+		if (!variable || !this.meta.variablesMeta?.[variable]) throw new Error(`error: in dataset ${this.name} variable ${variable} not found`);
+		time = time !== undefined ? this.getValidTime(time) : '{time}';
+		return `${this.wxapi.dataServerURL + this.name}/${this.instance}/${variable}/${time}/{z}/{x}/{y}.${ext}`;
 	}
 
 	async checkDatasetValid(): Promise<boolean> {
 		await this.wxapi.initDone;
-		if (this.wxapi.datasetsNames.includes(this.name)) throw new Error('Dataset not found:' + this.name);
+		if (!this.wxapi.datasetsNames.includes(this.name)) throw new Error(`error: Dataset ${this.name} not found`);
 		return (await this.wxapi.getDatasetInstance(this.name)) === this.instance;
 	}
 }
 
 export class wxAPI {
-	dataServerURL: string;
-	init?: RequestInit;
-	datasetsNames: wxDataSetsNames = [];
-	processed: wxProcessed = {};
-	initDone: Promise<void>;
+	readonly dataServerURL: string;
+	readonly init?: RequestInit;
+	readonly datasetsNames: wxDataSetsNames = [];
+	readonly processed: wxProcessed = {};
+	readonly initDone: Promise<void>;
+	readonly loadMaskFunc: UriLoaderPromiseFunc<ImageData>;
 
-	constructor(dataServerURL: string, init?: RequestInit) {
+	constructor({
+		dataServerURL,
+		init,
+	}: {
+		dataServerURL: string;
+		init?: RequestInit;
+		colorStyles?: ColorStylesWeakMixed;
+		units?: Units;
+		colorSchemes?: ColorSchemes;
+	}) {
 		this.dataServerURL = dataServerURL;
 		this.init = init;
-		let promises = Promise.all([fetchJson(dataServerURL + 'datasets.json', init), fetchJson(dataServerURL + 'processed.json', init)]);
-		this.initDone = promises.then(([datasets, processed]) => {
-			this.datasetsNames = datasets;
-			// in 'processed.json' we need to get rid of the 'path' in dataset name
-			Object.keys(processed).forEach((datasetName) => {
+		// this.loadMaskFunc = loadImageDataCachedAbortable(init);
+		this.loadMaskFunc = cacheUriPromise(loadImageData);
+
+		const promises = Promise.all([fetchJson(dataServerURL + 'datasets.json', init), fetchJson(dataServerURL + 'processed.json', init)]);
+		this.initDone = promises.then(([datasets, processed]: [string[], wxProcessed]): void => {
+			this.datasetsNames.push(...datasets);
+			// in 'processed.json' we need to get rid of the 'path' after datasets names
+			Object.keys(processed).forEach((datasetName): void => {
 				this.processed[datasetName.split(':')[0]] = processed[datasetName];
 			});
 		});
 	}
 
 	async getDatasetInstance(datasetName: string): Promise<string> {
-		let instances: wxInstances = await fetchJson(this.dataServerURL + datasetName + '/instances.json', this.init);
+		const instances: wxInstances = await fetchJson(this.dataServerURL + datasetName + '/instances.json', this.init);
 		return instances.reverse()[0];
 	}
 
-	async getDatasetByName(datasetName: string): Promise<wxDataSet> {
+	async createDatasetByName(datasetName: string): Promise<wxDataSet> {
 		await this.initDone;
 		if (!this.datasetsNames.includes(datasetName)) throw new Error('Dataset not found:' + datasetName);
-		let instance = await this.getDatasetInstance(datasetName);
-		let meta: Meta = await fetchJson(this.dataServerURL + datasetName + '/' + instance + '/meta.json', this.init);
-		let processed = this.processed[datasetName];
+		const instance = await this.getDatasetInstance(datasetName);
+		const meta: Meta = await fetchJson(this.dataServerURL + datasetName + '/' + instance + '/meta.json', this.init);
+		const processed = this.processed[datasetName];
 		return new wxDataSet({ datasetName, instance, meta, processed, wxapi: this });
 	}
 
-	async getAllDatasets(): Promise<wxDataSet[]> {
+	async createAllDatasets(): Promise<wxDataSet[]> {
 		await this.initDone;
-		return Promise.all(this.datasetsNames.map(async (datasetName: string) => this.getDatasetByName(datasetName)));
+		return Promise.all(this.datasetsNames.map((datasetName: string) => this.createDatasetByName(datasetName)));
 	}
 
 	static filterDatasetsByVariableName(datasets: wxDataSet[], variableName: string): wxDataSet[] {
