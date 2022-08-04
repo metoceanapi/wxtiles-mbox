@@ -12,7 +12,8 @@ async function start() {
 	const datasetName = 'ecmwf.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	const variable = 'air.temperature.at-2m'; /* 'current.speed.northward.at-sea-surface/';  */ /* 'air.humidity.at-2m/';  */ /* 'reflectivity/'; */
 
-	const wxapi = new wxAPI({ dataServerURL });
+	const wxapi = new wxAPI({ dataServerURL, qtreeURL: dataServerURL + 'seamask.qtree' });
+	// await wxapi.loadMaskFunc({ x: 0, y: 0, z: 0 });
 	const wxdataset = await wxapi.createDatasetByName(datasetName);
 	WxTilesLibSetup({});
 
@@ -31,7 +32,7 @@ async function start() {
 	map.showTileBoundaries = true;
 
 	map.on('load', async () => {
-		const wxsource = new WxTileSource({ map, id: 'wxsource', wxstyleName: 'base', wxdataset, variable });
+		const wxsource = new WxTileSource({ map, id: 'wxsource', wxstyleName: 'base', wxdataset, variables: [variable] });
 		map.addSource(wxsource.id, wxsource);
 
 		map.addLayer({

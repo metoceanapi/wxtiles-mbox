@@ -200,7 +200,7 @@ function cacheURIPromise<T>(fn: CacheableURILoaderPromiseFunc<T>): CacheableURIL
 export type UriLoaderPromiseFunc<T> = (url: string, ...props: any) => Promise<T>;
 export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): UriLoaderPromiseFunc<T> {
 	const cache = new Map<string, Promise<T>>();
-	const cachedFn: UriLoaderPromiseFunc<T> = (url, ...props) => {
+	return (url, ...props) => {
 		const cached = cache.get(url);
 		if (cached) return cached;
 		const promise = fn(url, ...props);
@@ -208,11 +208,10 @@ export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): UriLoaderPromis
 		cache.set(url, promise);
 		// except aborted (images), so they could be reloaded
 		promise.catch((e) => {
-			e.name === '' && cache.delete(url);
+			e.name === 'AbortError' && cache.delete(url);
 		});
 		return promise;
 	};
-	return cachedFn;
 }
 
 // abortable 'loadImage'
@@ -272,7 +271,7 @@ export interface DataIntegral extends DataPicture {
 function imageToData(image: ImageBitmap): ImageData {
 	const { width, height } = image;
 	const context = Object.assign(document.createElement('canvas'), { width, height, imageSmoothingEnabled: false }).getContext('2d');
-	if (!context) throw new Error('Error: can not create context. Catastrophe');
+	if (!context) throw new Error('can not create context. Catastrophe');
 	context.drawImage(image, 0, 0);
 	return context.getImageData(0, 0, width, height);
 }
@@ -480,7 +479,7 @@ export function HEXtoRGBA(c: string): number {
 }
 
 // json loader helper
-export async function fetchJson(url: RequestInfo, requestInit?: RequestInit) {
+export async function fetchJson<T = any>(url: RequestInfo, requestInit?: RequestInit): Promise<T> {
 	return (await fetch(url, requestInit)).json();
 }
 

@@ -1,5 +1,5 @@
 import mapboxgl from 'mapbox-gl';
-import { wxDataSet } from '../wxAPI/wxAPI';
+import { wxAPI, wxDataSet } from '../wxAPI/wxAPI';
 import {
 	AbortableCacheableURILoaderPromiseFunc,
 	cacheUriPromise,
@@ -14,47 +14,46 @@ import {
 	UriLoaderPromiseFunc,
 } from '../utils/wxtools';
 import { RawCLUT } from '../utils/RawCLUT';
+import { Painter } from './render';
 
-type TileData = ImageData;
-
-export class WxTileSource implements mapboxgl.CustomSourceInterface<TileData> {
+export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	type: 'custom' = 'custom';
 	dataType: 'raster' = 'raster';
 
 	id: string;
-	variable: string;
+	variables: string[];
 	wxdataset: wxDataSet;
 	ext: string;
 
 	map: mapboxgl.Map;
 
 	time!: string; // set in constructor by setTime()
-	tilesURI!: string; // set in constructor by setTime()
+	tilesURIs!: string[]; // set in constructor by setTime()
 
-	tileSize?: number;
-	minzoom?: number;
-	maxzoom?: number;
+	tileSize: number;
+	maxzoom: number;
 	scheme?: string;
 	bounds?: [number, number, number, number];
 	attribution?: string;
 
 	tilesdata: Map<string, ImageData> = new Map();
-	loadDataFunc: UriLoaderPromiseFunc<TileData>;
+	loadDataFunc: UriLoaderPromiseFunc<DataIntegral>;
 
 	wxstyleName!: string; // set in constructor by setStyleName()
 	style: ColorStyleStrict = WxGetColorStyles()['base']; // set in constructor by setStyleName()
 	CLUT!: RawCLUT; // set in constructor by setStyleName()
 
+	painter: Painter;
+
 	constructor({
 		id,
 		time,
-		variable,
+		variables,
 		wxdataset,
 		ext = 'png',
 		wxstyleName = 'base',
 		map,
 		tileSize = 256,
-		minzoom,
 		maxzoom,
 		scheme,
 		bounds,
@@ -62,20 +61,19 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<TileData> {
 	}: {
 		id: string;
 		time?: string | number | Date;
-		variable: string;
+		variables: string[];
 		wxdataset: wxDataSet;
 		ext?: string;
 		map: mapboxgl.Map;
 		wxstyleName?: string;
 		tileSize?: number;
-		minzoom?: number;
 		maxzoom?: number;
 		scheme?: string;
 		bounds?: [number, number, number, number];
 		attribution?: string;
 	}) {
 		this.id = id;
-		this.variable = variable;
+		this.variables = variables;
 		this.wxdataset = wxdataset;
 		this.ext = ext;
 
@@ -83,24 +81,24 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<TileData> {
 
 		this.tileSize = tileSize;
 		this.attribution = attribution;
-		this.minzoom = minzoom;
-		this.maxzoom = maxzoom;
+		this.maxzoom = maxzoom || wxdataset.getMaxZoom();
 		this.scheme = scheme;
 		this.bounds = bounds;
 
-		// this.loadDataFunc = /* cacheUriPromise */ loadDataIntegral;
-		this.loadDataFunc = cacheUriPromise(loadImageData);
+		this.loadDataFunc = /* cacheUriPromise */ loadDataIntegral;
 
 		this.setTime(time);
 		this.setStyleByName(wxstyleName);
+
+		this.painter = new Painter(this);
 	}
 
 	async loadTile(tile: { z: number; x: number; y: number }, init?: { signal?: AbortSignal }): Promise<ImageData> {
-		const url = this.tilesURI.replace('{z}', String(tile.z)).replace('{x}', String(tile.x)).replace('{y}', String(tile.y));
-		// const im = await createImageBitmap(await (await fetch(url, options)).blob());
 		const initcopy = Object.assign({}, this.wxdataset.wxapi.init, { signal: init?.signal });
-		// const im = await loadImageData(url, initcopy);
-		const im = await this.loadDataFunc(url, initcopy);
+		const URLs = this.tilesURIs.map((uri) => uri.replace('{z}', tile.z.toString()).replace('{x}', tile.x.toString()).replace('{y}', tile.y.toString()));
+		const dataPrommices = URLs.map((url) => this.loadDataFunc(url, initcopy));
+		const data = await Promise.all(dataPrommices);
+		const im = this.painter.paint(data, tile);
 		this.tilesdata.set(tile.z + '-' + tile.x + '-' + tile.y, im);
 		return im;
 	}
@@ -113,7 +111,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<TileData> {
 	updateCurrentStyle(style: ColorStyleWeak): void {
 		this.style = Object.assign(this.getCurrentStyleCopy(), style); // deep copy, so could be (and is) changed
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
-		const { min, max, units } = this.wxdataset.meta.variablesMeta[this.variable];
+		const { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
 		this.CLUT = new RawCLUT(this.style, units, [min, max], false);
 		this.repaint();
 	}
@@ -122,9 +120,10 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<TileData> {
 		return Object.assign({}, this.style);
 	}
 
-	setTime(time?: string | number | Date): void {
-		this.time = this.wxdataset.getValidTime(time);
-		this.tilesURI = this.wxdataset.getURI(this); //{ variable: this.variable, time: this.time });
+	setTime(time_?: string | number | Date): void {
+		this.time = this.wxdataset.getValidTime(time_);
+		const { time, ext } = this;
+		this.tilesURIs = this.variables.map((variable) => this.wxdataset.getURI({ variable, time, ext })); //{ variable: this.variable, time: this.time });
 		this.repaint();
 	}
 
