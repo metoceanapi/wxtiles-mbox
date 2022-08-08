@@ -12,9 +12,12 @@ import {
 	refineColor,
 	WxGetColorStyles,
 	UriLoaderPromiseFunc,
+	uriXYZ,
+	XYZ,
 } from '../utils/wxtools';
 import { RawCLUT } from '../utils/RawCLUT';
-import { Painter } from './render';
+import { Painter } from './painter';
+import { Loader } from './loader';
 
 export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	type: 'custom' = 'custom';
@@ -31,19 +34,19 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	tilesURIs!: string[]; // set in constructor by setTime()
 
 	tileSize: number;
-	maxzoom: number;
+	maxzoom?: number;
 	scheme?: string;
 	bounds?: [number, number, number, number];
 	attribution?: string;
 
 	tilesdata: Map<string, ImageData> = new Map();
-	loadDataFunc: UriLoaderPromiseFunc<DataIntegral>;
 
 	wxstyleName!: string; // set in constructor by setStyleName()
 	style: ColorStyleStrict = WxGetColorStyles()['base']; // set in constructor by setStyleName()
 	CLUT!: RawCLUT; // set in constructor by setStyleName()
 
 	painter: Painter;
+	loader: Loader;
 
 	constructor({
 		id,
@@ -81,23 +84,23 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 
 		this.tileSize = tileSize;
 		this.attribution = attribution;
-		this.maxzoom = maxzoom || wxdataset.getMaxZoom();
+		this.maxzoom = maxzoom;// || wxdataset.getMaxZoom();
 		this.scheme = scheme;
 		this.bounds = bounds;
-
-		this.loadDataFunc = /* cacheUriPromise */ loadDataIntegral;
 
 		this.setTime(time);
 		this.setStyleByName(wxstyleName);
 
 		this.painter = new Painter(this);
+		this.loader = new Loader(this);
 	}
 
-	async loadTile(tile: { z: number; x: number; y: number }, init?: { signal?: AbortSignal }): Promise<ImageData> {
-		const initcopy = Object.assign({}, this.wxdataset.wxapi.init, { signal: init?.signal });
-		const URLs = this.tilesURIs.map((uri) => uri.replace('{z}', tile.z.toString()).replace('{x}', tile.x.toString()).replace('{y}', tile.y.toString()));
-		const dataPrommices = URLs.map((url) => this.loadDataFunc(url, initcopy));
-		const data = await Promise.all(dataPrommices);
+	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<ImageData> {
+		const data = await this.loader.load(tile, init);
+		if (!data) {
+			return new ImageData(1, 1);
+		}
+
 		const im = this.painter.paint(data, tile);
 		this.tilesdata.set(tile.z + '-' + tile.x + '-' + tile.y, im);
 		return im;
@@ -171,7 +174,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	 * @name unloadTile
 	 * @param {{ z: number, x: number, y: number }} tile Tile name to unload in the XYZ scheme format.
 	 */
-	unloadTile(tile: { z: number; x: number; y: number }): void {
+	unloadTile(tile: XYZ): void {
 		// const sourceCache = this.map.style._otherSourceCaches[this.id];
 		// const coords = sourceCache.getVisibleCoordinates();
 		// const tiles = coords.map((tileid: any) => sourceCache.getTile(tileid));
@@ -189,7 +192,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	 * @param {{ z: number, x: number, y: number }} tile Tile name to prepare in the XYZ scheme format.
 	 * @returns {boolean} True if tile exists, otherwise false.
 	 */
-	// hasTile(tileID: { z: number; x: number; y: number }): boolean {
+	// hasTile(tileID: XYZ): boolean {
 	// 	return this.tilesdata.has(tileID.z + '-' + tileID.x + '-' + tileID.y);
 	// }
 
@@ -203,7 +206,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	 * @param {{ z: number, x: number, y: number }} tile Tile name to prepare in the XYZ scheme format.
 	 * @returns {TextureImage} The tile image data as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`.
 	 */
-	// prepareTile(tileID: { z: number; x: number; y: number }): ImageBitmap | undefined {
+	// prepareTile(tileID: XYZ): ImageBitmap | undefined {
 	// 	return this.tilesdata.get(tileID.z + '-' + tileID.x + '-' + tileID.y);
 	// }
 }

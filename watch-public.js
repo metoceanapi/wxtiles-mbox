@@ -42,7 +42,7 @@ esbuild
 		const app = express();
 		app.use(express.static('public'));
 
-		const PORT = 3002;
+		const PORT = 3003;
 
 		app.get('/watch', function (req, res) {
 			res.writeHead(200, {

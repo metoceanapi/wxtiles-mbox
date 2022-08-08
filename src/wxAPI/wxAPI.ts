@@ -14,6 +14,8 @@ import {
 	cacheUriPromise,
 	UriLoaderPromiseFunc,
 	DataPicture,
+	uriXYZ,
+	XYZ,
 } from '../utils/wxtools';
 import { QTree } from '../utils/qtree';
 
@@ -141,7 +143,7 @@ export class wxAPI {
 	readonly datasetsNames: wxDataSetsNames = [];
 	readonly processed: wxProcessed = {};
 	readonly initDone: Promise<void>;
-	readonly loadMaskFunc: ({ x, y, z }: { x: number; y: number; z: number }) => Promise<ImageData>;
+	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData>;
 	readonly qtree: QTree = new QTree();
 
 	constructor({
@@ -164,9 +166,12 @@ export class wxAPI {
 
 		const maskloader = cacheUriPromise(loadImageData);
 		this.loadMaskFunc = maskURL
-			? ({ x, y, z }: { x: number; y: number; z: number }) => {
-					const uri = maskURL.replace('{x}', x.toString()).replace('{y}', y.toString()).replace('{z}', z.toString());
-					return maskloader(uri, init);
+			? async (coord: XYZ) => {
+					try {
+						return await maskloader(uriXYZ(maskURL, coord), init);
+					} catch (e) {
+						throw new Error(`loading mask failure  message: ${e.message} maskURL: ${maskURL}`);
+					}
 			  }
 			: () => Promise.reject(new Error('maskURL not defined'));
 

@@ -2,6 +2,12 @@ import { __units_default_preset } from '../defaults/uconv';
 import { __colorSchemes_default_preset } from '../defaults/colorschemes';
 import { __colorStyles_default_preset } from '../defaults/styles';
 
+export interface XYZ {
+	x: number;
+	y: number;
+	z: number;
+}
+
 export type UnitTuple = [string, number, number?];
 
 export interface Units {
@@ -544,4 +550,8 @@ export function WXLOG(...str: any) {
 export function refineColor(c: string): string {
 	// convert short form of color into long  #25f => #2255ff
 	return c[0] === '#' && c.length === 4 ? '#' + c[1] + c[1] + c[2] + c[2] + c[3] + c[3] : c;
+}
+
+export function uriXYZ(uri: string, { x, y, z }: XYZ): string {
+	return uri.replace('{x}', x.toString()).replace('{y}', y.toString()).replace('{z}', z.toString());
 }
