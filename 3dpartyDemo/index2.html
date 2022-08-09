@@ -1,10 +1,11 @@
+<!-- Custom shader on tiles! -->
 <!DOCTYPE html>
 <html>
 	<head>
 		<title>tile shader test</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-		<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.css" rel="stylesheet" />
+		<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
 		<style>
 			body {
 				margin: 0;
@@ -38,7 +39,7 @@
 		<input id="falsecolor_start" type="range" min="-100" max="200" />
 		<input id="falsecolor_end" type="range" min="-100" max="200" />
 
-		<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.js"></script>
+		<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
 		<script>
 			mapboxgl.accessToken = 'pk.eyJ1IjoibW91cm5lciIsImEiOiJWWnRiWG1VIn0.j6eccFHpE3Q04XPLI7JxbA';
 
@@ -414,11 +415,11 @@
 					gl.useProgram(this.program);
 
 					// This is needed because there's a cache that cares about the layer id
-					const layerID = 'custom-tiles';
+					const layerID = 'custom-tileswwwww';
 
 					const painter = this.map.painter;
 					// This is just the name of the source we're pulling from. On the satellite style, 'mapbox' is the satellite view.
-					const sourceCache = this.map.style.sourceCaches['mapbox'];
+					const sourceCache = this.map.style._otherSourceCaches['mapbox'];
 					const source = sourceCache.getSource();
 					const coords = sourceCache.getVisibleCoordinates().reverse();
 
@@ -447,7 +448,7 @@
 						};
 						const colorMode = painter.colorModeForRenderPass();
 
-						const posMatrix = coord.posMatrix;
+						const posMatrix = coord.projMatrix;
 						tile.registerFadeDuration(0.3); // Was stored in the paint properties, here is hardcoded
 
 						const parentTile = sourceCache.findLoadedParent(coord, 0),
@@ -472,9 +473,9 @@
 
 						// I'm assuming our source is an "ImageSource", though I don't really know what that means.
 						// I followed the implementation on that branch of the if to produce the following.
-						const layoutVertexBuffer = source.boundsBuffer || painter.rasterBoundsBuffer;
+						const layoutVertexBuffer = source.boundsBuffer || painter.mercatorBoundsBuffer;
 						const indexBuffer = painter.quadTriangleIndexBuffer;
-						const segments = source.boundsSegments || painter.rasterBoundsSegments;
+						const segments = source.boundsSegments || painter.mercatorBoundsSegments;
 						const drawMode = gl.TRIANGLES;
 
 						// Set GL properties
