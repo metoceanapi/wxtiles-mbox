@@ -16,13 +16,11 @@ export class Loader {
 	}
 
 	async load(coords: XYZ, init?: { signal?: AbortSignal }): Promise<DataPicture[] | null> {
+		// TODO: test if needed this check, or it is already done by the Source.bounds
 		if (!this._checkInsideBoundaries(coords)) return null; // tile is cut by boundaries
+
 		const tileType = this._checkTypeAndMask(coords);
 		if (!tileType) return null; // tile is cut by mask
-
-		// coords.x = 77;
-		// coords.y = 100;
-		// coords.z = 10;
 
 		const { upCoords, subCoords } = splitCoords(coords, this.wxsource.wxdataset.meta.maxZoom);
 		const URLs = this.wxsource.tilesURIs.map((uri) => uriXYZ(uri, upCoords));
@@ -38,7 +36,7 @@ export class Loader {
 
 		await this._applyMask(processedData, coords, tileType, !subCoords && data.length === 1); // apply mask if needed
 
-		// if (layer.state.vector) {
+		// if (processedData.length > 1) {
 		// 	this._createStreamLines();
 		// }
 

@@ -3,20 +3,7 @@ import './wxtiles.css';
 import { __colorSchemes_default_preset } from '../defaults/colorschemes';
 import { __colorStyles_default_preset } from '../defaults/styles';
 import { __units_default_preset } from '../defaults/uconv';
-import {
-	ColorSchemes,
-	ColorStylesWeakMixed,
-	Units,
-	fetchJson,
-	AbortableCacheableURILoaderPromiseFunc,
-	loadImageDataCachedAbortable,
-	loadImageData,
-	cacheUriPromise,
-	UriLoaderPromiseFunc,
-	DataPicture,
-	uriXYZ,
-	XYZ,
-} from '../utils/wxtools';
+import { fetchJson, loadImageData, cacheUriPromise, uriXYZ, XYZ, WxTilesLibOptions, WxTilesLibSetup } from '../utils/wxtools';
 import { QTree } from '../utils/qtree';
 
 type wxDataSetsNames = Array<string>;
@@ -119,8 +106,9 @@ export class wxDataSet {
 		return this.meta.maxZoom;
 	}
 
-	getBoundaries(): AllBoundariesMeta | undefined {
-		return this.meta.boundaries;
+	getBoundaries(): [number, number, number, number] | undefined {
+		const bn = this.meta.boundaries?.boundariesnorm;
+		return bn && [bn.west, bn.south, bn.east, bn.north];
 	}
 
 	getURI({ variable, time, ext = 'png' }: { variable: string; time?: string | number | Date; ext?: string }): string {
@@ -136,6 +124,13 @@ export class wxDataSet {
 	}
 }
 
+export interface wxAPIOptions extends WxTilesLibOptions {
+	dataServerURL: string;
+	maskURL?: string;
+	qtreeURL?: string;
+	init?: RequestInit;
+}
+
 export class wxAPI {
 	readonly dataServerURL: string;
 	readonly maskURL?: string;
@@ -146,20 +141,9 @@ export class wxAPI {
 	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData>;
 	readonly qtree: QTree = new QTree();
 
-	constructor({
-		dataServerURL,
-		maskURL,
-		qtreeURL,
-		init,
-	}: {
-		dataServerURL: string;
-		maskURL?: string;
-		qtreeURL?: string;
-		init?: RequestInit;
-		// colorStyles?: ColorStylesWeakMixed;
-		// units?: Units;
-		// colorSchemes?: ColorSchemes;
-	}) {
+	constructor({ dataServerURL, maskURL, qtreeURL, init, colorStyles, units, colorSchemes }: wxAPIOptions) {
+		WxTilesLibSetup({ colorStyles, units, colorSchemes });
+
 		this.dataServerURL = dataServerURL;
 		this.maskURL = maskURL;
 		this.init = init;

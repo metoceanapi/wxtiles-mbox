@@ -3,44 +3,46 @@ import mapboxgl from 'mapbox-gl';
 
 import { wxAPI } from '../src/wxAPI/wxAPI';
 import { WxTileSource } from '../src/wxsource/wxsource';
-import { WxTilesLibSetup } from '../src/utils/wxtools';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
 
 async function start() {
 	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
-	const variable = 'air.temperature.at-2m'; /* 'current.speed.northward.at-sea-surface/';  */ /* 'air.humidity.at-2m/';  */ /* 'reflectivity/'; */
+	const variables = ['air.temperature.at-2m'];
+	// const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-100m'];
+
+	// const datasetName = 'ww3-ecmwf.global';
+	// const variables = ['wave.direction.mean'];
 
 	const wxapi = new wxAPI({ dataServerURL, qtreeURL: dataServerURL + 'seamask.qtree', maskURL: dataServerURL, init: {} });
 	const wxdataset = await wxapi.createDatasetByName(datasetName);
-	WxTilesLibSetup({});
 
 	const map = new mapboxgl.Map({
 		container: 'map',
+		style: 'mapbox://styles/mapbox/light-v10',
+		// style: 'mapbox://styles/mapbox/satellite-v9',
+		/*
 		style: {
 			version: 8,
 			name: 'Empty',
 			sources: {},
 			layers: [],
-		},
+		}, // */
 		center: [-209.2, -34.26],
 		zoom: 3,
 	});
 
+	map.addControl(new mapboxgl.NavigationControl());
+
 	// map.showTileBoundaries = true;
 
 	map.on('load', async () => {
-		const wxsource = new WxTileSource({ map, id: 'wxsource', wxstyleName: 'base', wxdataset, variables: [variable] });
-		map.addSource(wxsource.id, wxsource);
+		// addSkyAndTerrain(map);
 
-		map.addLayer({
-			id: 'wxtiles',
-			type: 'raster',
-			source: wxsource.id,
-			minzoom: 0,
-			maxzoom: 24,
-		});
+		const wxsource = new WxTileSource({ map, id: 'wxsource', wxstyleName: 'base', wxdataset, variables });
+		map.addSource(wxsource.id, wxsource);
+		map.addLayer({ id: 'wxtiles', type: 'raster', source: wxsource.id });
 
 		addPoints(map);
 
@@ -100,6 +102,28 @@ function addPoints(map: mapboxgl.Map) {
 		paint: {
 			'circle-radius': 30,
 			'circle-color': '#F84C4C', // red color
+		},
+	});
+}
+
+function addSkyAndTerrain(map: mapboxgl.Map) {
+	map.addSource('mapbox-dem', {
+		type: 'raster-dem',
+		url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+		tileSize: 512,
+		maxzoom: 14,
+	});
+	// add the DEM source as a terrain layer with exaggerated height
+	map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+
+	// add a sky layer that will show when the map is highly pitched
+	map.addLayer({
+		id: 'sky',
+		type: 'sky',
+		paint: {
+			'sky-type': 'atmosphere',
+			'sky-atmosphere-sun': [0.0, 0.0],
+			'sky-atmosphere-sun-intensity': 15,
 		},
 	});
 }

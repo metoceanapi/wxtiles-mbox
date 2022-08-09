@@ -1,20 +1,8 @@
 import mapboxgl from 'mapbox-gl';
-import { wxAPI, wxDataSet } from '../wxAPI/wxAPI';
-import {
-	AbortableCacheableURILoaderPromiseFunc,
-	cacheUriPromise,
-	loadDataIntegral,
-	ColorStyleStrict,
-	ColorStyleWeak,
-	DataIntegral,
-	loadDataIntegralCachedAbortable,
-	loadImageData,
-	refineColor,
-	WxGetColorStyles,
-	UriLoaderPromiseFunc,
-	uriXYZ,
-	XYZ,
-} from '../utils/wxtools';
+
+import { wxDataSet } from '../wxAPI/wxAPI';
+import { ColorStyleStrict, ColorStyleWeak, refineColor, WxGetColorStyles, XYZ } from '../utils/wxtools';
+
 import { RawCLUT } from '../utils/RawCLUT';
 import { Painter } from './painter';
 import { Loader } from './loader';
@@ -84,10 +72,9 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 
 		this.tileSize = tileSize;
 		this.attribution = attribution;
-		this.maxzoom = maxzoom;// || wxdataset.getMaxZoom();
+		this.maxzoom = maxzoom; // || wxdataset.getMaxZoom();
 		this.scheme = scheme;
-		this.bounds = bounds;
-
+		this.bounds = bounds; // || wxdataset.getBoundaries(); // TODO ???
 		this.setTime(time);
 		this.setStyleByName(wxstyleName);
 
@@ -115,7 +102,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 		this.style = Object.assign(this.getCurrentStyleCopy(), style); // deep copy, so could be (and is) changed
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
 		const { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
-		this.CLUT = new RawCLUT(this.style, units, [min, max], false);
+		this.CLUT = new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
 		this.repaint();
 	}
 

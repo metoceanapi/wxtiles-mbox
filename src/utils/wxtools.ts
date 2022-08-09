@@ -90,14 +90,14 @@ let _units: Units;
 let _colorSchemes: ColorSchemes;
 let _colorStylesUnrolled: ColorStylesStrict;
 
-export interface LibSetupObject {
+export interface WxTilesLibOptions {
 	colorStyles?: ColorStylesWeakMixed;
 	units?: Units;
 	colorSchemes?: ColorSchemes;
 }
 
 /// some random usefull stuff
-export function WxTilesLibSetup({ colorStyles = {}, units = {}, colorSchemes = {} }: LibSetupObject = {}): void {
+export function WxTilesLibSetup({ colorStyles = {}, units = {}, colorSchemes = {} }: WxTilesLibOptions = {}): void {
 	WXLOG('WxTile lib setup: start');
 	_units = Object.assign({}, __units_default_preset, units);
 	_colorSchemes = Object.assign({}, colorSchemes, __colorSchemes_default_preset);
@@ -106,8 +106,14 @@ export function WxTilesLibSetup({ colorStyles = {}, units = {}, colorSchemes = {
 	WXLOG('WxTile lib setup: styles unrolled');
 
 	// Make sure fonts are loaded & ready!
-	document.fonts.load('32px barbs');
-	document.fonts.load('32px arrows');
+	try {
+		(async () => {
+			await document.fonts.load('32px barbs');
+			await document.fonts.load('32px arrows');
+		})();
+	} catch (e) {
+		WXLOG('WxTile lib setup: fonts not loaded');
+	}
 
 	WXLOG('WxTile lib setup is done.');
 }

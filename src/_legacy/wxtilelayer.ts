@@ -155,18 +155,41 @@ interface LayerProgram {
 	clutDif: WebGLUniformLocation;
 }
 
+interface UniformLocations {
+	program: WebGLProgram;
+	[key: string]: WebGLUniformLocation;
+}
+
+function getUniforms(gl: WebGLRenderingContext, program: WebGLProgram, uniforms: string[]): { [key: string]: WebGLUniformLocation } {
+	const result: UniformLocations = { program };
+	uniforms.forEach((u) => {
+		result[u] = gl.getUniformLocation(program, u) || 0;
+		if (!result[u]) throw new Error(`Uniform ${u} not found`);
+	});
+
+	return result;
+}
+
 function setupLayer(gl: WebGLRenderingContext): LayerProgram {
 	const vertexShader = gl.createShader(gl.VERTEX_SHADER);
 	if (!vertexShader) throw '!vertexShader';
 
 	gl.shaderSource(vertexShader, vsSource);
 	gl.compileShader(vertexShader);
+	if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+		const info = gl.getShaderInfoLog(vertexShader);
+		throw new Error(`Could not compile vertex program ${info}`);
+	}
 
 	const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
 	if (!fragmentShader) throw '!fragmentShader';
 
 	gl.shaderSource(fragmentShader, fsSource);
 	gl.compileShader(fragmentShader);
+	if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+		const info = gl.getShaderInfoLog(fragmentShader);
+		throw new Error(`Could not compile fragment program ${info}`);
+	}
 
 	const program = gl.createProgram();
 	if (!program) throw '!program';
@@ -175,34 +198,38 @@ function setupLayer(gl: WebGLRenderingContext): LayerProgram {
 	gl.attachShader(program, fragmentShader);
 	gl.linkProgram(program);
 	gl.validateProgram(program);
+	if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+		const info = gl.getProgramInfoLog(program);
+		throw new Error(`Could not compile WebGL program ${info}`);
+	}
 
 	const vertexPosition = gl.getAttribLocation(program, 'vertexPosition');
 
 	const uMatrix = gl.getUniformLocation(program, 'uMatrix');
-	if (!uMatrix) throw '!uMatrix';
+	if (!uMatrix) throw new Error('!uMatrix');
 
 	const dataTex = gl.getUniformLocation(program, 'dataTex');
-	if (!dataTex) throw '!dataTex';
+	if (!dataTex) throw new Error('!dataTex');
 	const dataTex2 = gl.getUniformLocation(program, 'dataTex2');
-	if (!dataTex2) throw '!dataTex2';
+	if (!dataTex2) throw new Error('!dataTex2');
 
 	const CLUTTex = gl.getUniformLocation(program, 'CLUTTex');
-	if (!CLUTTex) throw '!CLUTTex';
+	if (!CLUTTex) throw new Error('!CLUTTex');
 
 	const zoom = gl.getUniformLocation(program, 'zoom');
-	if (!zoom) throw '!zoom';
+	if (!zoom) throw new Error('!zoom');
 
 	const dataMin = gl.getUniformLocation(program, 'dataMin');
-	if (!dataMin) throw '!dataMin';
+	if (!dataMin) throw new Error('!dataMin');
 	const dataDif = gl.getUniformLocation(program, 'dataDif');
-	if (!dataDif) throw '!dataDif';
+	if (!dataDif) throw new Error('!dataDif');
 	const clutMin = gl.getUniformLocation(program, 'clutMin');
-	if (!clutMin) throw '!clutMin';
+	if (!clutMin) throw new Error('!clutMin');
 	const clutDif = gl.getUniformLocation(program, 'clutDif');
-	if (!clutDif) throw '!clutDif';
+	if (!clutDif) throw new Error('!clutDif');
 
 	const vertexBuffer = gl.createBuffer();
-	if (!vertexBuffer) throw '!vertexBuffer';
+	if (!vertexBuffer) throw new Error('!vertexBuffer');
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]), gl.STATIC_DRAW);
