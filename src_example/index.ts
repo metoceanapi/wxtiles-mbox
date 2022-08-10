@@ -20,9 +20,9 @@ async function start() {
 
 	const map = new mapboxgl.Map({
 		container: 'map',
-		style: 'mapbox://styles/mapbox/light-v10',
+		// style: 'mapbox://styles/mapbox/light-v10',
 		// style: 'mapbox://styles/mapbox/satellite-v9',
-		/*
+		//*
 		style: {
 			version: 8,
 			name: 'Empty',
@@ -30,45 +30,65 @@ async function start() {
 			layers: [],
 		}, // */
 		center: [-209.2, -34.26],
-		zoom: 3,
+		zoom: 2,
+		projection: { name: 'globe' },
 	});
 
 	map.addControl(new mapboxgl.NavigationControl());
 
-	// map.showTileBoundaries = true;
+	map.showTileBoundaries = true;
 
 	map.on('load', async () => {
+		// map.getStyle().transition = { delay: 500, duration: 500 }; //?.duration
+
 		// addSkyAndTerrain(map);
 
-		const wxsource = new WxTileSource({ map, id: 'wxsource', wxstyleName: 'base', wxdataset, variables });
-		map.addSource(wxsource.id, wxsource);
-		map.addLayer({ id: 'wxtiles', type: 'raster', source: wxsource.id });
+		// const wxsource = new WxTileSource({ map, id: 'wxsource', wxstyleName: 'base', wxdataset, variables, tileSize: 256 });
+		// const wxsource = new WxTileSource({ id: 'wxsource' });
+		// map.addSource(wxsource.id, wxsource);
+		// map.addSource(wxsource.id, { maxzoom: wxdataset.getMaxZoom(), id: wxsource.id, type: 'raster', tiles: [wxsource.tilesURIs[0]], tileSize: 256 });
+		// map.addSource('wxsource', { type: 'raster', tiles: ['http://tile.openstreetmap.org/{z}/{x}/{y}.png'] });
+
+		//*
+		map.addSource('wxsource', {
+			type: 'custom',
+			dataType: 'raster',
+			id: 'wxsource',
+
+			async loadTile(tile, init?: { signal?: AbortSignal }): Promise<ImageBitmap> {
+				return createImageBitmap(await (await fetch(`http://tile.openstreetmap.org/${tile.z}/${tile.x}/${tile.y}.png`, init)).blob());
+			},
+		}); //*/
+
+		// map.areTilesLoaded();
+		// map.isSourceLoaded(wxsource.id);
+
+		map.addLayer({ id: 'wxtiles', type: 'raster', source: 'wxsource' });
 
 		addPoints(map);
 
-		// const sourceCache = map.style._otherSourceCaches[wxsource.id];
+		// setTimeout(() => {
+		// 	// const source = map.getSource('trace'); //.setData({});
+		// 	// wxsource.setTime(0);
+		// 	// wxsource.reload();
+		// 	const source2 = <mapboxgl.CustomSource<ImageBitmap>>map.getSource('wxsource'); //.setData(URIw);
+		// 	const imp = source2._implementation;
+		// 	// map.style._sourceCaches['other:wxtiles'].clearTiles();
+		// 	// map.style._sourceCaches['other:wxtiles'].update(map.transform);
 
-		setTimeout(() => {
-			// 	const URIw = dataServer + dataSet + instance + variable + times[7] + '/{z}/{x}/{y}.png';
-			// const URI2 = dataset.getURI({ variableName: variable, time: 20 });
-			// const source2 = <mapboxgl.CustomSource<ImageBitmap>>map.getSource('wxtiles'); //.setData(URIw);
-			// const imp = source2._implementation;
-			// map.style._sourceCaches['other:wxtiles'].clearTiles();
-			// map.style._sourceCaches['other:wxtiles'].update(map.transform);
+		// 	// (map as any).style._otherSourceCaches?.['wxtiles'].reload();
+		// 	// const style = map.style;
+		// 	// const { sourceCaches, _sourceCaches } = style;
+		// 	// style.sources['wxtiles'].tiles = [URI2];
+		// 	const t = 0;
 
-			// (map as any).style._otherSourceCaches?.['wxtiles'].reload();
-			// const style = map.style;
-			// const { sourceCaches, _sourceCaches } = style;
-			// style.sources['wxtiles'].tiles = [URI2];
-			const t = 0;
-
-			// 	// map.addSource('wxtiles', {
-			// 	// 	type: 'raster',
-			// 	// 	tiles: [URIw],
-			// 	// 	tileSize: 256,
-			// 	// 	maxzoom: 4,
-			// 	// });
-		}, 1000);
+		// 	// 	// map.addSource('wxtiles', {
+		// 	// 	// 	type: 'raster',
+		// 	// 	// 	tiles: [URIw],
+		// 	// 	// 	tileSize: 256,
+		// 	// 	// 	maxzoom: 4,
+		// 	// 	// });
+		// }, 3000);
 
 		// const layer = new WxTileLayer('asdf', URI);
 		// map.addLayer(layer);

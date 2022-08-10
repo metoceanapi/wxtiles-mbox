@@ -117,6 +117,10 @@ export class wxDataSet {
 		return `${this.wxapi.dataServerURL + this.name}/${this.instance}/${variable}/${time}/{z}/{x}/{y}.${ext}`;
 	}
 
+	checkVariableValid(variable: string): boolean {
+		return this.meta.variablesMeta?.[variable] !== undefined;
+	}
+
 	async checkDatasetValid(): Promise<boolean> {
 		await this.wxapi.initDone;
 		if (!this.wxapi.datasetsNames.includes(this.name)) throw new Error(`Dataset ${this.name} not found`);

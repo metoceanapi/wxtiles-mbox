@@ -227,7 +227,7 @@ export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): UriLoaderPromis
 }
 
 // abortable 'loadImage'
-async function loadImage(url: string, requestInit?: RequestInit): Promise<ImageBitmap> {
+export async function loadImage(url: string, requestInit?: RequestInit): Promise<ImageBitmap> {
 	//// Method 0
 	return createImageBitmap(await (await fetch(url, requestInit)).blob());
 
@@ -560,4 +560,8 @@ export function refineColor(c: string): string {
 
 export function uriXYZ(uri: string, { x, y, z }: XYZ): string {
 	return uri.replace('{x}', x.toString()).replace('{y}', y.toString()).replace('{z}', z.toString());
+}
+
+export function HashXYZ({ x, y, z }: XYZ): string {
+	return `${z}-${x}-${y}`;
 }

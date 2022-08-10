@@ -1,13 +1,13 @@
 import mapboxgl from 'mapbox-gl';
 
 import { wxDataSet } from '../wxAPI/wxAPI';
-import { ColorStyleStrict, ColorStyleWeak, refineColor, WxGetColorStyles, XYZ } from '../utils/wxtools';
+import { ColorStyleStrict, ColorStyleWeak, HashXYZ, loadImageData, refineColor, uriXYZ, WxGetColorStyles, XYZ } from '../utils/wxtools';
 
 import { RawCLUT } from '../utils/RawCLUT';
 import { Painter } from './painter';
 import { Loader } from './loader';
 
-export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
+export class WxTileSource2 implements mapboxgl.CustomSourceInterface<ImageData> {
 	type: 'custom' = 'custom';
 	dataType: 'raster' = 'raster';
 
@@ -63,6 +63,15 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 		bounds?: [number, number, number, number];
 		attribution?: string;
 	}) {
+		// check variables
+		if (!variables || 1 < variables.length || variables.length > 2) {
+			throw new Error(`wxTileSource ${wxdataset.name}: only 1 or 2 variables are supported but ${variables.length} were given`);
+		}
+
+		variables.forEach((v) => {
+			if (!wxdataset.checkVariableValid(v)) throw new Error(`wxTileSource ${wxdataset.name}: variable ${v} is not valid`);
+		});
+
 		this.id = id;
 		this.variables = variables;
 		this.wxdataset = wxdataset;
@@ -83,13 +92,14 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	}
 
 	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<ImageData> {
+		// return loadImageData(uriXYZ(this.tilesURIs[0], tile), init);
 		const data = await this.loader.load(tile, init);
 		if (!data) {
 			return new ImageData(1, 1);
 		}
 
 		const im = this.painter.paint(data, tile);
-		this.tilesdata.set(tile.z + '-' + tile.x + '-' + tile.y, im);
+		// this.tilesdata.set(tile.z + '-' + tile.x + '-' + tile.y, im);
 		return im;
 	}
 
@@ -117,6 +127,13 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 		this.repaint();
 	}
 
+	reload(): void {
+		const style = (this.map as any).style;
+		const cache = style?._otherSourceCaches?.[this.id];
+		cache.clearTiles?.();
+		cache.reload?.();
+	}
+
 	getTime(): string {
 		return this.time;
 	}
@@ -133,9 +150,9 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	 * @name onAdd
 	 * @param {Map} map The Map this custom source was just added to.
 	 */
-	onAdd(map: mapboxgl.Map): void {
-		const t = 0;
-	}
+	// onAdd(map: mapboxgl.Map): void {
+	// 	const t = 0;
+	// }
 
 	/**
 	 * Optional method called when the source has been removed from the Map with {@link Map#removeSource}.
@@ -147,9 +164,9 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	 * @name onRemove
 	 * @param {Map} map The Map this custom source was added to.
 	 */
-	onRemove(map: mapboxgl.Map): void {
-		const t = 0;
-	}
+	// onRemove(map: mapboxgl.Map): void {
+	// 	const t = 0;
+	// }
 
 	/**
 	 * Optional method called after the tile is unloaded from the map viewport. This
@@ -161,13 +178,13 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	 * @name unloadTile
 	 * @param {{ z: number, x: number, y: number }} tile Tile name to unload in the XYZ scheme format.
 	 */
-	unloadTile(tile: XYZ): void {
-		// const sourceCache = this.map.style._otherSourceCaches[this.id];
-		// const coords = sourceCache.getVisibleCoordinates();
-		// const tiles = coords.map((tileid: any) => sourceCache.getTile(tileid));
+	// unloadTile(tile: XYZ): void {
+	// 	// const sourceCache = this.map.style._otherSourceCaches[this.id];
+	// 	// const coords = sourceCache.getVisibleCoordinates();
+	// 	// const tiles = coords.map((tileid: any) => sourceCache.getTile(tileid));
 
-		this.tilesdata.delete(tile.z + '-' + tile.x + '-' + tile.y);
-	}
+	// 	this.tilesdata.delete(HashXYZ(tile));
+	// }
 
 	/**
 	 * Optional method called during a render frame to check if there is a tile to render.
@@ -179,8 +196,8 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	 * @param {{ z: number, x: number, y: number }} tile Tile name to prepare in the XYZ scheme format.
 	 * @returns {boolean} True if tile exists, otherwise false.
 	 */
-	// hasTile(tileID: XYZ): boolean {
-	// 	return this.tilesdata.has(tileID.z + '-' + tileID.x + '-' + tileID.y);
+	// hasTile(tile: XYZ): boolean {
+	// 	return this.tilesdata.has(HashXYZ(tile));
 	// }
 
 	/**
@@ -193,7 +210,28 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	 * @param {{ z: number, x: number, y: number }} tile Tile name to prepare in the XYZ scheme format.
 	 * @returns {TextureImage} The tile image data as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`.
 	 */
-	// prepareTile(tileID: XYZ): ImageBitmap | undefined {
-	// 	return this.tilesdata.get(tileID.z + '-' + tileID.x + '-' + tileID.y);
+	// prepareTile(tile: XYZ): ImageData | undefined {
+	// 	return this.tilesdata.get(HashXYZ(tile));
 	// }
+}
+export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageBitmap> {
+	type: 'custom' = 'custom';
+	dataType: 'raster' = 'raster';
+
+	id: string;
+
+	constructor({ id }: { id: string }) {
+		this.id = id;
+	}
+
+	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<ImageBitmap> {
+		return createImageBitmap(
+			await (
+				await fetch(
+					`https://tiles.metoceanapi.com/data/gfs.global/2022-08-09T18:00:00Z/air.temperature.at-2m/2022-08-10T03:00:00Z/${tile.z}/${tile.x}/${tile.y}.png`,
+					init
+				)
+			).blob()
+		);
+	}
 }
