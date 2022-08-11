@@ -40,7 +40,7 @@
 				id: 'customSource',
 
 				async loadTile(tile, init) {
-					const im = createImageBitmap(await (await fetch(`http://tile.openstreetmap.org/${tile.z}/${tile.x}/${tile.y}.png`, init)).blob());
+					const im = createImageBitmap(await (await fetch(`https://tile.openstreetmap.org/${tile.z}/${tile.x}/${tile.y}.png`, init)).blob());
 					/*simulate data heavy preprocessing*/ await Promise.all([im, new Promise((resolve) => setTimeout(resolve, 2500))]);
 					return im;
 				},
