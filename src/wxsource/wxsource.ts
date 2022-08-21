@@ -7,7 +7,7 @@ import { RawCLUT } from '../utils/RawCLUT';
 import { Painter } from './painter';
 import { Loader } from './loader';
 
-export class WxTileSource2 implements mapboxgl.CustomSourceInterface<ImageData> {
+export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	type: 'custom' = 'custom';
 	dataType: 'raster' = 'raster';
 
@@ -213,25 +213,4 @@ export class WxTileSource2 implements mapboxgl.CustomSourceInterface<ImageData> 
 	// prepareTile(tile: XYZ): ImageData | undefined {
 	// 	return this.tilesdata.get(HashXYZ(tile));
 	// }
-}
-export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageBitmap> {
-	type: 'custom' = 'custom';
-	dataType: 'raster' = 'raster';
-
-	id: string;
-
-	constructor({ id }: { id: string }) {
-		this.id = id;
-	}
-
-	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<ImageBitmap> {
-		return createImageBitmap(
-			await (
-				await fetch(
-					`https://tiles.metoceanapi.com/data/gfs.global/2022-08-09T18:00:00Z/air.temperature.at-2m/2022-08-10T03:00:00Z/${tile.z}/${tile.x}/${tile.y}.png`,
-					init
-				)
-			).blob()
-		);
-	}
 }

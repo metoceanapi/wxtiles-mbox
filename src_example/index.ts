@@ -22,16 +22,10 @@ async function start() {
 		container: 'map',
 		// style: 'mapbox://styles/mapbox/light-v10',
 		// style: 'mapbox://styles/mapbox/satellite-v9',
-		//*
-		style: {
-			version: 8,
-			name: 'Empty',
-			sources: {},
-			layers: [],
-		}, // */
+		style: { version: 8, name: 'Empty', sources: {}, layers: [] },
 		center: [-209.2, -34.26],
 		zoom: 2,
-		projection: { name: 'globe' },
+		// projection: { name: 'globe' },
 	});
 
 	map.addControl(new mapboxgl.NavigationControl());
@@ -39,32 +33,18 @@ async function start() {
 	map.showTileBoundaries = true;
 
 	map.on('load', async () => {
-		// map.getStyle().transition = { delay: 500, duration: 500 }; //?.duration
-
-		// addSkyAndTerrain(map);
-
-		// const wxsource = new WxTileSource({ map, id: 'wxsource', wxstyleName: 'base', wxdataset, variables, tileSize: 256 });
-		// const wxsource = new WxTileSource({ id: 'wxsource' });
-		// map.addSource(wxsource.id, wxsource);
-		// map.addSource(wxsource.id, { maxzoom: wxdataset.getMaxZoom(), id: wxsource.id, type: 'raster', tiles: [wxsource.tilesURIs[0]], tileSize: 256 });
-		// map.addSource('wxsource', { type: 'raster', tiles: ['http://tile.openstreetmap.org/{z}/{x}/{y}.png'] });
-
-		//*
-		map.addSource('wxsource', {
-			type: 'custom',
-			dataType: 'raster',
+		const wxsource = new WxTileSource({
+			map,
 			id: 'wxsource',
+			wxstyleName: 'base',
+			wxdataset,
+			variables,
+		});
 
-			async loadTile(tile, init?: { signal?: AbortSignal }): Promise<ImageBitmap> {
-				return createImageBitmap(await (await fetch(`http://tile.openstreetmap.org/${tile.z}/${tile.x}/${tile.y}.png`, init)).blob());
-			},
-		}); //*/
-
-		// map.areTilesLoaded();
-		// map.isSourceLoaded(wxsource.id);
-
+		map.addSource(wxsource.id, wxsource);
 		map.addLayer({ id: 'wxtiles', type: 'raster', source: 'wxsource' });
 
+		// addSkyAndTerrain(map);
 		addPoints(map);
 
 		// setTimeout(() => {
