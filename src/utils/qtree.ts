@@ -20,10 +20,10 @@ export class QTree {
 
 	constructor() {}
 
-	async load(input: RequestInfo, init?: RequestInit | undefined): Promise<void> {
+	async load(input: RequestInfo, requestInit?: RequestInit | undefined): Promise<void> {
 		let _seamask: string;
 		try {
-			_seamask = await fetchJson<string>(input, init);
+			_seamask = await fetchJson<string>(input, requestInit);
 		} catch (e) {
 			throw new Error(`Failed to load QTree: ${e.message}`);
 		}

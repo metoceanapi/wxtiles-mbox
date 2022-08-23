@@ -107,8 +107,10 @@ export class wxDataSet {
 	}
 
 	getBoundaries(): [number, number, number, number] | undefined {
-		const bn = this.meta.boundaries?.boundariesnorm;
-		return bn && [bn.west, bn.south, bn.east, bn.north];
+		const b180a = this.meta.boundaries?.boundaries180;
+		if (!(b180a?.length === 1)) return; // TODO can's make lon = [170 to 190] as mapBox uses -180 to 180, so need to check for that in loader
+		const b180 = b180a[0]; // else let mapbox manage boundaries
+		return [b180.west, b180.south, b180.east, b180.north];
 	}
 
 	getURI({ variable, time, ext = 'png' }: { variable: string; time?: string | number | Date; ext?: string }): string {
@@ -130,43 +132,46 @@ export class wxDataSet {
 
 export interface wxAPIOptions extends WxTilesLibOptions {
 	dataServerURL: string;
-	maskURL?: string;
-	qtreeURL?: string;
-	init?: RequestInit;
+	maskURL?: 'none' | 'auto' | string;
+	qtreeURL?: 'none' | 'auto' | string;
+	requestInit?: RequestInit;
 }
 
 export class wxAPI {
 	readonly dataServerURL: string;
 	readonly maskURL?: string;
-	readonly init?: RequestInit;
+	readonly requestInit?: RequestInit;
 	readonly datasetsNames: wxDataSetsNames = [];
 	readonly processed: wxProcessed = {};
 	readonly initDone: Promise<void>;
 	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData>;
 	readonly qtree: QTree = new QTree();
 
-	constructor({ dataServerURL, maskURL, qtreeURL, init, colorStyles, units, colorSchemes }: wxAPIOptions) {
+	constructor({ dataServerURL, maskURL = 'auto', qtreeURL = 'auto', requestInit, colorStyles, units, colorSchemes }: wxAPIOptions) {
 		WxTilesLibSetup({ colorStyles, units, colorSchemes });
 
 		this.dataServerURL = dataServerURL;
+		maskURL = maskURL === 'auto' ? dataServerURL + 'mask/' : maskURL;
 		this.maskURL = maskURL;
-		this.init = init;
+		qtreeURL = qtreeURL === 'auto' ? dataServerURL + 'seamask.qtree' : qtreeURL;
+		this.requestInit = requestInit;
 
 		const maskloader = cacheUriPromise(loadImageData);
-		this.loadMaskFunc = maskURL
-			? async (coord: XYZ) => {
-					try {
-						return await maskloader(uriXYZ(maskURL, coord), init);
-					} catch (e) {
-						throw new Error(`loading mask failure  message: ${e.message} maskURL: ${maskURL}`);
-					}
-			  }
-			: () => Promise.reject(new Error('maskURL not defined'));
+		this.loadMaskFunc =
+			maskURL !== 'none'
+				? async (coord: XYZ) => {
+						try {
+							return await maskloader(uriXYZ(maskURL, coord), requestInit);
+						} catch (e) {
+							throw new Error(`loading mask failure  message: ${e.message} maskURL: ${maskURL}`);
+						}
+				  }
+				: () => Promise.reject(new Error('maskURL not defined'));
 
 		this.initDone = Promise.all([
-			fetchJson<string[]>(dataServerURL + 'datasets.json', init),
-			fetchJson<wxProcessed>(dataServerURL + 'processed.json', init),
-			qtreeURL ? this.qtree.load(qtreeURL, init) : Promise.resolve(),
+			fetchJson<string[]>(dataServerURL + 'datasets.json', requestInit),
+			fetchJson<wxProcessed>(dataServerURL + 'processed.json', requestInit),
+			qtreeURL !== 'none' ? this.qtree.load(qtreeURL, requestInit) : Promise.resolve(),
 		]).then(([datasets, processed, _]): void => {
 			this.datasetsNames.push(...datasets);
 			// in 'processed.json' we need to get rid of the 'path' after datasets names
@@ -177,22 +182,27 @@ export class wxAPI {
 	}
 
 	async getDatasetInstance(datasetName: string): Promise<string> {
-		const instances = await fetchJson<wxInstances>(this.dataServerURL + datasetName + '/instances.json', this.init);
-		return instances.reverse()[0];
+		try {
+			const instances = await fetchJson<wxInstances>(this.dataServerURL + datasetName + '/instances.json', this.requestInit);
+			if (instances.length === 0) throw new Error(`No instances found for dataset ${datasetName}`);
+			return instances[instances.length - 1];
+		} catch (e) {
+			throw new Error(`getting dataset instances failure  message: ${e.message} datasetName: ${datasetName}`);
+		}
 	}
 
-	async createDatasetByName(datasetName: string): Promise<wxDataSet> {
+	async createDatasetManager(datasetName: string): Promise<wxDataSet> {
 		await this.initDone;
 		if (!this.datasetsNames.includes(datasetName)) throw new Error('Dataset not found:' + datasetName);
 		const instance = await this.getDatasetInstance(datasetName);
-		const meta = await fetchJson<Meta>(this.dataServerURL + datasetName + '/' + instance + '/meta.json', this.init);
+		const meta = await fetchJson<Meta>(this.dataServerURL + datasetName + '/' + instance + '/meta.json', this.requestInit);
 		const processed = this.processed[datasetName];
 		return new wxDataSet({ datasetName, instance, meta, processed, wxapi: this });
 	}
 
 	async createAllDatasets(): Promise<wxDataSet[]> {
 		await this.initDone;
-		return Promise.all(this.datasetsNames.map((datasetName: string) => this.createDatasetByName(datasetName)));
+		return Promise.all(this.datasetsNames.map((datasetName: string) => this.createDatasetManager(datasetName)));
 	}
 
 	static filterDatasetsByVariableName(datasets: wxDataSet[], variableName: string): wxDataSet[] {

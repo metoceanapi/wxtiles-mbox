@@ -15,7 +15,7 @@ export class Loader {
 		wxsource.wxdataset.wxapi.loadMaskFunc;
 	}
 
-	async load(coords: XYZ, init?: { signal?: AbortSignal }): Promise<DataPicture[] | null> {
+	async load(coords: XYZ, requestInit?: { signal?: AbortSignal }): Promise<DataPicture[] | null> {
 		// TODO: test if needed this check, or it is already done by the Source.bounds
 		if (!this._checkInsideBoundaries(coords)) return null; // tile is cut by boundaries
 
@@ -24,13 +24,13 @@ export class Loader {
 
 		const { upCoords, subCoords } = splitCoords(coords, this.wxsource.wxdataset.meta.maxZoom);
 		const URLs = this.wxsource.tilesURIs.map((uri) => uriXYZ(uri, upCoords));
-		const initcopy = Object.assign({}, this.wxsource.wxdataset.wxapi.init, { signal: init?.signal }); // make initCopy, copy only signal
-		const loadDataFunc = (url: string) => this.loadDataFunc(url, initcopy);
+		const requestInitCopy = Object.assign({}, this.wxsource.wxdataset.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
+		const loadDataFunc = (url: string) => this.loadDataFunc(url, requestInitCopy);
 		const data = await Promise.all(URLs.map(loadDataFunc));
 
 		const { units } = this.wxsource.wxdataset.meta.variablesMeta[this.wxsource.variables[0]];
 		const interpolator = units === 'degree' ? subDataDegree : subData;
-		const processor = (d: DataIntegral) => interpolator(blurData(d, this.wxsource.style.blurRadius), subCoords);
+		const processor = (d: DataIntegral) => interpolator(blurData(d, this.wxsource.style.blurRadius + 4), subCoords);
 		const processedData = data.map(processor); // preprocess all loaded data
 		this._vectorMagnitudesPrepare(processedData); // if vector data, prepare magnitudes
 

@@ -265,7 +265,7 @@ export async function loadImage(url: string, requestInit?: RequestInit): Promise
 
 interface IntegralPare {
 	integral: Uint32Array;
-	integralNZ: Uint32Array;
+	integralNZ: Uint32Array | null;
 }
 
 export interface DataPicture {
@@ -280,10 +280,15 @@ export interface DataIntegral extends DataPicture {
 	radius: number;
 }
 
+export function create2DContext({ width, height }: { width: number; height: number }): CanvasRenderingContext2D {
+	const context = Object.assign(document.createElement('canvas'), { width, height, imageSmoothingEnabled: false }).getContext('2d');
+	if (!context) throw new Error('Cannot get canvas context');
+	return context;
+}
+
 function imageToData(image: ImageBitmap): ImageData {
 	const { width, height } = image;
-	const context = Object.assign(document.createElement('canvas'), { width, height, imageSmoothingEnabled: false }).getContext('2d');
-	if (!context) throw new Error('can not create context. Catastrophe');
+	const context = create2DContext(image);
 	context.drawImage(image, 0, 0);
 	return context.getImageData(0, 0, width, height);
 }
@@ -389,7 +394,7 @@ function integralImage(raw: Uint16Array): IntegralPare {
 	const integral = new Uint32Array(258 * 258);
 	// The main Idea of integralNZ is to calculate the amount of non zero values,
 	// so in the Blur algorithm it can be used for 'averaging' instead of actual area of BoxBlur frame
-	const integralNZ = new Uint32Array(258 * 258);
+	let integralNZ: Uint32Array | null = new Uint32Array(258 * 258);
 
 	integral[0] = raw[0]; // upper left value
 	integralNZ[0] = raw[0] === 0 ? 0 : 1; // upper left value
@@ -409,6 +414,9 @@ function integralImage(raw: Uint16Array): IntegralPare {
 			integralNZ[i] = (raw[i] === 0 ? 0 : 1) + integralNZ[i - 258] + integralNZ[i - 1] - integralNZ[i - 258 - 1];
 		}
 	}
+
+	// 66564 is the maximum value of the integral image
+	// integralNZ[66563] === 66564 && (integralNZ = null); // if all values are not 0, then no need to use it
 
 	return { integral, integralNZ };
 }
@@ -430,11 +438,16 @@ export function blurData(im: DataIntegral, radius: number): DataIntegral {
 			const i1 = s * (y - ry - 1) + x;
 			const i2 = s * (y + ry) + x;
 
-			const ANZ = integralNZ[i1 - rx - 1];
-			const BNZ = integralNZ[i1 + rx];
-			const CNZ = integralNZ[i2 - rx - 1];
-			const DNZ = integralNZ[i2 + rx];
-			const sumNZ = ANZ + DNZ - BNZ - CNZ; // amount of non Zero values
+			let sumNZ: number;
+			if (integralNZ) {
+				const ANZ = integralNZ[i1 - rx - 1];
+				const BNZ = integralNZ[i1 + rx];
+				const CNZ = integralNZ[i2 - rx - 1];
+				const DNZ = integralNZ[i2 + rx];
+				sumNZ = ANZ + DNZ - BNZ - CNZ; // amount of non Zero values
+			} else {
+				sumNZ = (2 * rx + 1) * (2 * ry + 1); // all values are non Zero
+			}
 
 			const A = integral[i1 - rx - 1];
 			const B = integral[i1 + rx];

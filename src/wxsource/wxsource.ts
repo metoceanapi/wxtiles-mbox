@@ -18,8 +18,8 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 
 	map: mapboxgl.Map;
 
-	time!: string; // set in constructor by setTime()
-	tilesURIs!: string[]; // set in constructor by setTime()
+	time!: string; // is set in constructor by setTime()
+	tilesURIs!: string[]; // is set in constructor by setTime()
 
 	tileSize: number;
 	maxzoom?: number;
@@ -29,9 +29,9 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 
 	tilesdata: Map<string, ImageData> = new Map();
 
-	wxstyleName!: string; // set in constructor by setStyleName()
-	style: ColorStyleStrict = WxGetColorStyles()['base']; // set in constructor by setStyleName()
-	CLUT!: RawCLUT; // set in constructor by setStyleName()
+	wxstyleName!: string; // is set in constructor by setStyleName()
+	style: ColorStyleStrict = WxGetColorStyles()['base'];
+	CLUT!: RawCLUT; // is set in constructor by setStyleName()
 
 	painter: Painter;
 	loader: Loader;
@@ -64,7 +64,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 		attribution?: string;
 	}) {
 		// check variables
-		if (!variables || 1 < variables.length || variables.length > 2) {
+		if (!variables?.length || variables.length > 2) {
 			throw new Error(`wxTileSource ${wxdataset.name}: only 1 or 2 variables are supported but ${variables.length} were given`);
 		}
 
@@ -83,7 +83,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 		this.attribution = attribution;
 		this.maxzoom = maxzoom; // || wxdataset.getMaxZoom();
 		this.scheme = scheme;
-		this.bounds = bounds; // || wxdataset.getBoundaries(); // TODO ???
+		this.bounds = bounds || wxdataset.getBoundaries(); // let mapbox manage boundaries, but not all cases are covered.
 		this.setTime(time);
 		this.setStyleByName(wxstyleName);
 

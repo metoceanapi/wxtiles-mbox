@@ -8,15 +8,15 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzN
 
 async function start() {
 	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	const wxapi = new wxAPI({ dataServerURL, requestInit: {} });
+
 	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	const variables = ['air.temperature.at-2m'];
-	// const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-100m'];
+	// const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-10m'];
 
 	// const datasetName = 'ww3-ecmwf.global';
 	// const variables = ['wave.direction.mean'];
-
-	const wxapi = new wxAPI({ dataServerURL, qtreeURL: dataServerURL + 'seamask.qtree', maskURL: dataServerURL, init: {} });
-	const wxdataset = await wxapi.createDatasetByName(datasetName);
+	const wxdataset = await wxapi.createDatasetManager(datasetName);
 
 	const map = new mapboxgl.Map({
 		container: 'map',
@@ -41,7 +41,7 @@ async function start() {
 			variables,
 		});
 
-		map.addSource(wxsource.id, wxsource);
+		wxsource.map.addSource(wxsource.id, wxsource);
 		map.addLayer({ id: 'wxtiles', type: 'raster', source: 'wxsource' });
 
 		// addSkyAndTerrain(map);

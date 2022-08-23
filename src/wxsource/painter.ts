@@ -1,5 +1,5 @@
 import { RawCLUT } from '../utils/RawCLUT';
-import { ColorStyleStrict, DataIntegral, DataPicture, HEXtoRGBA, RGBtoHEX, XYZ } from '../utils/wxtools';
+import { ColorStyleStrict, create2DContext, DataIntegral, DataPicture, HEXtoRGBA, RGBtoHEX, XYZ } from '../utils/wxtools';
 import { WxTileSource } from './wxsource';
 
 interface IsoInfo {
@@ -19,27 +19,19 @@ export class Painter {
 	}
 
 	paint(data: DataPicture[], tile: XYZ): ImageData {
-		const imageData = this._fill(data[0], this.wxsource);
-		const isoInfo = this._fillIsolines(data[0], imageData, this.wxsource);
+		const { wxsource } = this;
+		const imageData = this._fill(data[0], wxsource);
+		const isoInfo = this._fillIsolines(imageData, data[0], wxsource);
 
-		const ctx = this.createCtx();
-		ctx.putImageData(imageData, 0, 0);
-		this._fillIsolineText(isoInfo, ctx, this.wxsource);
-		this._drawVectorsStatic(data, ctx, this.wxsource);
-		this._drawDegreesStatic(data, ctx, this.wxsource);
+		const context = create2DContext({ width: 256, height: 256 });
+		context.putImageData(imageData, 0, 0);
+		this._fillIsolineText(isoInfo, context, wxsource);
+		this._drawVectorsStatic(data, context, wxsource);
+		this._drawDegreesStatic(data, context, wxsource);
 
 		// this._drawStreamLinesStatic(); // TODO!
 
-		return ctx.getImageData(0, 0, 256, 256); // copy data back to imageData;
-	}
-
-	private createCtx(): CanvasRenderingContext2D {
-		const canvas = document.createElement('canvas');
-		canvas.width = 256;
-		canvas.height = 256;
-		const ctx = canvas.getContext('2d');
-		if (!ctx) throw new Error('Cannot get canvas context');
-		return ctx;
+		return context.getImageData(0, 0, 256, 256); // copy data back to imageData;
 	}
 
 	protected _fill(data: DataPicture, { CLUT, style, tileSize }: WxTileSource): ImageData {
@@ -61,7 +53,7 @@ export class Painter {
 		return imageData;
 	}
 
-	protected _fillIsolines(data: DataPicture, imageData: ImageData, { CLUT, style }: WxTileSource): IsoInfo[] {
+	protected _fillIsolines(imageData: ImageData, data: DataPicture, { CLUT, style }: WxTileSource): IsoInfo[] {
 		const { raw } = data; // scalar data
 		const imageFillBuffer = new Uint32Array(imageData.data.buffer); // a usefull representation of image's bytes (same memory)
 		const { levelIndex, colorsI } = CLUT;
