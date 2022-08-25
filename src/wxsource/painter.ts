@@ -12,13 +12,13 @@ interface IsoInfo {
 }
 
 export class Painter {
-	wxsource: WxTileSource;
+	protected wxsource: WxTileSource;
 
 	constructor(wxsource: WxTileSource) {
 		this.wxsource = wxsource;
 	}
 
-	paint(data: DataPicture[], tile: XYZ): ImageData {
+	paint(data: DataPicture[]): ImageData {
 		const { wxsource } = this;
 		const imageData = this._fill(data[0], wxsource);
 		const isoInfo = this._fillIsolines(imageData, data[0], wxsource);

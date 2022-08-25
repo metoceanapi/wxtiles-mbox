@@ -1,25 +1,27 @@
 import mapboxgl from 'mapbox-gl';
 
-import { wxDataSet } from '../wxAPI/wxAPI';
+import { wxDataSetManager } from '../wxAPI/wxAPI';
 import { ColorStyleStrict, ColorStyleWeak, HashXYZ, loadImageData, refineColor, uriXYZ, WxGetColorStyles, XYZ } from '../utils/wxtools';
 
 import { RawCLUT } from '../utils/RawCLUT';
 import { Painter } from './painter';
 import { Loader } from './loader';
 
-export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
+type wxRaster = ImageData;
+
+export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 	type: 'custom' = 'custom';
 	dataType: 'raster' = 'raster';
 
 	id: string;
 	variables: string[];
-	wxdataset: wxDataSet;
+	wxdataset: wxDataSetManager;
 	ext: string;
 
 	map: mapboxgl.Map;
 
-	time!: string; // is set in constructor by setTime()
-	tilesURIs!: string[]; // is set in constructor by setTime()
+	time!: string; // is set in constructor by _setURLs()
+	tilesURIs!: string[]; // is set in constructor by _setURLs()
 
 	tileSize: number;
 	maxzoom?: number;
@@ -27,7 +29,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	bounds?: [number, number, number, number];
 	attribution?: string;
 
-	tilesdata: Map<string, ImageData> = new Map();
+	// tilesdata: Map<string, ImageData> = new Map();
 
 	wxstyleName!: string; // is set in constructor by setStyleName()
 	style: ColorStyleStrict = WxGetColorStyles()['base'];
@@ -35,6 +37,9 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 
 	painter: Painter;
 	loader: Loader;
+
+	tilesReload: Map<string, ImageData> = new Map();
+	setTimeInProgress: boolean = false;
 
 	constructor({
 		id,
@@ -53,7 +58,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 		id: string;
 		time?: string | number | Date;
 		variables: string[];
-		wxdataset: wxDataSet;
+		wxdataset: wxDataSetManager;
 		ext?: string;
 		map: mapboxgl.Map;
 		wxstyleName?: string;
@@ -65,11 +70,11 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	}) {
 		// check variables
 		if (!variables?.length || variables.length > 2) {
-			throw new Error(`wxTileSource ${wxdataset.name}: only 1 or 2 variables are supported but ${variables.length} were given`);
+			throw new Error(`wxTileSource ${wxdataset.datasetName}: only 1 or 2 variables are supported but ${variables.length} were given`);
 		}
 
 		variables.forEach((v) => {
-			if (!wxdataset.checkVariableValid(v)) throw new Error(`wxTileSource ${wxdataset.name}: variable ${v} is not valid`);
+			if (!wxdataset.checkVariableValid(v)) throw new Error(`wxTileSource ${wxdataset.datasetName}: variable ${v} is not valid`);
 		});
 
 		this.id = id;
@@ -84,21 +89,20 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 		this.maxzoom = maxzoom; // || wxdataset.getMaxZoom();
 		this.scheme = scheme;
 		this.bounds = bounds || wxdataset.getBoundaries(); // let mapbox manage boundaries, but not all cases are covered.
-		this.setTime(time);
+		this._setURLs(time);
 		this.setStyleByName(wxstyleName);
 
 		this.painter = new Painter(this);
 		this.loader = new Loader(this);
 	}
 
-	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<ImageData> {
-		// return loadImageData(uriXYZ(this.tilesURIs[0], tile), init);
+	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<wxRaster> {
 		const data = await this.loader.load(tile, init);
-		if (!data) {
-			return new ImageData(1, 1);
+		if (!data.data) {
+			return undefined as any; //new ImageData(1, 1);
 		}
 
-		const im = this.painter.paint(data, tile);
+		const im = this.painter.paint(data.data);
 		// this.tilesdata.set(tile.z + '-' + tile.x + '-' + tile.y, im);
 		return im;
 	}
@@ -108,76 +112,84 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 		this.updateCurrentStyle(WxGetColorStyles()[wxstyleName]);
 	}
 
-	updateCurrentStyle(style: ColorStyleWeak): void {
+	updateCurrentStyle(style: ColorStyleWeak): Promise<void> {
 		this.style = Object.assign(this.getCurrentStyleCopy(), style); // deep copy, so could be (and is) changed
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
 		const { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
 		this.CLUT = new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
-		this.repaint();
+		return this._reloadVisibleTiles();
 	}
 
 	getCurrentStyleCopy(): ColorStyleStrict {
 		return Object.assign({}, this.style);
 	}
 
-	setTime(time_?: string | number | Date): void {
+	protected _setURLs(time_?: string | number | Date): void {
 		this.time = this.wxdataset.getValidTime(time_);
 		const { time, ext } = this;
-		this.tilesURIs = this.variables.map((variable) => this.wxdataset.getURI({ variable, time, ext })); //{ variable: this.variable, time: this.time });
-		this.repaint();
+		this.tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext }));
 	}
 
-	reload(): void {
+	private _getVisibleTiles(): XYZ[] {
+		// HACK: The most vulnerable part. The mapboxgl API is not very well documented.
 		const style = (this.map as any).style;
 		const cache = style?._otherSourceCaches?.[this.id];
-		cache.clearTiles?.();
-		cache.reload?.();
+		const coords = cache?.getVisibleCoordinates?.();
+		return coords?.map((c): XYZ => c.canonical) || [];
+	}
+
+	/**
+	 *
+	 * Reload and Repaint visible tiles. Usefull for changing style and timestep.
+	 **/
+	private async _reloadVisibleTiles(): Promise<void> {
+		const coords = this._getVisibleTiles();
+		const results = await Promise.allSettled(coords.map((c) => this.loadTile(c)));
+		this.tilesReload = new Map();
+		results.forEach((result, i) => this.tilesReload.set(HashXYZ(coords[i]), (result as any).value));
+
+		// Hmmm... let's imagine that we have a lot of tiles to render (impossible), and the browser is slow to update the map.
+		// prepareTile() should clean up the tilesReload map, so that the next repaint will not use the old tiles.
+		// but! In case map is dragged then not all tile will be deleted by the next repaint, so we need to kclean up everithing...
+		const copy = this.tilesReload;
+		setTimeout(() => copy.clear(), 10); // let's wait a bit to make sure the map is painted and clean up the rest of tilesReload
+
+		this.map.triggerRepaint();
+	}
+
+	async setTime(time_?: string | number | Date): Promise<string> {
+		this._setURLs(time_);
+		await this._reloadVisibleTiles();
+		return this.time;
 	}
 
 	getTime(): string {
 		return this.time;
 	}
 
-	repaint(): void {}
+	prepareTile(tile: XYZ): wxRaster | undefined {
+		if (!this.tilesReload?.size) return;
+		const hash = HashXYZ(tile);
+		const im = this.tilesReload.get(hash);
+		this.tilesReload.delete(hash);
+		return im;
+	}
 
-	/**
-	 * Optional method called when the source has been added to the Map with {@link Map#addSource}.
-	 * This gives the source a chance to initialize resources and register event listeners.
-	 *
-	 * @function
-	 * @memberof CustomSourceInterface
-	 * @instance
-	 * @name onAdd
-	 * @param {Map} map The Map this custom source was just added to.
-	 */
+	// reload(): void {
+	// 	const style = (this.map as any).style;
+	// 	const cache = style?._otherSourceCaches?.[this.id];
+	// 	cache.clearTiles?.();
+	// 	cache.reload?.();
+	// }
+
 	// onAdd(map: mapboxgl.Map): void {
 	// 	const t = 0;
 	// }
 
-	/**
-	 * Optional method called when the source has been removed from the Map with {@link Map#removeSource}.
-	 * This gives the source a chance to clean up resources and event listeners.
-	 *
-	 * @function
-	 * @memberof CustomSourceInterface
-	 * @instance
-	 * @name onRemove
-	 * @param {Map} map The Map this custom source was added to.
-	 */
 	// onRemove(map: mapboxgl.Map): void {
 	// 	const t = 0;
 	// }
 
-	/**
-	 * Optional method called after the tile is unloaded from the map viewport. This
-	 * gives the source a chance to clean up resources and event listeners.
-	 *
-	 * @function
-	 * @memberof CustomSourceInterface
-	 * @instance
-	 * @name unloadTile
-	 * @param {{ z: number, x: number, y: number }} tile Tile name to unload in the XYZ scheme format.
-	 */
 	// unloadTile(tile: XYZ): void {
 	// 	// const sourceCache = this.map.style._otherSourceCaches[this.id];
 	// 	// const coords = sourceCache.getVisibleCoordinates();
@@ -186,31 +198,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<ImageData> {
 	// 	this.tilesdata.delete(HashXYZ(tile));
 	// }
 
-	/**
-	 * Optional method called during a render frame to check if there is a tile to render.
-	 *
-	 * @function
-	 * @memberof CustomSourceInterface
-	 * @instance
-	 * @name hasTile
-	 * @param {{ z: number, x: number, y: number }} tile Tile name to prepare in the XYZ scheme format.
-	 * @returns {boolean} True if tile exists, otherwise false.
-	 */
 	// hasTile(tile: XYZ): boolean {
 	// 	return this.tilesdata.has(HashXYZ(tile));
-	// }
-
-	/**
-	 * Optional method called during a render frame to allow a source to prepare and modify a tile texture if needed.
-	 *
-	 * @function
-	 * @memberof CustomSourceInterface
-	 * @instance
-	 * @name prepareTile
-	 * @param {{ z: number, x: number, y: number }} tile Tile name to prepare in the XYZ scheme format.
-	 * @returns {TextureImage} The tile image data as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`.
-	 */
-	// prepareTile(tile: XYZ): ImageData | undefined {
-	// 	return this.tilesdata.get(HashXYZ(tile));
 	// }
 }
