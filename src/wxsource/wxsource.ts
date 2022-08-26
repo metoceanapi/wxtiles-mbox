@@ -97,6 +97,10 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 	}
 
 	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<wxRaster> {
+		if (this.tilesReload?.size) {
+			return this.tilesReload.get(HashXYZ(tile))!;
+		}
+
 		const data = await this.loader.load(tile, init);
 		if (!data.data) {
 			return undefined as any; //new ImageData(1, 1);
@@ -112,12 +116,12 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		this.updateCurrentStyle(WxGetColorStyles()[wxstyleName]);
 	}
 
-	updateCurrentStyle(style: ColorStyleWeak): Promise<void> {
+	async updateCurrentStyle(style: ColorStyleWeak): Promise<void> {
 		this.style = Object.assign(this.getCurrentStyleCopy(), style); // deep copy, so could be (and is) changed
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
 		const { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
 		this.CLUT = new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
-		return this._reloadVisibleTiles();
+		await this.reloadVisible();
 	}
 
 	getCurrentStyleCopy(): ColorStyleStrict {
@@ -130,36 +134,16 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		this.tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext }));
 	}
 
-	private _getVisibleTiles(): XYZ[] {
-		// HACK: The most vulnerable part. The mapboxgl API is not very well documented.
-		const style = (this.map as any).style;
-		const cache = style?._otherSourceCaches?.[this.id];
-		const coords = cache?.getVisibleCoordinates?.();
-		return coords?.map((c): XYZ => c.canonical) || [];
-	}
-
-	/**
-	 *
-	 * Reload and Repaint visible tiles. Usefull for changing style and timestep.
-	 **/
-	private async _reloadVisibleTiles(): Promise<void> {
-		const coords = this._getVisibleTiles();
-		const results = await Promise.allSettled(coords.map((c) => this.loadTile(c)));
+	protected async reloadVisible(): Promise<void> {
 		this.tilesReload = new Map();
-		results.forEach((result, i) => this.tilesReload.set(HashXYZ(coords[i]), (result as any).value));
-
-		// Hmmm... let's imagine that we have a lot of tiles to render (impossible), and the browser is slow to update the map.
-		// prepareTile() should clean up the tilesReload map, so that the next repaint will not use the old tiles.
-		// but! In case map is dragged then not all tile will be deleted by the next repaint, so we need to kclean up everithing...
-		const copy = this.tilesReload;
-		setTimeout(() => copy.clear(), 10); // let's wait a bit to make sure the map is painted and clean up the rest of tilesReload
-
-		this.map.triggerRepaint();
+		await Promise.allSettled(this.coveringTiles().map(async (c) => this.tilesReload.set(HashXYZ(c), await this.loadTile(c))));
+		this.clearTiles();
+		this.update();
 	}
 
 	async setTime(time_?: string | number | Date): Promise<string> {
 		this._setURLs(time_);
-		await this._reloadVisibleTiles();
+		await this.reloadVisible();
 		return this.time;
 	}
 
@@ -167,28 +151,31 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		return this.time;
 	}
 
-	prepareTile(tile: XYZ): wxRaster | undefined {
-		if (!this.tilesReload?.size) return;
-		const hash = HashXYZ(tile);
-		const im = this.tilesReload.get(hash);
-		this.tilesReload.delete(hash);
-		return im;
+	protected coveringTiles(): XYZ[] {
+		// COMING SOON in a future release
+		// but for now, we use the same algorithm as in mapbox-gl-js
+		const source = this.map.getSource(this.id);
+		return (source as any)?._coveringTiles?.() || [];
 	}
 
-	// reload(): void {
-	// 	const style = (this.map as any).style;
-	// 	const cache = style?._otherSourceCaches?.[this.id];
-	// 	cache.clearTiles?.();
-	// 	cache.reload?.();
-	// }
+	protected clearTiles() {
+		// COMING SOON in a future release
+		// but for now, we use the same algorithm as in mapbox-gl-js
+		(this.map as any).style?._clearSource?.(this.id);
+	}
 
-	// onAdd(map: mapboxgl.Map): void {
-	// 	const t = 0;
-	// }
+	protected update() {
+		// COMING SOON in a future release
+		// but for now, we use the same algorithm as in mapbox-gl-js
+		(this.map as any).style?._updateSource?.(this.id);
+		return (this.map.getSource(this.id) as any)?._update?.();
+	}
 
-	// onRemove(map: mapboxgl.Map): void {
-	// 	const t = 0;
-	// }
+	// prepareTile(tile: XYZ): wxRaster | undefined {}
+
+	// onAdd(map: mapboxgl.Map): void {}
+
+	// onRemove(map: mapboxgl.Map): void {}
 
 	// unloadTile(tile: XYZ): void {
 	// 	// const sourceCache = this.map.style._otherSourceCaches[this.id];

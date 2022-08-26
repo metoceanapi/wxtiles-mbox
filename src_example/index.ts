@@ -54,16 +54,15 @@ async function start() {
 	// addRaster(map, wxmanager.createURI({ variable: variables[0] }), wxmanager.getMaxZoom());
 	addPoints(map);
 
-	// let t = 0;
-	// const tlength = wxdataset.getTimes().length;
-	// const nextTimeStep = async () => {
-	// 	t = (t + 1) % tlength;
-	// 	await wxsource.setTime(t); // await always !!
-	// 	setTimeout(nextTimeStep, 0);
-	// };
-	// setTimeout(nextTimeStep, 5000);
+	const tlength = wxmanager.getTimes().length;
+	let t = 0;
+	const nextTimeStep = async () => {
+		await wxsource.setTime(t++ % tlength); // await always !!
+		setTimeout(nextTimeStep, 100);
+	};
+	setTimeout(nextTimeStep, 2000);
 
-	setTimeout(() => wxsource.setTime(10), 3000);
+	// setTimeout(() => wxsource.setTime(10), 3000);
 }
 
 start();

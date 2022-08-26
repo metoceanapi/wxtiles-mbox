@@ -281,7 +281,9 @@ export interface DataIntegral extends DataPicture {
 }
 
 export function create2DContext({ width, height }: { width: number; height: number }): CanvasRenderingContext2D {
-	const context = Object.assign(document.createElement('canvas'), { width, height, imageSmoothingEnabled: false }).getContext('2d');
+	const context = Object.assign(document.createElement('canvas'), { width, height, imageSmoothingEnabled: false }).getContext('2d', {
+		willReadFrequently: true,
+	});
 	if (!context) throw new Error('Cannot get canvas context');
 	return context;
 }
