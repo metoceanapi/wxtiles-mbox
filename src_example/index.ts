@@ -3,9 +3,107 @@ import mapboxgl, { baseApiUrl } from 'mapbox-gl';
 
 import { wxAPI } from '../src/wxAPI/wxAPI';
 import { WxTileSource } from '../src/wxsource/wxsource';
+import { createLegend, Legend } from '../src/utils/RawCLUT';
+import { ColorStyleStrict } from '../src/utils/wxtools';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
+class LegendControl {
+	_map?: mapboxgl.Map;
+	_canvas: HTMLCanvasElement;
+	constructor(map: mapboxgl.Map) {
+		this._map = map;
+		const canvas = document.createElement('canvas');
+		canvas.width = 600;
+		canvas.height = 40;
+		canvas.style.borderStyle = 'solid';
+		canvas.style.borderColor = '#000';
+		canvas.style.backgroundColor = '#fff';
+		this._canvas = canvas;
+		this._canvas.className = 'mapboxgl-ctrl';
+		this._canvas.textContent = 'Hello, world';
+	}
 
+	onAdd(map) {
+		return this._canvas;
+	}
+
+	onRemove() {
+		this._canvas.parentNode?.removeChild(this._canvas);
+		this._map = undefined;
+	}
+
+	drawLegend(style: ColorStyleStrict) {
+		const { _canvas } = this;
+		const { width, height } = _canvas;
+		const halfHeight = (16 + height) >> 2;
+		const legend = createLegend(width - 50, style);
+
+		// draw legend
+		const ctx = _canvas.getContext('2d')!;
+		const imData = ctx.createImageData(width, height);
+		const im = new Uint32Array(imData.data.buffer);
+		im.fill(-1);
+
+		const startX = 2;
+		const startY = 2;
+		const startXY = startX + width * startY;
+
+		const trSize = halfHeight >> 1;
+		// left triangle
+		if (legend.showBelowMin) {
+			const c = legend.colors[0];
+			if (c) {
+				for (let x = 0; x < trSize; ++x) {
+					for (let y = trSize; y < trSize + x; ++y) {
+						im[startXY + x + y * width] = c;
+						im[startXY + x + (trSize * 2 - y) * width] = c;
+					}
+				}
+			}
+		}
+
+		for (let x = 0; x < legend.size; ++x) {
+			for (let y = 0; y < halfHeight; ++y) {
+				if (legend.colors[0]) {
+					im[startX + x + trSize + (y + startY + 1) * width] = legend.colors[x];
+				}
+			}
+		}
+
+		// right triangle
+		if (legend.showAboveMax) {
+			const c = legend.colors[legend.colors.length - 1];
+			if (c) {
+				for (let x = 0; x <= trSize; ++x) {
+					for (let y = trSize; y < trSize + x; ++y) {
+						im[startXY + trSize * 2 + legend.size - x + y * width] = c;
+						im[startXY + trSize * 2 + legend.size - x + (trSize * 2 - y) * width] = c;
+					}
+				}
+			}
+		}
+
+		ctx.putImageData(imData, 0, 0);
+
+		// draw ticks
+		ctx.font = '8px sans-serif';
+		ctx.beginPath();
+		for (const tick of legend.ticks) {
+			ctx.strokeStyle = '#000';
+			ctx.moveTo(tick.pos + trSize + startX + 1, startY + 3);
+			ctx.lineTo(tick.pos + trSize + startX + 1, halfHeight);
+			ctx.fillText(tick.dataString, tick.pos + trSize + startX + 1, halfHeight + 11);
+		}
+
+		ctx.font = '12px sans-serif';
+		const txt = `(${legend.units})`;
+		ctx.fillText(txt, 13, height - 5);
+		ctx.stroke();
+
+		ctx.strokeStyle = '#888';
+		ctx.strokeRect(1, 1, width - 3, height - 2); //for white background
+	}
+}
 async function start() {
 	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	const wxapi = new wxAPI({ dataServerURL, requestInit: {} });
@@ -28,7 +126,10 @@ async function start() {
 		// projection: { name: 'globe' },
 	});
 
+	const legendControl = new LegendControl(map);
+
 	map.addControl(new mapboxgl.NavigationControl());
+	map.addControl(legendControl, 'top-left');
 	map.showTileBoundaries = true;
 
 	await map.once('load');
@@ -41,6 +142,8 @@ async function start() {
 		variables,
 		time: 0,
 	});
+
+	legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
 
 	map.addSource(wxsource.id, wxsource);
 	map.addLayer({
