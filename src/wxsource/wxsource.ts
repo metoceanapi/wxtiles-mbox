@@ -90,7 +90,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		this.scheme = scheme;
 		this.bounds = bounds || wxdataset.getBoundaries(); // let mapbox manage boundaries, but not all cases are covered.
 		this._setURLs(time);
-		this.setStyleByName(wxstyleName);
+		this.setStyleByName(wxstyleName, false);
 
 		this.painter = new Painter(this);
 		this.loader = new Loader(this);
@@ -98,7 +98,9 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 
 	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<wxRaster> {
 		if (this.tilesReload?.size) {
-			return this.tilesReload.get(HashXYZ(tile))!;
+			const tileData = this.tilesReload.get(HashXYZ(tile));
+			// this.tilesReload.delete(HashXYZ(tile));
+			return tileData!;
 		}
 
 		const data = await this.loader.load(tile, init);
@@ -111,20 +113,20 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		return im;
 	}
 
-	setStyleByName(wxstyleName: string): void {
+	setStyleByName(wxstyleName: string, reload = true): void {
 		this.wxstyleName = wxstyleName;
-		this.updateCurrentStyle(WxGetColorStyles()[wxstyleName]);
+		this.updateCurrentStyleObject(WxGetColorStyles()[wxstyleName], reload);
 	}
 
-	async updateCurrentStyle(style: ColorStyleWeak): Promise<void> {
-		this.style = Object.assign(this.getCurrentStyleCopy(), style); // deep copy, so could be (and is) changed
+	async updateCurrentStyleObject(style: ColorStyleWeak, reload = true): Promise<void> {
+		this.style = Object.assign(this.getCurrentStyleObjectCopy(), style); // deep copy, so could be (and is) changed
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
 		const { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
 		this.CLUT = new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
-		await this.reloadVisible();
+		reload && (await this.reloadVisible());
 	}
 
-	getCurrentStyleCopy(): ColorStyleStrict {
+	getCurrentStyleObjectCopy(): ColorStyleStrict {
 		return Object.assign({}, this.style);
 	}
 
@@ -151,24 +153,25 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		return this.time;
 	}
 
-	protected coveringTiles(): XYZ[] {
-		// COMING SOON in a future release
-		// but for now, we use the same algorithm as in mapbox-gl-js
-		const source = this.map.getSource(this.id);
-		return (source as any)?._coveringTiles?.() || [];
-	}
-
 	protected clearTiles() {
 		// COMING SOON in a future release
 		// but for now, we use the same algorithm as in mapbox-gl-js
 		(this.map as any).style?._clearSource?.(this.id);
+		(this.map as any).style?._reloadSource(this.id);
+	}
+
+	protected coveringTiles(): XYZ[] {
+		// COMING SOON in a future release
+		// but for now, we use the same algorithm as in mapbox-gl-js
+		// return (this.map.getSource(this.id) as any)?._coveringTiles?.() || [];
+		return [];
 	}
 
 	protected update() {
 		// COMING SOON in a future release
 		// but for now, we use the same algorithm as in mapbox-gl-js
-		(this.map as any).style?._updateSource?.(this.id);
-		return (this.map.getSource(this.id) as any)?._update?.();
+		// (this.map as any).style?._updateSource?.(this.id);
+		// return (this.map.getSource(this.id) as any)?._update?.();
 	}
 
 	// prepareTile(tile: XYZ): wxRaster | undefined {}

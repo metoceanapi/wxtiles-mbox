@@ -49,9 +49,9 @@ export interface Meta {
 
 /**
  * @class wxDataSetManager
- * @description Class for managing wxDataSets.
- * @param {string} dataSetsName - Name of the wxDataSet.
- * @param {string} instance - current instance (instance or data time creataion in NC-file) of the wxDataSet.
+ * @description Class for managing WX datasets.
+ * @param {string} dataSetsName - Name of the dataset.
+ * @param {string} instance - current instance (instance or data time creataion in NC-file) of the dataset.
  * @param {Meta} meta - metadata.
  * @param {[string, string]} processed - timestemp and filename of the dataset.
  * @param {wxAPI} wxapi - Wx API control object.
@@ -85,7 +85,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get closets valid time to the given time.
-	 * @memberof wxDataSet
+	 * @memberof wxDataSetManager
 	 * @argument {number} time - either a number of a step in dataset's time array or seconds since epoch
 	 * @argument {string} time - time convertable to a Date object
 	 * @argument {Date} time - Date object
@@ -105,7 +105,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's times.
-	 * @memberof wxDataSet
+	 * @memberof wxDataSetManager
 	 * @returns {string[]} - copy of dataset's times
 	 * */
 	getTimes(): string[] {
@@ -114,7 +114,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's variables.
-	 * @memberof wxDataSet
+	 * @memberof wxDataSetManager
 	 * @returns {string[]} - copy of dataset's variables
 	 * */
 	getVariables(): string[] {
@@ -123,7 +123,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's variable meta.
-	 * @memberof wxDataSet
+	 * @memberof wxDataSetManager
 	 * @argument {string} variable - variable name
 	 * @returns {units, min, max} - some of dataset's variable meta
 	 * unit - unit of the variable
@@ -136,7 +136,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's native maximum zoom level.
-	 * @memberof wxDataSet
+	 * @memberof wxDataSetManager
 	 * @returns {number} - maximum zoom level of the dataset
 	 * */
 	getMaxZoom(): number {
@@ -145,7 +145,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's boundaries.
-	 * @memberof wxDataSet
+	 * @memberof wxDataSetManager
 	 * @returns {[west, north, east, south]} - dataset's boundaries
 	 * */
 	getBoundaries(): [number, number, number, number] | undefined {
@@ -157,7 +157,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Createts dataset's current URI ready for fetching tiles.
-	 * @memberof wxDataSet
+	 * @memberof wxDataSetManager
 	 * @argument {string} variable - variable of the dataset
 	 * @argument {string | number | Date} time - time of the dataset
 	 * @argument {string} ext - zoom level of the dataset
@@ -171,7 +171,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Check if given variable is available in the dataset.
-	 * @memberof wxDataSet
+	 * @memberof wxDataSetManager
 	 * @argument {string} variable - variable name
 	 * @returns {boolean} - true if variable is available in the dataset
 	 * */
@@ -181,7 +181,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Check if dataset's instance updated (fresh data is arrived) since datasset object was created
-	 * @memberof wxDataSet
+	 * @memberof wxDataSetManager
 	 * @returns {boolean} - true if dataset's instance updated since datasset object was created
 	 * */
 	async checkDatasetOutdated(): Promise<boolean> {
