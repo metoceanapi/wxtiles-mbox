@@ -50,7 +50,7 @@
 					ctx.font = '15px sans-serif';
 					ctx.fillStyle = 'red';
 					ctx.fillText(z + '/' + x + '/' + y, 50, 170);
-
+					await Promise.all([new Promise((resolve) => setTimeout(resolve, 2500))]);
 					return canvas;
 				},
 			};
