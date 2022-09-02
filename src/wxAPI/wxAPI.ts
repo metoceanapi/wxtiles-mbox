@@ -53,33 +53,18 @@ export interface Meta {
  * @param {string} dataSetsName - Name of the dataset.
  * @param {string} instance - current instance (instance or data time creataion in NC-file) of the dataset.
  * @param {Meta} meta - metadata.
- * @param {[string, string]} processed - timestemp and filename of the dataset.
  * @param {wxAPI} wxapi - Wx API control object.
  * */
 export class wxDataSetManager {
 	datasetName: string;
 	instance: string;
 	meta: Meta;
-	processed: [string, string];
 	wxapi: wxAPI;
 
-	constructor({
-		datasetName,
-		instance,
-		meta,
-		processed,
-		wxapi,
-	}: {
-		datasetName: string;
-		instance: string;
-		meta: Meta;
-		processed: [string, string];
-		wxapi: wxAPI;
-	}) {
+	constructor({ datasetName, instance, meta, wxapi }: { datasetName: string; instance: string; meta: Meta; wxapi: wxAPI }) {
 		this.datasetName = datasetName;
 		this.instance = instance;
 		this.meta = meta;
-		this.processed = processed;
 		this.wxapi = wxapi;
 	}
 
@@ -214,7 +199,6 @@ export class wxAPI {
 	readonly maskURL?: string;
 	readonly requestInit?: RequestInit;
 	readonly datasetsNames: wxDataSetsNames = [];
-	readonly processed: wxProcessed = {};
 	readonly initDone: Promise<void>;
 	readonly qtree: QTree = new QTree();
 	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData>;
@@ -242,14 +226,9 @@ export class wxAPI {
 
 		this.initDone = Promise.all([
 			fetchJson<string[]>(dataServerURL + 'datasets.json', requestInit),
-			fetchJson<wxProcessed>(dataServerURL + 'processed.json', requestInit),
 			qtreeURL !== 'none' ? this.qtree.load(qtreeURL, requestInit) : Promise.resolve(),
-		]).then(([datasets, processed, _]): void => {
+		]).then(([datasets, _]): void => {
 			this.datasetsNames.push(...datasets);
-			// in 'processed.json' we need to get rid of the 'path' after datasets names
-			Object.keys(processed).forEach((datasetName): void => {
-				this.processed[datasetName.split(':')[0]] = processed[datasetName];
-			});
 		});
 	}
 
@@ -268,8 +247,7 @@ export class wxAPI {
 		if (!this.datasetsNames.includes(datasetName)) throw new Error('Dataset not found:' + datasetName);
 		const instance = await this.getDatasetInstance(datasetName);
 		const meta = await fetchJson<Meta>(this.dataServerURL + datasetName + '/' + instance + '/meta.json', this.requestInit);
-		const processed = this.processed[datasetName];
-		return new wxDataSetManager({ datasetName, instance, meta, processed, wxapi: this });
+		return new wxDataSetManager({ datasetName, instance, meta, wxapi: this });
 	}
 
 	async createAllDatasetsManagers(): Promise<wxDataSetManager[]> {
