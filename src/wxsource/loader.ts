@@ -13,7 +13,7 @@ export interface CoordPicture {
 
 export class Loader {
 	protected wxsource: WxTileSource;
-	loadDataFunc: UriLoaderPromiseFunc<DataIntegral> = loadDataIntegral; //cacheUriPromise(loadDataIntegral);;
+	loadDataFunc: UriLoaderPromiseFunc<DataIntegral> = /*loadDataIntegral; //*/ cacheUriPromise(loadDataIntegral);
 
 	constructor(wxsource: WxTileSource) {
 		this.wxsource = wxsource;

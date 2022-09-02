@@ -5,7 +5,7 @@ import { ColorStyleStrict, ColorStyleWeak, HashXYZ, loadImageData, refineColor, 
 
 import { RawCLUT } from '../utils/RawCLUT';
 import { Painter } from './painter';
-import { Loader } from './loader';
+import { CoordPicture, Loader } from './loader';
 
 type wxRaster = ImageData;
 
@@ -86,7 +86,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 
 		this.tileSize = tileSize;
 		this.attribution = attribution;
-		this.maxzoom = maxzoom; // || wxdataset.getMaxZoom();
+		this.maxzoom = maxzoom;
 		this.scheme = scheme;
 		this.bounds = bounds || wxdataset.getBoundaries(); // let mapbox manage boundaries, but not all cases are covered.
 		this._setURLs(time);
@@ -96,16 +96,28 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		this.loader = new Loader(this);
 	}
 
+	// Beter to use when loading is not in progress
+	// I beleive you don't need it, but it is here just in case
+	clearCache(): void {
+		this.loader = new Loader(this);
+	}
+
 	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<wxRaster> {
 		if (this.tilesReload?.size) {
 			const tileData = this.tilesReload.get(HashXYZ(tile));
-			// this.tilesReload.delete(HashXYZ(tile));
-			return tileData!;
+			if (tileData) return tileData;
 		}
 
-		const data = await this.loader.load(tile, init);
+		let data: CoordPicture;
+		try {
+			data = await this.loader.load(tile, init);
+		} catch (e) {
+			return new ImageData(1, 1); // happens when tile is not available (does not exist)
+			// throw new Error(`Can't load ${tile.z}/${tile.x}/${tile.y}`);
+		}
+
 		if (!data.data) {
-			return undefined as any; //new ImageData(1, 1);
+			return new ImageData(1, 1); // happens when tile is cut by qTree or by Mask
 		}
 
 		const im = this.painter.paint(data.data);
@@ -137,6 +149,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 	}
 
 	protected async reloadVisible(): Promise<void> {
+		// TODO: set cancelable 'init' for loadTile
 		this.tilesReload = new Map();
 		await Promise.allSettled(this.coveringTiles().map(async (c) => this.tilesReload.set(HashXYZ(c), await this.loadTile(c))));
 		this.clearTiles();

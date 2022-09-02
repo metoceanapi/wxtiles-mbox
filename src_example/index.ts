@@ -114,13 +114,17 @@ async function start() {
 
 	// const datasetName = 'ww3-ecmwf.global';
 	// const variables = ['wave.direction.mean'];
+
+	// const datasetName = 'obs-radar.rain.nzl.national'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	// const variables = ['reflectivity'];
+
 	const wxmanager = await wxapi.createDatasetManager(datasetName);
 
 	const map = new mapboxgl.Map({
 		container: 'map',
-		// style: 'mapbox://styles/mapbox/light-v10',
+		style: 'mapbox://styles/mapbox/light-v10',
 		// style: 'mapbox://styles/mapbox/satellite-v9',
-		style: { version: 8, name: 'Empty', sources: {}, layers: [] },
+		// style: { version: 8, name: 'Empty', sources: {}, layers: [] },
 		center: [-209.2, -34.26],
 		zoom: 2,
 		// projection: { name: 'globe' },
@@ -157,6 +161,7 @@ async function start() {
 	// addRaster(map, wxmanager.createURI({ variable: variables[0] }), wxmanager.getMaxZoom());
 	addPoints(map);
 
+	/** DEMO: timesteps 
 	const tlength = wxmanager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {
@@ -164,6 +169,18 @@ async function start() {
 		setTimeout(nextTimeStep, 100);
 	};
 	setTimeout(nextTimeStep, 2000);
+	//*/
+
+	/** DEMO: Dynamic blur effect */
+	let b = 0;
+	let db = 1;
+	const nextBlur = async () => {
+		await wxsource.updateCurrentStyleObject({ blurRadius: b }); // await always !!
+		b += db;
+		if (b > 15 || b < 0) db = -db;
+		setTimeout(nextBlur, 10);
+	};
+	setTimeout(nextBlur, 2000); //*/
 
 	// setTimeout(() => wxsource.setTime(10), 3000);
 }
