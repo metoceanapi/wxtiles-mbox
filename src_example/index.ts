@@ -4,7 +4,8 @@ import mapboxgl, { baseApiUrl } from 'mapbox-gl';
 import { wxAPI } from '../src/wxAPI/wxAPI';
 import { WxTileSource } from '../src/wxsource/wxsource';
 import { createLegend, Legend } from '../src/utils/RawCLUT';
-import { ColorStyleStrict } from '../src/utils/wxtools';
+import { ColorStyleStrict, createLevels } from '../src/utils/wxtools';
+import { WxTileLayer } from '../src/_legacy/wxtilelayer';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
 class LegendControl {
@@ -109,8 +110,8 @@ async function start() {
 	const wxapi = new wxAPI({ dataServerURL, requestInit: {} });
 
 	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
-	const variables = ['air.temperature.at-2m'];
-	// const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-10m'];
+	// const variables = ['air.temperature.at-2m'];
+	const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-10m'];
 
 	// const datasetName = 'ww3-ecmwf.global';
 	// const variables = ['wave.direction.mean'];
@@ -175,10 +176,14 @@ async function start() {
 	let b = 0;
 	let db = 1;
 	const nextBlur = async () => {
-		await wxsource.updateCurrentStyleObject({ blurRadius: b }); // await always !!
+		const { min, max } = wxsource.getCurrentMeta();
+		const d = max - min;
+		await wxsource.updateCurrentStyleObject({ blurRadius: b, levels: createLevels(min + (d / 2) * (b / 15), min + d * (b / 15), 10) }); // await always !!
+		legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
+
 		b += db;
 		if (b > 15 || b < 0) db = -db;
-		setTimeout(nextBlur, 10);
+		setTimeout(nextBlur, 100);
 	};
 	setTimeout(nextBlur, 2000); //*/
 
