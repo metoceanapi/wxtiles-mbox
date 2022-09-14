@@ -18,10 +18,14 @@ export class Painter {
 		this.wxsource = wxsource;
 	}
 
-	paint(data: DataPicture[]): ImageData {
+	paint(data: DataPicture[]): HTMLCanvasElement {
 		const { wxsource } = this;
-		const imageData = this._fill(data[0], wxsource);
-		const isoInfo = this._fillIsolines(imageData, data[0], wxsource);
+		const { tileSize } = wxsource;
+		const imageData = new ImageData(tileSize, tileSize);
+		const imageBuffer = new Uint32Array(imageData.data.buffer); // a usefull representation of image's bytes (same memory)
+
+		this._fill(data[0], imageBuffer, wxsource);
+		const isoInfo = this._fillIsolines(imageBuffer, data[0], wxsource);
 
 		const context = create2DContext({ width: 256, height: 256 });
 		context.putImageData(imageData, 0, 0);
@@ -31,31 +35,28 @@ export class Painter {
 
 		// this._drawStreamLinesStatic(); // TODO!
 
-		return context.getImageData(0, 0, 256, 256); // copy data back to imageData;
+		// return context.getImageData(0, 0, 256, 256); // copy data back to imageData;
+		// context.canvas.
+		return context.canvas;
 	}
 
-	protected _fill(data: DataPicture, { CLUT, style, tileSize }: WxTileSource): ImageData {
-		const imageData = new ImageData(tileSize, tileSize);
-		const imageFillBuffer = new Uint32Array(imageData.data.buffer); // a usefull representation of image's bytes (same memory)
+	protected _fill(data: DataPicture, imageBuffer: Uint32Array, { CLUT, style }: WxTileSource) {
 		const { raw } = data; // scalar data
 		const { colorsI } = CLUT;
 		// fill: none, gradient, solid
 		if (style.fill !== 'none') {
 			for (let y = 0, i = 0, di = 259; y < 256; ++y, di += 2) {
 				for (let x = 0; x < 256; ++x, ++i, ++di) {
-					imageFillBuffer[i] = colorsI[raw[di]];
+					imageBuffer[i] = colorsI[raw[di]];
 				}
 			}
 		} else {
-			imageFillBuffer.fill(0);
+			imageBuffer.fill(0);
 		}
-
-		return imageData;
 	}
 
-	protected _fillIsolines(imageData: ImageData, data: DataPicture, { CLUT, style }: WxTileSource): IsoInfo[] {
+	protected _fillIsolines(imageBuffer: Uint32Array, data: DataPicture, { CLUT, style }: WxTileSource): IsoInfo[] {
 		const { raw } = data; // scalar data
-		const imageFillBuffer = new Uint32Array(imageData.data.buffer); // a usefull representation of image's bytes (same memory)
 		const { levelIndex, colorsI } = CLUT;
 		const info: IsoInfo[] = []; // numbers on isolines
 		if (style.isolineColor !== 'none') {
@@ -77,13 +78,13 @@ export class Painter {
 						const ii = y * 256 + x;
 						switch (style.isolineColor) {
 							case 'inverted':
-								imageFillBuffer[ii] = ~colorsI[md] | 0xff000000; // invert color and make alfa = 255
+								imageBuffer[ii] = ~colorsI[md] | 0xff000000; // invert color and make alfa = 255
 								break;
 							case 'fill':
-								imageFillBuffer[ii] = colorsI[md] | 0xff000000; // make alfa = 255
+								imageBuffer[ii] = colorsI[md] | 0xff000000; // make alfa = 255
 								break;
 							default:
-								imageFillBuffer[ii] = flatColor;
+								imageBuffer[ii] = flatColor;
 								break;
 						} // switch isoline_style
 

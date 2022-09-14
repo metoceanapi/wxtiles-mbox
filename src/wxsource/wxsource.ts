@@ -7,7 +7,7 @@ import { RawCLUT } from '../utils/RawCLUT';
 import { Painter } from './painter';
 import { CoordPicture, Loader } from './loader';
 
-type wxRaster = ImageData;
+type wxRaster = HTMLCanvasElement; //ImageData;
 
 export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 	type: 'custom' = 'custom';
@@ -38,7 +38,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 	painter: Painter;
 	loader: Loader;
 
-	tilesReload: Map<string, ImageData> = new Map();
+	tilesReload: Map<string, wxRaster> = new Map();
 	setTimeInProgress: boolean = false;
 
 	constructor({
@@ -112,12 +112,14 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		try {
 			data = await this.loader.load(tile, init);
 		} catch (e) {
-			return new ImageData(1, 1); // happens when tile is not available (does not exist)
+			throw { status: 404 };
+			// return new ImageData(1, 1); // happens when tile is not available (does not exist)
 			// throw new Error(`Can't load ${tile.z}/${tile.x}/${tile.y}`);
 		}
 
 		if (!data.data) {
-			return new ImageData(1, 1); // happens when tile is cut by qTree or by Mask
+			throw { status: 404 };
+			// return new ImageData(1, 1); // happens when tile is cut by qTree or by Mask
 		}
 
 		const im = this.painter.paint(data.data);
@@ -130,12 +132,12 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		this.updateCurrentStyleObject(WxGetColorStyles()[wxstyleName], reload);
 	}
 
-	async updateCurrentStyleObject(style: ColorStyleWeak, reload = true): Promise<void> {
+	async updateCurrentStyleObject(style: ColorStyleWeak, reload = true, init?: { signal?: AbortSignal }): Promise<void> {
 		this.style = Object.assign(this.getCurrentStyleObjectCopy(), style); // deep copy, so could be (and is) changed
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
 		const { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
 		this.CLUT = new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
-		reload && (await this.reloadVisible());
+		reload && (await this.reloadVisible(init));
 	}
 
 	getCurrentStyleObjectCopy(): ColorStyleStrict {
@@ -148,17 +150,16 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		this.tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext }));
 	}
 
-	protected async reloadVisible(): Promise<void> {
-		// TODO: set cancelable 'init' for loadTile
+	protected async reloadVisible(init?: { signal?: AbortSignal }): Promise<void> {
 		this.tilesReload = new Map();
-		await Promise.allSettled(this.coveringTiles().map(async (c) => this.tilesReload.set(HashXYZ(c), await this.loadTile(c))));
+		await Promise.allSettled(this.coveringTiles().map(async (c) => this.tilesReload.set(HashXYZ(c), await this.loadTile(c, init))));
 		this.clearTiles();
 		this.update();
 	}
 
-	async setTime(time_?: string | number | Date): Promise<string> {
+	async setTime(time_?: string | number | Date, init?: { signal?: AbortSignal }): Promise<string> {
 		this._setURLs(time_);
-		await this.reloadVisible();
+		await this.reloadVisible(init);
 		return this.time;
 	}
 
