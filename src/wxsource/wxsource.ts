@@ -147,9 +147,15 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 	} {
 		let { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
 		if (this.variables.length > 1) {
+			// for the verctor field we need to get the min and max of the vectors' length
+			// but convert and calculate ALL vector length just for that is too much
+			// so we just use estimation based on the max of the vector components
 			const metas = this.variables.map((v) => this.wxdataset.meta.variablesMeta[v]);
-			min = Math.hypot(metas[0].min, metas[1].min);
-			max = Math.hypot(metas[0].max, metas[1].max);
+			// hence min of a vector length can't be less than 0
+			min = 0;
+			// max of a field can't be less than max of the components multiplied by sqrt(2)
+			max = 1.42 * Math.max(-metas[0].min, metas[0].max, -metas[1].min, metas[1].max);
+			// tese values arn't real! but they are good enough for the estimation
 		}
 
 		return { min, max, units };
