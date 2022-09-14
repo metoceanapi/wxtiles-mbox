@@ -135,9 +135,24 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 	async updateCurrentStyleObject(style: ColorStyleWeak, reload = true, init?: { signal?: AbortSignal }): Promise<void> {
 		this.style = Object.assign(this.getCurrentStyleObjectCopy(), style); // deep copy, so could be (and is) changed
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
-		const { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
+		const { min, max, units } = this.getCurrentMeta();
 		this.CLUT = new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
 		reload && (await this.reloadVisible(init));
+	}
+
+	getCurrentMeta(): {
+		units: string;
+		min: number;
+		max: number;
+	} {
+		let { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
+		if (this.variables.length > 1) {
+			const metas = this.variables.map((v) => this.wxdataset.meta.variablesMeta[v]);
+			min = Math.hypot(metas[0].min, metas[1].min);
+			max = Math.hypot(metas[0].max, metas[1].max);
+		}
+
+		return { min, max, units };
 	}
 
 	getCurrentStyleObjectCopy(): ColorStyleStrict {
