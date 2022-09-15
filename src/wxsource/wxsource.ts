@@ -8,9 +8,9 @@ import { Painter } from './painter';
 import { CoordPicture, Loader } from './loader';
 
 type wxRaster = HTMLCanvasElement; //ImageData;
-type CSIPicture = ImageData; // To shut up TS errors for CustomSourceInterface
+type CSIRaster = ImageData; // To shut up TS errors for CustomSourceInterface
 
-export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIPicture> {
+export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	type: 'custom' = 'custom';
 	dataType: 'raster' = 'raster';
 
@@ -103,7 +103,11 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIPicture> 
 		this.loader = new Loader(this);
 	}
 
-	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<CSIPicture> {
+	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<CSIRaster> {
+		return this._loadTile(tile, init) as any; // to shut up TS errors
+	}
+
+	async _loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<wxRaster> {
 		if (this.tilesReload?.size) {
 			const tileData = this.tilesReload.get(HashXYZ(tile));
 			if (tileData) return tileData as any;
@@ -173,7 +177,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIPicture> 
 
 	protected async reloadVisible(init?: { signal?: AbortSignal }): Promise<void> {
 		this.tilesReload = new Map();
-		await Promise.allSettled(this.coveringTiles().map(async (c) => this.tilesReload.set(HashXYZ(c), await this.loadTile(c, init))));
+		await Promise.allSettled(this.coveringTiles().map(async (c) => this.tilesReload.set(HashXYZ(c), await this._loadTile(c, init))));
 		this.clearTiles();
 		this.update();
 	}
