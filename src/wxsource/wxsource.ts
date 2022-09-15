@@ -47,7 +47,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	painter: Painter;
 	loader: Loader;
 
-	tilesReload: Map<string, wxRasterData> = new Map();
+	tilesCache: Map<string, wxRasterData> = new Map();
 	setTimeInProgress: boolean = false;
 
 	constructor({
@@ -112,15 +112,15 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	}
 
 	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<CSIRaster> {
-		const raster_data = await this._loadTile(tile, init);
+		const raster_data = await this._loadTile(tile, this.tilesCache, init);
 		const raster = this.animation
 			? this.painter.imprintVectorAnimationLinesStep(raster_data.data, raster_data.raster, this, this.animationFrame)
 			: raster_data.raster;
 		return raster as any; // to shut up TS errors
 	}
 
-	async _loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<wxRasterData> {
-		const tileData = this.tilesReload.get(HashXYZ(tile));
+	async _loadTile(tile: XYZ, tilesCache: Map<string, wxRasterData>, init?: { signal?: AbortSignal }): Promise<wxRasterData> {
+		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
 
 		let data: wxData | null = null;
@@ -135,7 +135,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		}
 
 		const raster_data = { raster: this.painter.paint(data), data };
-		this.tilesReload.set(HashXYZ(tile), raster_data); // TODO: cache loaded tiles
+		tilesCache.set(HashXYZ(tile), raster_data); // TODO: cache loaded tiles
 		return raster_data;
 	}
 
@@ -190,8 +190,9 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	}
 
 	protected async reloadVisible(init?: { signal?: AbortSignal }): Promise<void> {
-		this.tilesReload = new Map(); // clear cache
-		await Promise.allSettled(this.coveringTiles().map((c) => this._loadTile(c, init))); // fill up cache
+		const tilesCache = new Map(); 
+		await Promise.allSettled(this.coveringTiles().map((c) => this._loadTile(c, tilesCache, init))); // fill up cache
+		this.tilesCache = tilesCache; // replace cache
 		this.repaintVisible();
 	}
 

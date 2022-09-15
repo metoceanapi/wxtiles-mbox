@@ -166,7 +166,7 @@ async function start() {
 	await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: false }); // await always !!
 	wxsource.startAnimation();
 
-	/** DEMO: timesteps NEVER USE WITH ANIMATION ON
+	//** DEMO: timesteps NEVER USE WITH ANIMATION ON
 	const tlength = wxmanager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {
