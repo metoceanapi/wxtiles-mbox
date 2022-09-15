@@ -109,12 +109,12 @@ async function start() {
 	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	const wxapi = new wxAPI({ dataServerURL, requestInit: {} });
 
-	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	// const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// const variables = ['air.temperature.at-2m'];
-	const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-10m'];
+	// const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-10m'];
 
-	// const datasetName = 'ww3-ecmwf.global';
-	// const variables = ['wave.direction.mean'];
+	const datasetName = 'ww3-ecmwf.global';
+	const variables = ['wave.direction.mean'];
 
 	// const datasetName = 'obs-radar.rain.nzl.national'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// const variables = ['reflectivity'];
@@ -174,18 +174,16 @@ async function start() {
 
 	/** DEMO: Dynamic blur effect */
 	let b = 0;
-	let db = 1;
-	const nextBlur = async () => {
-		const { min, max } = wxsource.getCurrentMeta();
-		const d = max - min;
-		await wxsource.updateCurrentStyleObject({ blurRadius: b, levels: createLevels(min + (d / 2) * (b / 15), min + d * (b / 15), 10) }); // await always !!
-		legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
+	let db = 5;
+	const nextAnim = async () => {
+		await wxsource.updateCurrentStyleObject({ addDegrees: b }); // await always !!
 
 		b += db;
-		if (b > 15 || b < 0) db = -db;
-		setTimeout(nextBlur, 100);
+		if (b > 360 || b < 0) db = -db;
+		setTimeout(nextAnim, 1);
 	};
-	setTimeout(nextBlur, 2000); //*/
+
+	setTimeout(nextAnim, 2000); //*/
 
 	// setTimeout(() => wxsource.setTime(10), 3000);
 }
