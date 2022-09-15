@@ -1,6 +1,6 @@
-import { RawCLUT } from '../utils/RawCLUT';
-import { ColorStyleStrict, create2DContext, DataIntegral, DataPicture, HEXtoRGBA, RGBtoHEX, XYZ } from '../utils/wxtools';
-import { WxTileSource } from './wxsource';
+import { create2DContext, type DataPicture, HEXtoRGBA, RGBtoHEX } from '../utils/wxtools';
+import { type wxData } from './loader';
+import { type WxTileSource } from './wxsource';
 
 interface IsoInfo {
 	x: number;
@@ -18,26 +18,32 @@ export class Painter {
 		this.wxsource = wxsource;
 	}
 
-	paint(data: DataPicture[]): HTMLCanvasElement {
+	paint(data: wxData): HTMLCanvasElement {
 		const { wxsource } = this;
 		const { tileSize } = wxsource;
 		const imageData = new ImageData(tileSize, tileSize);
 		const imageBuffer = new Uint32Array(imageData.data.buffer); // a usefull representation of image's bytes (same memory)
 
-		this._fill(data[0], imageBuffer, wxsource);
-		const isoInfo = this._fillIsolines(imageBuffer, data[0], wxsource);
+		this._fill(data.data[0], imageBuffer, wxsource);
+		const isoInfo = this._fillIsolines(imageBuffer, data.data[0], wxsource);
 
 		const context = create2DContext({ width: 256, height: 256 });
 		context.putImageData(imageData, 0, 0);
 		this._fillIsolineText(isoInfo, context, wxsource);
-		this._drawVectorsStatic(data, context, wxsource);
-		this._drawDegreesStatic(data[0], context, wxsource);
+		this._drawVectorsStatic(data.data, context, wxsource);
+		this._drawDegreesStatic(data.data[0], context, wxsource);
+		this._drawStreamLinesStatic(data, context, wxsource);
 
-		// this._drawStreamLinesStatic(); // TODO!
-
-		// return context.getImageData(0, 0, 256, 256); // copy data back to imageData;
-		// context.canvas.
 		return context.canvas;
+	}
+
+	imprintVectorAnimationLinesStep(data: wxData, background: HTMLCanvasElement, wxsource: WxTileSource, step: number): HTMLCanvasElement {
+		if (data.slines.length === 0 || wxsource.style.streamLineStatic || wxsource.style.streamLineColor === 'none') return background;
+
+		const ctxSlines = create2DContext({ width: 256, height: 256 });
+		ctxSlines.drawImage(background, 0, 0);
+		this._drawVectorAnimationLinesStep(data, ctxSlines, wxsource, step);
+		return ctxSlines.canvas;
 	}
 
 	protected _fill(data: DataPicture, imageBuffer: Uint32Array, { CLUT, style }: WxTileSource) {
@@ -175,7 +181,7 @@ export class Painter {
 	} // _drawVector
 
 	protected _drawDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, { CLUT, style }: WxTileSource): void {
-		const { units } = this.wxsource.getCurrentMeta(); // wxdataset.meta.variablesMeta[variables[0]];
+		const { units } = this.wxsource.getCurrentMeta();
 		if (units !== 'degree') return;
 		const addDegrees = 0.017453292519943 * style.addDegrees;
 
@@ -212,4 +218,83 @@ export class Painter {
 			} // for x
 		} // for y
 	} // _drawDegree
+
+	protected _drawStreamLinesStatic(wxdata: wxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxTileSource): void {
+		const { data, slines } = wxdata;
+		if (!slines.length || !style.streamLineStatic || style.streamLineColor === 'none') return;
+		// const { canvasVectorAnimationCtx: ctx } = this;
+
+		const l = data[0];
+		ctx.lineWidth = 1;
+		for (let i = slines.length; i--; ) {
+			const sLine = slines[i];
+			for (let k = 0; k < sLine.length - 1; ++k) {
+				const p0 = sLine[k];
+				const p1 = sLine[k + 1];
+				const di = p0.x + 1 + (p0.y + 1) * 258;
+
+				switch (style.streamLineColor) {
+					case 'inverted':
+						ctx.strokeStyle = RGBtoHEX(~CLUT.colorsI[l.raw[di]]); // alfa = 255
+						break;
+					case 'fill':
+						ctx.strokeStyle = RGBtoHEX(CLUT.colorsI[l.raw[di]]); // alfa = 255
+						break;
+					default: // put color directly from vectorColor
+						ctx.strokeStyle = style.streamLineColor;
+						break;
+				} // switch isoline_style
+
+				ctx.beginPath();
+				ctx.moveTo(p0.x, p0.y);
+				ctx.lineTo(p1.x, p1.y);
+				ctx.stroke();
+			}
+		}
+	} // _drawStreamLinesStatic
+
+	protected _drawVectorAnimationLinesStep(wxdata: wxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxTileSource, timeStemp: number): void {
+		// 'timeStemp' is a time tick given by the browser's scheduller
+		const { data, slines } = wxdata;
+		// if (!slines.length || !style.streamLineStatic || style.streamLineColor === 'none') return; // done by the caller!!!
+		const l = data[0];
+
+		timeStemp = timeStemp >> 5;
+		for (let i = 0; i < slines.length; ++i) {
+			const sLine = slines[i];
+			const sSize = sLine.length - 1;
+			// seed - is the most opaque piece // TODO:improve?
+			let seed = (timeStemp + (1 + sLine[0].x) * (1 + sLine[0].y)) % 30;
+			for (let k = 0; k < sSize; ++k) {
+				const p0 = sLine[k];
+				const p1 = sLine[k + 1];
+				let t = 1 - (seed - k) / sSize; // TODO: improve?
+				if (t < 0 || t > 1) t = 0;
+				const col = (~~(t * 255)).toString(16).padStart(2, '0');
+				const w = 1 + ~~((1.2 - t) * 5);
+				ctx.lineWidth = w;
+
+				const di = p0.x + 1 + (p0.y + 1) * 258;
+				let baseColor;
+				switch (style.streamLineColor) {
+					case 'inverted':
+						baseColor = RGBtoHEX(~CLUT.colorsI[l.raw[di]]); // alfa = 255
+						break;
+					case 'fill':
+						baseColor = RGBtoHEX(CLUT.colorsI[l.raw[di]]); // alfa = 255
+						break;
+					default: // put color directly from vectorColor
+						baseColor = style.streamLineColor;
+						break;
+				} // switch isoline_style
+
+				ctx.strokeStyle = baseColor + col; //(col.length < 2 ? '0' + col : col);
+
+				ctx.beginPath();
+				ctx.moveTo(p0.x, p0.y);
+				ctx.lineTo(p1.x, p1.y);
+				ctx.stroke();
+			} // for k
+		} // for i
+	} // _drawVectorAnimationLinesStep
 }

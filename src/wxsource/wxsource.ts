@@ -1,14 +1,19 @@
 import mapboxgl from 'mapbox-gl';
 
-import { wxDataSetManager } from '../wxAPI/wxAPI';
-import { ColorStyleStrict, ColorStyleWeak, HashXYZ, loadImageData, refineColor, uriXYZ, WxGetColorStyles, XYZ } from '../utils/wxtools';
+import { type wxDataSetManager } from '../wxAPI/wxAPI';
+import { type ColorStyleStrict, type ColorStyleWeak, HashXYZ, refineColor, WxGetColorStyles, type XYZ } from '../utils/wxtools';
 
 import { RawCLUT } from '../utils/RawCLUT';
 import { Painter } from './painter';
-import { CoordPicture, Loader } from './loader';
+import { Loader, type wxData } from './loader';
 
-type wxRaster = HTMLCanvasElement; //ImageData;
 type CSIRaster = ImageData; // To shut up TS errors for CustomSourceInterface
+type wxRaster = HTMLCanvasElement; // Actual result of a Painter
+
+interface wxRasterData {
+	raster: wxRaster;
+	data: wxData;
+}
 
 export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	type: 'custom' = 'custom';
@@ -36,10 +41,13 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	style: ColorStyleStrict = WxGetColorStyles()['base'];
 	CLUT!: RawCLUT; // is set in constructor by setStyleName()
 
+	animation = false;
+	animationFrame = 0;
+
 	painter: Painter;
 	loader: Loader;
 
-	tilesReload: Map<string, wxRaster> = new Map();
+	tilesReload: Map<string, wxRasterData> = new Map();
 	setTimeInProgress: boolean = false;
 
 	constructor({
@@ -104,31 +112,31 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	}
 
 	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<CSIRaster> {
-		return this._loadTile(tile, init) as any; // to shut up TS errors
+		const raster_data = await this._loadTile(tile, init);
+		const raster = this.animation
+			? this.painter.imprintVectorAnimationLinesStep(raster_data.data, raster_data.raster, this, this.animationFrame)
+			: raster_data.raster;
+		return raster as any; // to shut up TS errors
 	}
 
-	async _loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<wxRaster> {
-		if (this.tilesReload?.size) {
-			const tileData = this.tilesReload.get(HashXYZ(tile));
-			if (tileData) return tileData as any;
-		}
+	async _loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<wxRasterData> {
+		const tileData = this.tilesReload.get(HashXYZ(tile));
+		if (tileData) return tileData;
 
-		let data: CoordPicture;
+		let data: wxData | null = null;
 		try {
 			data = await this.loader.load(tile, init);
 		} catch (e) {
 			throw { status: 404 }; // happens when tile is not available (does not exist)
 		}
 
-		if (!data.data) {
+		if (!data) {
 			throw { status: 404 }; // happens when tile is cut by qTree or by Mask
 		}
 
-		// this.tilesReload.set(HashXYZ(tile), data.data); // TODO: cache loaded tiles
-
-		const im = this.painter.paint(data.data);
-		// this.tilesdata.set(tile.z + '-' + tile.x + '-' + tile.y, im);
-		return im as any;
+		const raster_data = { raster: this.painter.paint(data), data };
+		this.tilesReload.set(HashXYZ(tile), raster_data); // TODO: cache loaded tiles
+		return raster_data;
 	}
 
 	setStyleByName(wxstyleName: string, reload = true): void {
@@ -144,11 +152,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		reload && (await this.reloadVisible(init));
 	}
 
-	getCurrentMeta(): {
-		units: string;
-		min: number;
-		max: number;
-	} {
+	getCurrentMeta(): { units: string; min: number; max: number } {
 		let { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
 		if (this.variables.length > 1) {
 			// for the verctor field we need to get the min and max of the vectors' length
@@ -169,17 +173,8 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		return Object.assign({}, this.style);
 	}
 
-	protected _setURLs(time_?: string | number | Date): void {
-		this.time = this.wxdataset.getValidTime(time_);
-		const { time, ext } = this;
-		this.tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext }));
-	}
-
-	protected async reloadVisible(init?: { signal?: AbortSignal }): Promise<void> {
-		this.tilesReload = new Map();
-		await Promise.allSettled(this.coveringTiles().map(async (c) => this.tilesReload.set(HashXYZ(c), await this._loadTile(c, init))));
-		this.clearTiles();
-		this.update();
+	getTime(): string {
+		return this.time;
 	}
 
 	async setTime(time_?: string | number | Date, init?: { signal?: AbortSignal }): Promise<string> {
@@ -188,46 +183,60 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		return this.time;
 	}
 
-	getTime(): string {
-		return this.time;
+	protected _setURLs(time_?: string | number | Date): void {
+		this.time = this.wxdataset.getValidTime(time_);
+		const { time, ext } = this;
+		this.tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext }));
+	}
+
+	protected async reloadVisible(init?: { signal?: AbortSignal }): Promise<void> {
+		this.tilesReload = new Map(); // clear cache
+		await Promise.allSettled(this.coveringTiles().map((c) => this._loadTile(c, init))); // fill up cache
+		this.repaintVisible();
+	}
+
+	protected repaintVisible(): void {
+		this.clearTiles();
+		this.update(); // it forces mapbox to reload visible tiles (hopefully from cache)
+	}
+
+	startAnimation(): void {
+		if (this.animation) return;
+		this.animation = true;
+		const animationStep = (frame: number) => {
+			if (!this.animation || this.style.streamLineStatic || this.style.streamLineColor === 'none') return;
+			this.animationFrame = frame;
+			this.repaintVisible();
+			requestAnimationFrame(animationStep);
+		};
+
+		requestAnimationFrame(animationStep);
+	}
+
+	stopAnimation(): void {
+		this.animation = false;
 	}
 
 	protected clearTiles() {
 		// COMING SOON in a future release
 		// but for now, we use the same algorithm as in mapbox-gl-js
 		(this.map as any).style?._clearSource?.(this.id);
-		(this.map as any).style?._reloadSource(this.id);
+		// (this.map as any).style?._reloadSource(this.id); // TODO: check if this is needed // seems NOT
 	}
 
+	// get assigned by map.addSource
 	protected coveringTiles(): XYZ[] {
-		// COMING SOON in a future release
-		// but for now, we use the same algorithm as in mapbox-gl-js
-		// return (this.map.getSource(this.id) as any)?._coveringTiles?.() || [];
 		return [];
+		// mapbox-gl-js implementation: return (this.map.getSource(this.id) as any)?._coveringTiles?.() || [];
 	}
 
+	// get assigned by map.addSource
 	protected update() {
-		// COMING SOON in a future release
-		// but for now, we use the same algorithm as in mapbox-gl-js
-		// (this.map as any).style?._updateSource?.(this.id);
-		// return (this.map.getSource(this.id) as any)?._update?.();
+		// mapbox-gl-js implementation: return (this.map.getSource(this.id) as any)?._update?.();
 	}
-
-	// prepareTile(tile: XYZ): wxRaster | undefined {}
 
 	// onAdd(map: mapboxgl.Map): void {}
-
 	// onRemove(map: mapboxgl.Map): void {}
-
-	// unloadTile(tile: XYZ): void {
-	// 	// const sourceCache = this.map.style._otherSourceCaches[this.id];
-	// 	// const coords = sourceCache.getVisibleCoordinates();
-	// 	// const tiles = coords.map((tileid: any) => sourceCache.getTile(tileid));
-
-	// 	this.tilesdata.delete(HashXYZ(tile));
-	// }
-
-	// hasTile(tile: XYZ): boolean {
-	// 	return this.tilesdata.has(HashXYZ(tile));
-	// }
+	// unloadTile(tile: XYZ): void { }
+	// hasTile(tile: XYZ): boolean { }
 }

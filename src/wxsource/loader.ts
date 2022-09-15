@@ -1,14 +1,20 @@
-import { coordToPixel, PixelsToLonLat } from '../utils/mercator';
 import { TileType } from '../utils/qtree';
-import { blurData, cacheUriPromise, DataIntegral, DataPicture, loadDataIntegral, UriLoaderPromiseFunc, uriXYZ, XYZ } from '../utils/wxtools';
-import { BoundaryMeta } from '../wxAPI/wxAPI';
+import { blurData, cacheUriPromise, type DataIntegral, type DataPicture, loadDataIntegral, UriLoaderPromiseFunc, uriXYZ, type XYZ } from '../utils/wxtools';
+import { type BoundaryMeta } from '../wxAPI/wxAPI';
 import { applyMask, makeBox, splitCoords, subData, subDataDegree } from './loadertools';
-import { WxTileSource } from './wxsource';
+import { type WxTileSource } from './wxsource';
 
-export interface CoordPicture {
-	coord: XYZ;
-	data: DataPicture[] | null;
-	// ctx: CanvasRenderingContext2D;
+interface SLinePoint {
+	x: number;
+	y: number;
+}
+
+export type SLine = SLinePoint[];
+
+// export type wxData = DataPicture[] | null;
+export interface wxData {
+	data: DataPicture[];
+	slines: SLine[];
 }
 
 export class Loader {
@@ -19,32 +25,25 @@ export class Loader {
 		this.wxsource = wxsource;
 	}
 
-	async load(coord: XYZ, requestInit?: { signal?: AbortSignal }): Promise<CoordPicture> {
+	async load(coord: XYZ, requestInit?: { signal?: AbortSignal }): Promise<wxData | null> {
 		// TODO: mapbox can't work with boundaries aceross lon 180. Once it's fixed, we can remove this check
-		if (!this._checkInsideBoundaries(coord)) return { coord, data: null }; // tile is cut by boundaries
+		if (!this._checkInsideBoundaries(coord)) return null; // tile is cut by boundaries
 
 		const tileType = this._checkTypeAndMask(coord);
-		if (!tileType) return { coord, data: null }; // tile is cut by mask
+		if (!tileType) return null; // tile is cut by mask
 
 		const { upCoords, subCoords } = splitCoords(coord, this.wxsource.wxdataset.meta.maxZoom);
 		const URLs = this.wxsource.tilesURIs.map((uri) => uriXYZ(uri, upCoords));
 		const requestInitCopy = Object.assign({}, this.wxsource.wxdataset.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
-		const loadDataFunc = (url: string) => this.loadDataFunc(url, requestInitCopy);
-		const rawdata = await Promise.all(URLs.map(loadDataFunc));
+		const rawdata = await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
 
-		const { units } = this.wxsource.wxdataset.meta.variablesMeta[this.wxsource.variables[0]];
+		const { units } = this.wxsource.getCurrentMeta();
 		const interpolator = units === 'degree' ? subDataDegree : subData;
 		const processor = (d: DataIntegral) => interpolator(blurData(d, this.wxsource.style.blurRadius), subCoords);
 		const data = rawdata.map(processor); // preprocess all loaded data
 		this._vectorMagnitudesPrepare(data); // if vector data, prepare magnitudes
-
 		await this._applyMask(data, coord, tileType, !subCoords && rawdata.length === 1); // apply mask if needed
-
-		// if (processedData.length > 1) {
-		// 	this._createStreamLines();
-		// }
-
-		return { coord, data };
+		return { data, slines: this._createStreamLines(data) };
 	}
 
 	protected async _applyMask(data: DataPicture[], tile: XYZ, tileType: TileType, needCopy: boolean): Promise<void> {
@@ -113,4 +112,74 @@ export class Loader {
 
 		return true;
 	}
+
+	protected _createStreamLines(data: DataPicture[]): SLine[] {
+		if (data.length !== 3) return [];
+		const { style } = this.wxsource;
+		if (style.streamLineColor === 'none') return [];
+		const streamLines: SLine[] = []; // an array of stremllines. Each section of streamline represents a position and size of a particle.
+
+		// idea is taken from the LIC (linear integral convolution) algorithm and the 'multipartical vector field visualisation'
+		// Having the stream lines as precalculated trajectories makes an animation more predictable and (IMHO) representative.
+		// Algorithm: use U and V as an increment to build a trajectory. To make trajectory more or less correct the algo
+		// does 20 moc steps and stores the point into streamline (sLine).
+		// Algo does two passes: forward and backward, to cope boundaries and improve visual effect.
+		const [l, u, v] = data;
+		const factor = (style.streamLineSpeedFactor || 1) / l.dmax;
+		const addDegrees = style.addDegrees ? 0.017453292519943 * style.addDegrees : 0;
+		const gridStep = style.streamLineGridStep || 64;
+		const steps = style.streamLineSteps || 300;
+		for (let y = 0; y <= 256; y += gridStep) {
+			for (let x = 0; x <= 256; x += gridStep) {
+				if (!l.raw[1 + x + (1 + y) * 258]) continue; // NODATA
+				const sLine: SLine = []; // streamline
+				let xforw = x;
+				let yforw = y;
+				let oldDi = -1; // previous di. The first di will never be -1
+				let dx = 0;
+				let dy = 0;
+				for (let i = 0; i <= steps && xforw >= 0 && xforw <= 256 && yforw >= 0 && yforw <= 256; i++) {
+					// forward
+					if (!(i % (steps / 10))) sLine.push({ x: ~~xforw, y: ~~yforw }); // push each (steps/10)-th point // 7 points max
+					const di = ~~xforw + 1 + (~~yforw + 1) * 258;
+					if (di !== oldDi) {
+						// calc dx, dy only if di changed
+						if (!l.raw[di]) break; // NODATA - stop streamline creation
+						oldDi = di; // save old di
+						const dl = l.dmin + l.raw[di] * l.dmul;
+						const du = u.dmin + u.raw[di] * u.dmul;
+						const dv = v.dmin + v.raw[di] * v.dmul;
+						const ang = Math.atan2(du, dv) + addDegrees;
+						dx = factor * dl * Math.sin(ang);
+						dy = factor * dl * Math.cos(ang);
+					}
+					xforw += dx;
+					yforw -= dy; // negative - due to Lat goes up but screen's coordinates go down
+				} // for i forward
+				let xback = x;
+				let yback = y;
+				oldDi = -1; // previous di. The first di will never be -1
+				for (let i = 1; i <= steps && xback >= 0 && xback <= 256 && yback >= 0 && yback <= 256; i++) {
+					// backward // i = 1 because otherwise it produces the same first point hence visual artefact! 2 hours debugging!
+					if (!(i % (steps / 10))) sLine.unshift({ x: ~~xback, y: ~~yback }); // push each (steps/10)-th point // 6 points max
+					const di = ~~xback + 1 + (~~yback + 1) * 258;
+					if (di !== oldDi) {
+						// calc dx, dy only if di changed
+						if (!l.raw[di]) break; // NODATA - stop streamline creation
+						oldDi = di; // save old di
+						const dl = l.dmin + l.raw[di] * l.dmul;
+						const du = u.dmin + u.raw[di] * u.dmul;
+						const dv = v.dmin + v.raw[di] * v.dmul;
+						const ang = Math.atan2(du, dv) + addDegrees;
+						dx = factor * dl * Math.sin(ang);
+						dy = factor * dl * Math.cos(ang);
+					}
+					xback -= dx;
+					yback += dy; // positive - due to Lat goes up but screen's coordinates go down
+				} // for i backward
+				sLine.length > 2 && streamLines.push(sLine);
+			} // for x
+		} // for y
+		return streamLines;
+	} // _createSLines
 }

@@ -109,14 +109,14 @@ async function start() {
 	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	const wxapi = new wxAPI({ dataServerURL, requestInit: {} });
 
-	// const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// const variables = ['air.temperature.at-2m'];
-	// const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-10m'];
+	const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-10m'];
 
-	const datasetName = 'ww3-ecmwf.global';
-	const variables = ['wave.direction.mean'];
+	// const datasetName = 'ww3-ecmwf.global';
+	// const variables = ['wave.direction.mean'];
 
-	// const datasetName = 'obs-radar.rain.nzl.national'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	// const datasetName = 'obs-radar.rain.nzl.national';
 	// const variables = ['reflectivity'];
 
 	const wxmanager = await wxapi.createDatasetManager(datasetName);
@@ -162,7 +162,11 @@ async function start() {
 	// addRaster(map, wxmanager.createURI({ variable: variables[0] }), wxmanager.getMaxZoom());
 	addPoints(map);
 
-	/** DEMO: timesteps 
+	// await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: true }); // await always !!
+	await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: false }); // await always !!
+	wxsource.startAnimation();
+
+	/** DEMO: timesteps NEVER USE WITH ANIMATION ON
 	const tlength = wxmanager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {
@@ -172,7 +176,7 @@ async function start() {
 	setTimeout(nextTimeStep, 2000);
 	//*/
 
-	/** DEMO: Dynamic blur effect */
+	/** DEMO: Dynamic blur effect /
 	let b = 0;
 	let db = 5;
 	const nextAnim = async () => {
@@ -182,7 +186,6 @@ async function start() {
 		if (b > 360 || b < 0) db = -db;
 		setTimeout(nextAnim, 1);
 	};
-
 	setTimeout(nextAnim, 2000); //*/
 
 	// setTimeout(() => wxsource.setTime(10), 3000);
