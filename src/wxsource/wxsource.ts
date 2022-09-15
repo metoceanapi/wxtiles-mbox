@@ -8,8 +8,9 @@ import { Painter } from './painter';
 import { CoordPicture, Loader } from './loader';
 
 type wxRaster = HTMLCanvasElement; //ImageData;
+type CSIPicture = ImageData; // To shut up TS errors for CustomSourceInterface
 
-export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
+export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIPicture> {
 	type: 'custom' = 'custom';
 	dataType: 'raster' = 'raster';
 
@@ -102,29 +103,28 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<wxRaster> {
 		this.loader = new Loader(this);
 	}
 
-	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<wxRaster> {
+	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<CSIPicture> {
 		if (this.tilesReload?.size) {
 			const tileData = this.tilesReload.get(HashXYZ(tile));
-			if (tileData) return tileData;
+			if (tileData) return tileData as any;
 		}
 
 		let data: CoordPicture;
 		try {
 			data = await this.loader.load(tile, init);
 		} catch (e) {
-			throw { status: 404 };
-			// return new ImageData(1, 1); // happens when tile is not available (does not exist)
-			// throw new Error(`Can't load ${tile.z}/${tile.x}/${tile.y}`);
+			throw { status: 404 }; // happens when tile is not available (does not exist)
 		}
 
 		if (!data.data) {
-			throw { status: 404 };
-			// return new ImageData(1, 1); // happens when tile is cut by qTree or by Mask
+			throw { status: 404 }; // happens when tile is cut by qTree or by Mask
 		}
+
+		// this.tilesReload.set(HashXYZ(tile), data.data); // TODO: cache loaded tiles
 
 		const im = this.painter.paint(data.data);
 		// this.tilesdata.set(tile.z + '-' + tile.x + '-' + tile.y, im);
-		return im;
+		return im as any;
 	}
 
 	setStyleByName(wxstyleName: string, reload = true): void {
