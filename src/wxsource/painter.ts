@@ -31,7 +31,7 @@ export class Painter {
 		context.putImageData(imageData, 0, 0);
 		this._fillIsolineText(isoInfo, context, wxsource);
 		this._drawVectorsStatic(data, context, wxsource);
-		this._drawDegreesStatic(data, context, wxsource);
+		this._drawDegreesStatic(data[0], context, wxsource);
 
 		// this._drawStreamLinesStatic(); // TODO!
 
@@ -174,16 +174,14 @@ export class Painter {
 		} // for y
 	} // _drawVector
 
-	protected _drawDegreesStatic(data: DataPicture[], ctx: CanvasRenderingContext2D, { CLUT, style, wxdataset, variables }: WxTileSource): void {
-		const { min, max, units } = wxdataset.meta.variablesMeta[variables[0]];
+	protected _drawDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, { CLUT, style }: WxTileSource): void {
+		const { units } = this.wxsource.getCurrentMeta(); // wxdataset.meta.variablesMeta[variables[0]];
 		if (units !== 'degree') return;
 		const addDegrees = 0.017453292519943 * style.addDegrees;
 
 		ctx.font = '50px arrows';
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
-		// ctx.clearRect(0, 0, 256, 256);
-		const l = data[0];
 		const vecChar = 'L';
 
 		// const zdif = Math.max(this.coords.z - this.layer.dataSource.meta.maxZoom, 0);
@@ -191,15 +189,15 @@ export class Painter {
 		for (let y = gridStep / 2; y < 256; y += gridStep) {
 			for (let x = gridStep / 2; x < 256; x += gridStep) {
 				const di = x + 1 + (y + 1) * 258;
-				if (!l.raw[di]) continue; // NODATA
-				const angDeg = l.dmin + l.raw[di] * l.dmul + 180;
+				if (!data.raw[di]) continue; // NODATA
+				const angDeg = data.dmin + data.raw[di] * data.dmul + 180;
 				const ang = angDeg * 0.01745329251; // pi/180
 				switch (style.vectorColor) {
 					case 'inverted':
-						ctx.fillStyle = RGBtoHEX(~CLUT.colorsI[l.raw[di]]); // alfa = 255
+						ctx.fillStyle = RGBtoHEX(~CLUT.colorsI[data.raw[di]]); // alfa = 255
 						break;
 					case 'fill':
-						ctx.fillStyle = RGBtoHEX(CLUT.colorsI[l.raw[di]]); // alfa = 255
+						ctx.fillStyle = RGBtoHEX(CLUT.colorsI[data.raw[di]]); // alfa = 255
 						break;
 					default: // put color directly from vectorColor
 						ctx.fillStyle = style.vectorColor;
