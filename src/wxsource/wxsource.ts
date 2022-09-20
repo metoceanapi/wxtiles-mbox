@@ -1,7 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 
 import { type wxDataSetManager } from '../wxAPI/wxAPI';
-import { type ColorStyleStrict, type ColorStyleWeak, HashXYZ, refineColor, WxGetColorStyles, type XYZ } from '../utils/wxtools';
+import { type ColorStyleStrict, type ColorStyleWeak, HashXYZ, refineColor, WxGetColorStyles, type XYZ, type DataPicture, RGBtoHEX } from '../utils/wxtools';
 
 import { RawCLUT } from '../utils/RawCLUT';
 import { Painter } from './painter';
@@ -13,6 +13,17 @@ type wxRaster = HTMLCanvasElement; // Actual result of a Painter
 interface wxRasterData {
 	raster: wxRaster;
 	data: wxData;
+}
+
+export interface WxTileInfo {
+	data: number[];
+	raw: number[];
+	rgba: number[];
+	hexColor: string[];
+	inStyleUnits: number[];
+	tilePoint: { x: number; y: number };
+	styleUnits: string;
+	dataUnits: string;
 }
 
 export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
@@ -135,7 +146,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		}
 
 		const raster_data = { raster: this.painter.paint(data), data };
-		tilesCache.set(HashXYZ(tile), raster_data); // TODO: cache loaded tiles
+		tilesCache.set(HashXYZ(tile), raster_data);
 		return raster_data;
 	}
 
@@ -190,7 +201,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	}
 
 	protected async reloadVisible(init?: { signal?: AbortSignal }): Promise<void> {
-		const tilesCache = new Map(); 
+		const tilesCache = new Map();
 		await Promise.allSettled(this.coveringTiles().map((c) => this._loadTile(c, tilesCache, init))); // fill up cache
 		this.tilesCache = tilesCache; // replace cache
 		this.repaintVisible();
@@ -205,7 +216,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		if (this.animation) return;
 		this.animation = true;
 		const animationStep = (frame: number) => {
-			if (!this.animation || this.style.streamLineStatic || this.style.streamLineColor === 'none') return;
+			if (!this.animation || this.variables.length < 2 || this.style.streamLineStatic || this.style.streamLineColor === 'none') return;
 			this.animationFrame = frame;
 			this.repaintVisible();
 			requestAnimationFrame(animationStep);
@@ -224,6 +235,42 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		(this.map as any).style?._clearSource?.(this.id);
 		// (this.map as any).style?._reloadSource(this.id); // TODO: check if this is needed // seems NOT
 	}
+
+	getLayerInfoAtLatLon(lnglat: mapboxgl.LngLat) {
+		const anymap = this.map as any;
+		const worldsize = anymap.transform.worldSize as number;
+		const zoom = Math.round(Math.log2(worldsize) - 8);
+		const tilesize = worldsize / (2 << (zoom - 1));
+		const mapPixCoord = anymap.transform.project(lnglat) as mapboxgl.Point;
+		const tileCoord = mapPixCoord.div(tilesize);
+		tileCoord.x = Math.floor(tileCoord.x);
+		tileCoord.y = Math.floor(tileCoord.y);
+		const tilePixel_ = mapPixCoord.sub(tileCoord.mult(tilesize)); // tile pixel coordinates
+		const tilePixel = tilePixel_.mult(255 / tilesize).round(); // convert to 256x256 pixel coordinates
+		return this.getTileData({ x: tileCoord.x, y: tileCoord.y, z: zoom }, tilePixel);
+	}
+
+	getTileData(tileCoord: XYZ, tilePixel: { x: number; y: number }): WxTileInfo | undefined {
+		const tile = this.tilesCache.get(HashXYZ(tileCoord));
+		if (!tile) return; // no tile
+		const tileData = this.getPixelInfo(tilePixel, tile.data.data);
+		if (!tileData) return; // oops! no data at the pixel
+		const { raw, data } = tileData;
+		const rgba = raw.map((r) => this.CLUT.colorsI[r]);
+		const hexColor = rgba.map(RGBtoHEX);
+		const inStyleUnits = data.map((d) => this.CLUT.DataToStyle(d));
+		return { data, raw, rgba, hexColor, inStyleUnits, tilePoint: tilePixel, styleUnits: this.style.units, dataUnits: this.getCurrentMeta().units };
+	}
+
+	// x, y - pixel on tile
+	protected getPixelInfo({ x, y }: { x: number; y: number }, data: DataPicture[]): { raw: number[]; data: number[] } | undefined {
+		const index = (y + 1) * 258 + (x + 1);
+		if (!data?.[0]?.raw?.[index]) return; // check if data is loaded and the pixel is not empty
+		return {
+			raw: data.map((data) => data.raw[index]),
+			data: data.map((data) => data.raw[index] * data.dmul + data.dmin),
+		};
+	} // getData
 
 	// get assigned by map.addSource
 	protected coveringTiles(): XYZ[] {

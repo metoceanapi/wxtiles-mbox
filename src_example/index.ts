@@ -1,11 +1,10 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
-import mapboxgl, { baseApiUrl } from 'mapbox-gl';
+import mapboxgl from 'mapbox-gl';
 
 import { wxAPI } from '../src/wxAPI/wxAPI';
-import { WxTileSource } from '../src/wxsource/wxsource';
-import { createLegend, Legend } from '../src/utils/RawCLUT';
-import { ColorStyleStrict, createLevels } from '../src/utils/wxtools';
-import { WxTileLayer } from '../src/_legacy/wxtilelayer';
+import { type WxTileInfo, WxTileSource } from '../src/wxsource/wxsource';
+import { createLegend } from '../src/utils/RawCLUT';
+import { ColorStyleStrict } from '../src/utils/wxtools';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
 class LegendControl {
@@ -166,7 +165,37 @@ async function start() {
 	await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: false }); // await always !!
 	wxsource.startAnimation();
 
-	//** DEMO: timesteps
+	// DEMO: change style's units
+	let i = 0;
+	map.on('click', async () => {
+		const u = ['knots', 'm/s', 'km/h', 'miles/h'];
+		await wxsource.updateCurrentStyleObject({ units: u[i], levels: undefined /*to recalculate levels*/ });
+		legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
+		i = (i + 1) % u.length;
+	});
+
+	// DEMO: read lon lat data
+	let popup: mapboxgl.Popup = new mapboxgl.Popup().setLngLat([0, 0]).setHTML('').addTo(map);
+	map.on('mousemove', (e) => {
+		popup.setHTML(`${e.lngLat}`);
+		popup.setLngLat(e.lngLat);
+		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap());
+		if (!tileInfo) {
+			return;
+		}
+
+		const { min, max } = wxsource.getCurrentMeta();
+		let content = `lnglat=(${e.lngLat.lng.toFixed(2)}, ${e.lngLat.lat.toFixed(2)})<br>
+			dataset=${wxmanager.datasetName}<br>
+			variables=${wxsource.variables}<br>
+			style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
+			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>
+			min=${min.toFixed(2)} ${tileInfo.dataUnits}, max=${max.toFixed(2)} ${tileInfo.dataUnits}<br>
+			time=${wxsource.getTime()}`;
+		popup.setHTML(content);
+	});
+
+	/** DEMO: timesteps
 	const tlength = wxmanager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {
@@ -223,6 +252,7 @@ function addPoints(map: mapboxgl.Map) {
 }
 
 function addSkyAndTerrain(map: mapboxgl.Map) {
+	map.setFog({ color: 'rgb(186, 210, 235)', 'horizon-blend': 0.02 });
 	map.addSource('mapbox-dem', {
 		type: 'raster-dem',
 		url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
