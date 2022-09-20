@@ -178,21 +178,20 @@ async function start() {
 	let popup: mapboxgl.Popup = new mapboxgl.Popup().setLngLat([0, 0]).setHTML('').addTo(map);
 	map.on('mousemove', (e) => {
 		popup.setHTML(`${e.lngLat}`);
-		popup.setLngLat(e.lngLat);
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap());
-		if (!tileInfo) {
-			return;
-		}
-
-		const { min, max } = wxsource.getCurrentMeta();
-		let content = `lnglat=(${e.lngLat.lng.toFixed(2)}, ${e.lngLat.lat.toFixed(2)})<br>
+		if (tileInfo) {
+			const { min, max } = wxsource.getCurrentMeta();
+			let content = `lnglat=(${e.lngLat.lng.toFixed(2)}, ${e.lngLat.lat.toFixed(2)})<br>
 			dataset=${wxmanager.datasetName}<br>
 			variables=${wxsource.variables}<br>
 			style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
 			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>
 			min=${min.toFixed(2)} ${tileInfo.dataUnits}, max=${max.toFixed(2)} ${tileInfo.dataUnits}<br>
 			time=${wxsource.getTime()}`;
-		popup.setHTML(content);
+			popup.setHTML(content);
+		}
+		
+		popup.setLngLat(e.lngLat);
 	});
 
 	/** DEMO: timesteps
