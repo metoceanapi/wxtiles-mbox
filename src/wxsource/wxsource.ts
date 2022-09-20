@@ -59,7 +59,6 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	loader: Loader;
 
 	tilesCache: Map<string, wxRasterData> = new Map();
-	setTimeInProgress: boolean = false;
 
 	constructor({
 		id,
@@ -130,7 +129,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		return raster as any; // to shut up TS errors
 	}
 
-	async _loadTile(tile: XYZ, tilesCache: Map<string, wxRasterData>, init?: { signal?: AbortSignal }): Promise<wxRasterData> {
+	protected async _loadTile(tile: XYZ, tilesCache: Map<string, wxRasterData>, init?: { signal?: AbortSignal }): Promise<wxRasterData> {
 		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
 
@@ -160,7 +159,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
 		const { min, max, units } = this.getCurrentMeta();
 		this.CLUT = new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
-		reload && (await this.reloadVisible(init));
+		reload && (await this.reloadVisible(true, init));
 	}
 
 	getCurrentMeta(): { units: string; min: number; max: number } {
@@ -188,9 +187,11 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		return this.time;
 	}
 
-	async setTime(time_?: string | number | Date, init?: { signal?: AbortSignal }): Promise<string> {
+	// NOTE: even if repaint is false, time and URL are still set!!
+	// so, might be confusing when getTime() returns a new time, but the tiles are not repainted
+	async setTime(time_?: string | number | Date, { repaint = true, init }: { repaint?: boolean; init?: { signal?: AbortSignal } } = {}): Promise<string> {
 		this._setURLs(time_);
-		await this.reloadVisible(init);
+		await this.reloadVisible(repaint, init);
 		return this.time;
 	}
 
@@ -200,9 +201,10 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		this.tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext }));
 	}
 
-	protected async reloadVisible(init?: { signal?: AbortSignal }): Promise<void> {
+	protected async reloadVisible(repaint: boolean, init?: { signal?: AbortSignal }): Promise<void> {
 		const tilesCache = new Map();
 		await Promise.allSettled(this.coveringTiles().map((c) => this._loadTile(c, tilesCache, init))); // fill up cache
+		if (!repaint || init?.signal?.aborted) return; // if we don't need to repaint, we are just need to cache the tiles inside the 'loader'
 		this.tilesCache = tilesCache; // replace cache
 		this.repaintVisible();
 	}

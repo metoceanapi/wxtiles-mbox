@@ -165,17 +165,38 @@ async function start() {
 	await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: false }); // await always !!
 	wxsource.startAnimation();
 
-	// DEMO: change style's units
+	// DEMO: abort
+	const abortController = new AbortController();
+	console.log('setTime(5)');
+	const prom = wxsource.setTime(5, { init: abortController });
+	abortController.abort(); // aborts the request
+	await prom; // await always !! even if aborted
+	console.log('aborted');
+	await wxsource.setTime(5); // no abort
+	console.log('setTime(5) done');
+
+	// DEMO: preload a timestep
+	await wxsource.setTime(10, { repaint: false }); // await always !! even if aborted
+	await wxsource.setTime(20, { repaint: false }); // await always !! even if aborted
+	console.log('preloaded timesteps 10, 20');
+	map.once('click', async () => {
+		await wxsource.setTime(10); // await always !! or abort
+		map.once('click', async () => {
+			await wxsource.setTime(20); // await always !! or abort
+		});
+	}); //*/
+
+	/*/ DEMO: change style's units
 	let i = 0;
 	map.on('click', async () => {
 		const u = ['knots', 'm/s', 'km/h', 'miles/h'];
-		await wxsource.updateCurrentStyleObject({ units: u[i], levels: undefined /*to recalculate levels*/ });
+		await wxsource.updateCurrentStyleObject({ units: u[i], levels: undefined }); // levels: undefined - to recalculate levels
 		legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
 		i = (i + 1) % u.length;
-	});
+	}); //*/
 
-	// DEMO: read lon lat data
-	let popup: mapboxgl.Popup = new mapboxgl.Popup().setLngLat([0, 0]).setHTML('').addTo(map);
+	/* DEMO: read lon lat data
+	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false }).setLngLat([0, 0]).setHTML('').addTo(map);
 	map.on('mousemove', (e) => {
 		popup.setHTML(`${e.lngLat}`);
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap());
@@ -190,9 +211,9 @@ async function start() {
 			time=${wxsource.getTime()}`;
 			popup.setHTML(content);
 		}
-		
+
 		popup.setLngLat(e.lngLat);
-	});
+	});//*/
 
 	/** DEMO: timesteps
 	const tlength = wxmanager.getTimes().length;
