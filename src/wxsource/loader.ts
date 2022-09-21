@@ -25,25 +25,36 @@ export class Loader {
 		this.wxsource = wxsource;
 	}
 
-	async load(coord: XYZ, requestInit?: { signal?: AbortSignal }): Promise<wxData | null> {
-		// TODO: mapbox can't work with boundaries aceross lon 180. Once it's fixed, we can remove this check
-		if (!this._checkInsideBoundaries(coord)) return null; // tile is cut by boundaries
-
-		const tileType = this._checkTypeAndMask(coord);
-		if (!tileType) return null; // tile is cut by mask
-
-		const { upCoords, subCoords } = splitCoords(coord, this.wxsource.wxdataset.meta.maxZoom);
-		const URLs = this.wxsource.tilesURIs.map((uri) => uriXYZ(uri, upCoords));
-		const requestInitCopy = Object.assign({}, this.wxsource.wxdataset.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
-		const rawdata = await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
-
+	async load(tile: XYZ, requestInit?: { signal?: AbortSignal }): Promise<wxData | null> {
+		const preloaded = await this.cacheLoad(tile, this.wxsource.tilesURIs, requestInit);
+		if (!preloaded) return null;
+		const { rawdata, subCoords, tileType } = preloaded;
 		const { units } = this.wxsource.getCurrentMeta();
 		const interpolator = units === 'degree' ? subDataDegree : subData;
 		const processor = (d: DataIntegral) => interpolator(blurData(d, this.wxsource.style.blurRadius), subCoords);
 		const data = rawdata.map(processor); // preprocess all loaded data
 		this._vectorMagnitudesPrepare(data); // if vector data, prepare magnitudes
-		await this._applyMask(data, coord, tileType, !subCoords && rawdata.length === 1); // apply mask if needed
+		await this._applyMask(data, tile, tileType, !subCoords && rawdata.length === 1); // apply mask if needed
 		return { data, slines: this._createStreamLines(data) };
+	}
+
+	async cacheLoad(
+		tile: XYZ,
+		uris: string[],
+		requestInit?: { signal?: AbortSignal }
+	): Promise<{ rawdata: DataIntegral[]; subCoords?: XYZ | undefined; tileType: TileType } | null> {
+		// TODO: mapbox can't work with boundaries across lon 180. Once it's fixed, we can remove this check
+		if (!this._checkInsideBoundaries(tile)) return null; // tile is cut by boundaries
+
+		const tileType = this._checkTypeAndMask(tile);
+		if (!tileType) return null; // tile is cut by mask
+
+		const { upCoords, subCoords } = splitCoords(tile, this.wxsource.wxdataset.meta.maxZoom);
+		const URLs = uris.map((uri) => uriXYZ(uri, upCoords));
+		const requestInitCopy = Object.assign({}, this.wxsource.wxdataset.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
+		const rawdata = await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
+		return { rawdata, subCoords, tileType };
+		// we don't need to process data, as it's for cache preloading only
 	}
 
 	protected async _applyMask(data: DataPicture[], tile: XYZ, tileType: TileType, needCopy: boolean): Promise<void> {

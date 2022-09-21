@@ -125,7 +125,7 @@ async function start() {
 		style: 'mapbox://styles/mapbox/light-v10',
 		// style: 'mapbox://styles/mapbox/satellite-v9',
 		// style: { version: 8, name: 'Empty', sources: {}, layers: [] },
-		center: [-209.2, -34.26],
+		center: [175.13, -35.86],
 		zoom: 2,
 		// projection: { name: 'globe' },
 	});
@@ -147,14 +147,12 @@ async function start() {
 		time: 0,
 	});
 
-	legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
-
 	map.addSource(wxsource.id, wxsource);
 	map.addLayer({
 		id: 'wxtiles',
 		type: 'raster',
 		source: 'wxsource',
-		paint: { 'raster-fade-duration': 0 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
+		paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.5 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
 	});
 
 	// addSkyAndTerrain(map);
@@ -162,27 +160,38 @@ async function start() {
 	addPoints(map);
 
 	// await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: true }); // await always !!
-	await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: false }); // await always !!
+	await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: false, levels: undefined }); // await always !!
+	legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
 	wxsource.startAnimation();
 
-	// DEMO: abort
+	/*/ DEMO: abort
 	const abortController = new AbortController();
 	console.log('setTime(5)');
-	const prom = wxsource.setTime(5, { init: abortController });
+	const prom = wxsource.setTime(5, { requestInit: abortController });
 	abortController.abort(); // aborts the request
 	await prom; // await always !! even if aborted
 	console.log('aborted');
 	await wxsource.setTime(5); // no abort
-	console.log('setTime(5) done');
+	console.log('setTime(5) done');//*/
 
 	// DEMO: preload a timestep
-	await wxsource.setTime(10, { repaint: false }); // await always !! even if aborted
-	await wxsource.setTime(20, { repaint: false }); // await always !! even if aborted
-	console.log('preloaded timesteps 10, 20');
 	map.once('click', async () => {
-		await wxsource.setTime(10); // await always !! or abort
+		console.log('no preload time=5');
+		const t = Date.now();
+		await wxsource.setTime(5); // await always !! or abort
+		console.log(Date.now() - t);
+		await wxsource.preloadTime(10); // await always !! even if aborted
+		await wxsource.preloadTime(20); // await always !! even if aborted
+		console.log('preloaded timesteps 10, 20');
 		map.once('click', async () => {
-			await wxsource.setTime(20); // await always !! or abort
+			const t = Date.now();
+			await wxsource.setTime(10); // await always !! or abort
+			console.log(Date.now() - t, ' step 10');
+			map.once('click', async () => {
+				const t = Date.now();
+				await wxsource.setTime(20); // await always !! or abort
+				console.log(Date.now() - t, ' step 20');
+			});
 		});
 	}); //*/
 
@@ -195,7 +204,7 @@ async function start() {
 		i = (i + 1) % u.length;
 	}); //*/
 
-	/* DEMO: read lon lat data
+	/*/ DEMO: read lon lat data
 	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false }).setLngLat([0, 0]).setHTML('').addTo(map);
 	map.on('mousemove', (e) => {
 		popup.setHTML(`${e.lngLat}`);
@@ -213,9 +222,9 @@ async function start() {
 		}
 
 		popup.setLngLat(e.lngLat);
-	});//*/
+	}); //*/
 
-	/** DEMO: timesteps
+	/*/ DEMO: timesteps
 	const tlength = wxmanager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {

@@ -9,6 +9,10 @@ import { Loader, type wxData } from './loader';
 
 type CSIRaster = ImageData; // To shut up TS errors for CustomSourceInterface
 type wxRaster = HTMLCanvasElement; // Actual result of a Painter
+type wxDate = string | number | Date;
+interface RInit {
+	signal?: AbortSignal;
+}
 
 interface wxRasterData {
 	raster: wxRaster;
@@ -27,36 +31,33 @@ export interface WxTileInfo {
 }
 
 export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
-	type: 'custom' = 'custom';
-	dataType: 'raster' = 'raster';
+	type: 'custom' = 'custom'; // MAPBOX API
+	dataType: 'raster' = 'raster'; // MAPBOX API
+	id: string; // MAPBOX API
 
-	id: string;
-	variables: string[];
+	variables: string[]; // vaariables of the dataset
 	wxdataset: wxDataSetManager;
-	ext: string;
+	ext: string; // tiles extension. png by default
 
-	map: mapboxgl.Map;
+	map: mapboxgl.Map; // current map
 
-	time!: string; // is set in constructor by _setURLs()
-	tilesURIs!: string[]; // is set in constructor by _setURLs()
+	time: string = ''; // current time. is set in constructor by _setURLs()
+	tilesURIs: string[] = []; // current URIs. is set in constructor by _setURLs()
 
-	tileSize: number;
-	maxzoom?: number;
-	scheme?: string;
-	bounds?: [number, number, number, number];
-	attribution?: string;
+	tileSize: number; // MAPBOX API default 256
+	maxzoom?: number; // MAPBOX API
+	scheme?: string; // MAPBOX API
+	bounds?: [number, number, number, number]; // MAPBOX API
+	attribution?: string; // MAPBOX API
 
-	// tilesdata: Map<string, ImageData> = new Map();
-
-	wxstyleName!: string; // is set in constructor by setStyleName()
-	style: ColorStyleStrict = WxGetColorStyles()['base'];
+	style!: ColorStyleStrict;
 	CLUT!: RawCLUT; // is set in constructor by setStyleName()
 
 	animation = false;
 	animationFrame = 0;
 
-	painter: Painter;
-	loader: Loader;
+	painter: Painter = new Painter(this);
+	loader: Loader = new Loader(this);
 
 	tilesCache: Map<string, wxRasterData> = new Map();
 
@@ -75,7 +76,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		attribution = 'wxTiles',
 	}: {
 		id: string;
-		time?: string | number | Date;
+		time?: wxDate;
 		variables: string[];
 		wxdataset: wxDataSetManager;
 		ext?: string;
@@ -96,23 +97,20 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 			if (!wxdataset.checkVariableValid(v)) throw new Error(`wxTileSource ${wxdataset.datasetName}: variable ${v} is not valid`);
 		});
 
-		this.id = id;
+		this.id = id; // MAPBOX API
 		this.variables = variables;
 		this.wxdataset = wxdataset;
 		this.ext = ext;
 
 		this.map = map;
 
-		this.tileSize = tileSize;
-		this.attribution = attribution;
-		this.maxzoom = maxzoom;
-		this.scheme = scheme;
-		this.bounds = bounds || wxdataset.getBoundaries(); // let mapbox manage boundaries, but not all cases are covered.
-		this._setURLs(time);
+		this.tileSize = tileSize; // MAPBOX API
+		this.attribution = attribution; // MAPBOX API
+		this.maxzoom = maxzoom; // MAPBOX API
+		this.scheme = scheme; // MAPBOX API
+		this.bounds = bounds || wxdataset.getBoundaries(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
+		this._setURLsAndTime(time);
 		this.setStyleByName(wxstyleName, false);
-
-		this.painter = new Painter(this);
-		this.loader = new Loader(this);
 	}
 
 	// Beter to use when loading is not in progress
@@ -121,21 +119,21 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		this.loader = new Loader(this);
 	}
 
-	async loadTile(tile: XYZ, init?: { signal?: AbortSignal }): Promise<CSIRaster> {
-		const raster_data = await this._loadTile(tile, this.tilesCache, init);
+	async loadTile(tile: XYZ, requestInit?: RInit): Promise<CSIRaster> {
+		const raster_data = await this._loadTile(tile, this.tilesCache, requestInit);
 		const raster = this.animation
 			? this.painter.imprintVectorAnimationLinesStep(raster_data.data, raster_data.raster, this, this.animationFrame)
 			: raster_data.raster;
 		return raster as any; // to shut up TS errors
 	}
 
-	protected async _loadTile(tile: XYZ, tilesCache: Map<string, wxRasterData>, init?: { signal?: AbortSignal }): Promise<wxRasterData> {
+	protected async _loadTile(tile: XYZ, tilesCache: Map<string, wxRasterData>, requestInit?: RInit): Promise<wxRasterData> {
 		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
 
 		let data: wxData | null = null;
 		try {
-			data = await this.loader.load(tile, init);
+			data = await this.loader.load(tile, requestInit);
 		} catch (e) {
 			throw { status: 404 }; // happens when tile is not available (does not exist)
 		}
@@ -150,16 +148,19 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	}
 
 	setStyleByName(wxstyleName: string, reload = true): void {
-		this.wxstyleName = wxstyleName;
 		this.updateCurrentStyleObject(WxGetColorStyles()[wxstyleName], reload);
 	}
 
-	async updateCurrentStyleObject(style: ColorStyleWeak, reload = true, init?: { signal?: AbortSignal }): Promise<void> {
+	protected _prepareCLUTfromCurrentStyle(): RawCLUT {
+		const { min, max, units } = this.getCurrentMeta();
+		return new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
+	}
+
+	async updateCurrentStyleObject(style: ColorStyleWeak, reload = true, requestInit?: RInit): Promise<void> {
 		this.style = Object.assign(this.getCurrentStyleObjectCopy(), style); // deep copy, so could be (and is) changed
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
-		const { min, max, units } = this.getCurrentMeta();
-		this.CLUT = new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
-		reload && (await this.reloadVisible(true, init));
+		this.CLUT = this._prepareCLUTfromCurrentStyle(); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
+		reload && (await this._reloadVisible(requestInit));
 	}
 
 	getCurrentMeta(): { units: string; min: number; max: number } {
@@ -187,29 +188,37 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		return this.time;
 	}
 
+	async preloadTime(time_: wxDate, requestInit?: RInit): Promise<void> {
+		const time = this.wxdataset.getValidTime(time_);
+		const tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext: this.ext }));
+		await Promise.allSettled(this.coveringTiles().map((tile) => this.loader.cacheLoad(tile, tilesURIs, requestInit))); // fill up cache
+	}
+
 	// NOTE: even if repaint is false, time and URL are still set!!
 	// so, might be confusing when getTime() returns a new time, but the tiles are not repainted
-	async setTime(time_?: string | number | Date, { repaint = true, init }: { repaint?: boolean; init?: { signal?: AbortSignal } } = {}): Promise<string> {
-		this._setURLs(time_);
-		await this.reloadVisible(repaint, init);
+	async setTime(time_?: wxDate, requestInit?: RInit): Promise<string> {
+		const oldtime = this.time;
+		this._setURLsAndTime(time_);
+		await this._reloadVisible(requestInit);
+		if (requestInit?.signal?.aborted) this._setURLsAndTime(oldtime); // restore old time and URLs
 		return this.time;
 	}
 
-	protected _setURLs(time_?: string | number | Date): void {
+	protected _setURLsAndTime(time_?: wxDate): void {
 		this.time = this.wxdataset.getValidTime(time_);
 		const { time, ext } = this;
 		this.tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext }));
 	}
 
-	protected async reloadVisible(repaint: boolean, init?: { signal?: AbortSignal }): Promise<void> {
+	protected async _reloadVisible(requestInit?: { signal?: AbortSignal }): Promise<void> {
 		const tilesCache = new Map();
-		await Promise.allSettled(this.coveringTiles().map((c) => this._loadTile(c, tilesCache, init))); // fill up cache
-		if (!repaint || init?.signal?.aborted) return; // if we don't need to repaint, we are just need to cache the tiles inside the 'loader'
+		await Promise.allSettled(this.coveringTiles().map((tile) => this._loadTile(tile, tilesCache, requestInit))); // fill up cache
+		if (requestInit?.signal?.aborted) return; // if we don't need to repaint, we are just need to cache the tiles inside the 'loader'
 		this.tilesCache = tilesCache; // replace cache
-		this.repaintVisible();
+		this._repaintVisible();
 	}
 
-	protected repaintVisible(): void {
+	protected _repaintVisible(): void {
 		this.clearTiles();
 		this.update(); // it forces mapbox to reload visible tiles (hopefully from cache)
 	}
@@ -220,7 +229,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		const animationStep = (frame: number) => {
 			if (!this.animation || this.variables.length < 2 || this.style.streamLineStatic || this.style.streamLineColor === 'none') return;
 			this.animationFrame = frame;
-			this.repaintVisible();
+			this._repaintVisible();
 			requestAnimationFrame(animationStep);
 		};
 
@@ -229,13 +238,6 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 
 	stopAnimation(): void {
 		this.animation = false;
-	}
-
-	protected clearTiles() {
-		// COMING SOON in a future release
-		// but for now, we use the same algorithm as in mapbox-gl-js
-		(this.map as any).style?._clearSource?.(this.id);
-		// (this.map as any).style?._reloadSource(this.id); // TODO: check if this is needed // seems NOT
 	}
 
 	getLayerInfoAtLatLon(lnglat: mapboxgl.LngLat) {
@@ -255,7 +257,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	getTileData(tileCoord: XYZ, tilePixel: { x: number; y: number }): WxTileInfo | undefined {
 		const tile = this.tilesCache.get(HashXYZ(tileCoord));
 		if (!tile) return; // no tile
-		const tileData = this.getPixelInfo(tilePixel, tile.data.data);
+		const tileData = this._getPixelInfo(tilePixel, tile.data.data);
 		if (!tileData) return; // oops! no data at the pixel
 		const { raw, data } = tileData;
 		const rgba = raw.map((r) => this.CLUT.colorsI[r]);
@@ -265,7 +267,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	}
 
 	// x, y - pixel on tile
-	protected getPixelInfo({ x, y }: { x: number; y: number }, data: DataPicture[]): { raw: number[]; data: number[] } | undefined {
+	protected _getPixelInfo({ x, y }: { x: number; y: number }, data: DataPicture[]): { raw: number[]; data: number[] } | undefined {
 		const index = (y + 1) * 258 + (x + 1);
 		if (!data?.[0]?.raw?.[index]) return; // check if data is loaded and the pixel is not empty
 		return {
@@ -274,13 +276,21 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		};
 	} // getData
 
-	// get assigned by map.addSource
+	// MBOX API
+	protected clearTiles() {
+		// COMING SOON in a future release
+		// but for now, we use the same algorithm as in mapbox-gl-js
+		(this.map as any).style?._clearSource?.(this.id);
+		// (this.map as any).style?._reloadSource(this.id); // TODO: check if this is needed // seems NOT
+	}
+
+	// MBOX API get assigned by map.addSource
 	protected coveringTiles(): XYZ[] {
 		return [];
 		// mapbox-gl-js implementation: return (this.map.getSource(this.id) as any)?._coveringTiles?.() || [];
 	}
 
-	// get assigned by map.addSource
+	// MBOX API get assigned by map.addSource
 	protected update() {
 		// mapbox-gl-js implementation: return (this.map.getSource(this.id) as any)?._update?.();
 	}
