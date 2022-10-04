@@ -21,20 +21,19 @@ export class QTree {
 	constructor() {}
 
 	async load(input: RequestInfo, requestInit?: RequestInit | undefined): Promise<void> {
-		let _seamask: string;
 		try {
-			_seamask = await fetchJson<string>(input, requestInit);
+			const _seamask = await fetchJson<string>(input, requestInit);
+			this.qtree = qtreeFromString(_seamask, { pos: 0 });
 		} catch (e) {
 			throw new Error(`Failed to load QTree: ${e.message}`);
 		}
 
-		this.qtree = qtreeFromString(_seamask, { pos: 0 });
 		this.qtreedepth = getTreeDepth(this.qtree);
 	}
 
 	check(coord: XYZ): TileType {
 		const d = coord.z - this.qtreedepth;
-		const deepest = d >= 0; // if the coord is deeper than the qtree, don't gi deeper than the qtree
+		const deepest = d >= 0; // if the coord is deeper than the qtree, don't go deeper than the qtree
 		const subCoords = deepest ? { x: coord.x >> d, y: coord.y >> d, z: this.qtreedepth } : { ...coord /*copy!*/ };
 		return qTreeCheckCoord(this.qtree, subCoords, deepest);
 	}

@@ -1,6 +1,6 @@
 import mapboxgl from 'mapbox-gl';
 
-import { type wxDataSetManager } from '../wxAPI/wxAPI';
+import { type VariableMeta, type wxDataSetManager } from '../wxAPI/wxAPI';
 import { type ColorStyleStrict, type ColorStyleWeak, HashXYZ, refineColor, WxGetColorStyles, type XYZ, type DataPicture, RGBtoHEX } from '../utils/wxtools';
 
 import { RawCLUT } from '../utils/RawCLUT';
@@ -30,12 +30,14 @@ export interface WxTileInfo {
 	dataUnits: string;
 }
 
+export type wxVars = [string] | [string, string];
+
 export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	type: 'custom' = 'custom'; // MAPBOX API
 	dataType: 'raster' = 'raster'; // MAPBOX API
 	id: string; // MAPBOX API
 
-	variables: string[]; // vaariables of the dataset
+	variables: wxVars; // variables of the dataset if vector then [eastward, northward]
 	wxdataset: wxDataSetManager;
 	ext: string; // tiles extension. png by default
 
@@ -77,7 +79,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 	}: {
 		id: string;
 		time?: wxDate;
-		variables: string[];
+		variables: wxVars;
 		wxdataset: wxDataSetManager;
 		ext?: string;
 		map: mapboxgl.Map;
@@ -156,20 +158,24 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		return new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
 	}
 
-	async updateCurrentStyleObject(style: ColorStyleWeak, reload = true, requestInit?: RInit): Promise<void> {
+	async updateCurrentStyleObject(style?: ColorStyleWeak, reload = true, requestInit?: RInit): Promise<void> {
 		this.style = Object.assign(this.getCurrentStyleObjectCopy(), style); // deep copy, so could be (and is) changed
 		this.style.streamLineColor = refineColor(this.style.streamLineColor);
 		this.CLUT = this._prepareCLUTfromCurrentStyle(); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
 		reload && (await this._reloadVisible(requestInit));
 	}
 
-	getCurrentMeta(): { units: string; min: number; max: number } {
-		let { min, max, units } = this.wxdataset.meta.variablesMeta[this.variables[0]];
+	getCurrentMeta(): VariableMeta {
+		const metas = this.variables.map((v) => {
+			const meta = this.wxdataset.meta.variablesMeta[v];
+			if (!meta) throw new Error(`wxTileSource ${this.wxdataset.datasetName}: variable ${v} is not valid`);
+			return meta;
+		});
+		let { min, max, units } = metas[0];
 		if (this.variables.length > 1) {
 			// for the verctor field we need to get the min and max of the vectors' length
 			// but convert and calculate ALL vector length just for that is too much
 			// so we just use estimation based on the max of the vector components
-			const metas = this.variables.map((v) => this.wxdataset.meta.variablesMeta[v]);
 			// hence min of a vector length can't be less than 0
 			min = 0;
 			// max of a field can't be less than max of the components multiplied by sqrt(2)

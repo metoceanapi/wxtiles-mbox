@@ -2,7 +2,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl';
 
 import { wxAPI } from '../src/wxAPI/wxAPI';
-import { type WxTileInfo, WxTileSource } from '../src/wxsource/wxsource';
+import { type WxTileInfo, WxTileSource, type wxVars } from '../src/wxsource/wxsource';
 import { createLegend } from '../src/utils/RawCLUT';
 import { ColorStyleStrict } from '../src/utils/wxtools';
 
@@ -106,11 +106,14 @@ class LegendControl {
 }
 async function start() {
 	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
-	const wxapi = new wxAPI({ dataServerURL, requestInit: {} });
+	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
+	const myHeaders = new Headers();
+	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
+	const wxapi = new wxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit: { headers: myHeaders } });
 
 	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
-	// const variables = ['air.temperature.at-2m'];
-	const variables = ['wind.speed.northward.at-10m', 'wind.speed.eastward.at-10m'];
+	// const variables: wxVars = ['air.temperature.at-2m'];
+	const variables: wxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
 
 	// const datasetName = 'ww3-ecmwf.global';
 	// const variables = ['wave.direction.mean'];
@@ -125,8 +128,8 @@ async function start() {
 		style: 'mapbox://styles/mapbox/light-v10',
 		// style: 'mapbox://styles/mapbox/satellite-v9',
 		// style: { version: 8, name: 'Empty', sources: {}, layers: [] },
-		center: [175.13, -35.86],
-		zoom: 2,
+		center: [174.5, -40.75],
+		zoom: 6,
 		// projection: { name: 'globe' },
 	});
 
@@ -144,7 +147,7 @@ async function start() {
 		wxstyleName: 'base',
 		wxdataset: wxmanager,
 		variables,
-		time: 0,
+		// time: 0,
 	});
 
 	map.addSource(wxsource.id, wxsource);
@@ -163,6 +166,7 @@ async function start() {
 	await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: false, levels: undefined }); // await always !!
 	legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
 	wxsource.startAnimation();
+	console.log('time', wxsource.getTime());
 
 	/*/ DEMO: abort
 	const abortController = new AbortController();
@@ -174,7 +178,7 @@ async function start() {
 	await wxsource.setTime(5); // no abort
 	console.log('setTime(5) done');//*/
 
-	// DEMO: preload a timestep
+	/*/ DEMO: preload a timestep
 	map.once('click', async () => {
 		console.log('no preload time=5');
 		const t = Date.now();

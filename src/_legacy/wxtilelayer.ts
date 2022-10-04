@@ -157,10 +157,10 @@ interface LayerProgram {
 
 interface UniformLocations {
 	program: WebGLProgram;
-	[key: string]: WebGLUniformLocation;
+	[key: string]: WebGLUniformLocation | undefined;
 }
 
-function getUniforms(gl: WebGLRenderingContext, program: WebGLProgram, uniforms: string[]): { [key: string]: WebGLUniformLocation } {
+function getUniforms(gl: WebGLRenderingContext, program: WebGLProgram, uniforms: string[]): UniformLocations {
 	const result: UniformLocations = { program };
 	uniforms.forEach((u) => {
 		result[u] = gl.getUniformLocation(program, u) || 0;

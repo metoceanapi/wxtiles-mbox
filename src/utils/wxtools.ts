@@ -11,11 +11,11 @@ export interface XYZ {
 export type UnitTuple = [string, number, number?];
 
 export interface Units {
-	[unit: string]: UnitTuple;
+	[unit: string]: UnitTuple | undefined;
 }
 
 export interface ColorSchemes {
-	[name: string]: string[];
+	[name: string]: string[] | undefined;
 }
 
 export type colorMapTuple = [number, string];
@@ -48,11 +48,11 @@ export interface ColorStyleWeak {
 }
 
 export interface ColorStylesWeakMixed {
-	[name: string]: ColorStyleWeak | ColorStyleWeak[];
+	[name: string]: ColorStyleWeak | ColorStyleWeak[] | undefined;
 }
 
 export interface ColorStylesIncomplete {
-	[name: string]: ColorStyleWeak;
+	[name: string]: ColorStyleWeak | undefined;
 }
 
 export interface ColorStyleStrict extends ColorStyleWeak {
@@ -83,7 +83,8 @@ export interface ColorStyleStrict extends ColorStyleWeak {
 }
 
 export interface ColorStylesStrict {
-	[name: string]: ColorStyleStrict;
+	base: ColorStyleStrict;
+	[name: string]: ColorStyleStrict | undefined;
 }
 
 let _units: Units;
@@ -141,15 +142,17 @@ export function makeConverter(from: string, to: string, customUnits?: Units): Co
 	}
 
 	const localUnitsCopy = Object.assign({}, _units, customUnits);
-	if (!localUnitsCopy[from] || !localUnitsCopy[to]) {
+	const fromUnit = localUnitsCopy[from];
+	const toUnit = localUnitsCopy[to];
+	if (!fromUnit || !toUnit) {
 		WXLOG('Inconvertible units. Trivial converter');
 		return c; // Inconvertible
 	}
 
-	const [fromUnit, fromFactor, fromOffset] = localUnitsCopy[from];
-	const [toUnit, toFactor, toOffset] = localUnitsCopy[to];
+	const [fromUnitBase, fromFactor, fromOffset] = fromUnit;
+	const [toUnitBase, toFactor, toOffset] = toUnit;
 
-	if (fromUnit !== toUnit || !fromFactor || !toFactor) {
+	if (fromUnitBase !== toUnitBase || !fromFactor || !toFactor) {
 		WXLOG('Inconvertible units. Trivial converter');
 		return c; // trivial
 	}
@@ -172,16 +175,18 @@ function unrollStylesParent(stylesArrInc: ColorStylesWeakMixed): ColorStylesStri
 		}
 	}
 
+	const baseStyleCopy = Object.assign({}, __colorStyles_default_preset.base);
 	// recursive function to apply inheritance
 	const inherit = (stylesInc: ColorStylesIncomplete, name: string): ColorStyleStrict => {
-		if (name === 'base') return __colorStyles_default_preset.base; // nothing to inherit
+		if (name === 'base') return baseStyleCopy; // nothing to inherit
 		const style = stylesInc[name]; // there are no arrays by this point
+		if (!style) return baseStyleCopy; // nothing to inherit
 		if (!style.parent || !(style.parent in stylesInc)) style.parent = 'base';
 		const parent = inherit(stylesInc, style.parent); // After inheritance it is FULL ColorStyle
 		return Object.assign(style, Object.assign({}, parent, style, { parent: 'base' })); // this ugly construction changes style 'in place' so it is a soft-copy. huray!
 	};
 
-	const styles: ColorStylesStrict = {};
+	const styles: ColorStylesStrict = { base: baseStyleCopy };
 	for (const name in stylesInc) {
 		styles[name] = inherit(stylesInc, name);
 	}
@@ -507,7 +512,12 @@ export function HEXtoRGBA(c: string): number {
 
 // json loader helper
 export async function fetchJson<T = any>(url: RequestInfo, requestInit?: RequestInit): Promise<T> {
-	return (await fetch(url, requestInit)).json();
+	const response = await fetch(url, requestInit);
+	if (!response.ok) {
+		throw new Error('error:' + url + ' - ' + response.statusText);
+	}
+
+	return response.json();
 }
 
 export function createEl(tagName: string, className = '', container?: HTMLElement): HTMLElement {
@@ -574,7 +584,8 @@ export function refineColor(c: string): string {
 }
 
 export function uriXYZ(uri: string, { x, y, z }: XYZ): string {
-	return uri.replace('{x}', x.toString()).replace('{y}', y.toString()).replace('{z}', z.toString());
+	return uri.replace('{x}', `${x}`).replace('{y}', `${y}`).replace('{z}', `${z}`);
+	// return uri.replace('{x}', x.toString()).replace('{y}', y.toString()).replace('{z}', z.toString());
 }
 
 export function HashXYZ({ x, y, z }: XYZ): string {

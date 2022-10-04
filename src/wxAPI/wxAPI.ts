@@ -6,20 +6,25 @@ import { __units_default_preset } from '../defaults/uconv';
 import { fetchJson, loadImageData, cacheUriPromise, uriXYZ, XYZ, WxTilesLibOptions, WxTilesLibSetup, Units, ColorSchemes } from '../utils/wxtools';
 import { QTree } from '../utils/qtree';
 
-type wxDataSetsNames = Array<string>;
-
 type wxInstances = Array<string>;
+interface DatasetShortMeta {
+	instance: string;
+	variables: string[];
+}
 
-interface wxProcessed {
-	[datasetName: string]: [string, string];
+export interface wxDataSetsMetasJSON {
+	allDatasetsList: string[];
+	[name: string]: DatasetShortMeta | string[] | undefined;
 }
 
 export interface VariableMeta {
-	[name: string]: {
-		units: string;
-		min: number;
-		max: number;
-	};
+	units: string;
+	min: number;
+	max: number;
+}
+
+export interface VariablesMetas {
+	[name: string]: VariableMeta | undefined;
 }
 
 export interface BoundaryMeta {
@@ -39,12 +44,115 @@ export interface AllBoundariesMeta {
 	boundaries360: BoundaryMeta[];
 }
 
-export interface Meta {
+export interface DatasetMeta {
 	variables: string[];
-	variablesMeta: VariableMeta;
+	variablesMeta: VariablesMetas;
 	maxZoom: number;
 	times: string[];
 	boundaries?: AllBoundariesMeta;
+}
+
+export interface wxAPIOptions extends WxTilesLibOptions {
+	dataServerURL: string;
+	maskURL?: 'none' | 'auto' | string;
+	qtreeURL?: 'none' | 'auto' | string;
+	requestInit?: RequestInit;
+}
+
+/**
+ * wxAPI is a wrapper for WxTilesLib.
+ * @class wxAPI
+ * @argument {string} dataServerURL - URL of the data server
+ * @argument {string} maskURL - URL of the mask server
+ * @argument {string} qtreeURL - URL of the qtree data file
+ * @argument {RequestInit} requestInit - request init object for fetching data
+ * @argument {ColorStylesWeakMixed | undefined} colorStyles - color styles for the rendering
+ * @argument {Units | undefined} unnits - units for the rendering
+ * @argument {ColorSchemes | undefined} colorSchemes - color schemes for the rendering
+ * */
+export class wxAPI {
+	readonly dataServerURL: string;
+	readonly maskURL?: string;
+	readonly requestInit?: RequestInit;
+	readonly datasetsMetas: wxDataSetsMetasJSON = { allDatasetsList: [] };
+	readonly initDone: Promise<void>;
+	readonly qtree: QTree = new QTree();
+	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData> = () => Promise.reject(new Error('maskURL not defined'));
+
+	constructor({ dataServerURL, maskURL = 'auto', qtreeURL = 'auto', requestInit, colorStyles, units, colorSchemes }: wxAPIOptions) {
+		WxTilesLibSetup({ colorStyles, units, colorSchemes });
+
+		this.dataServerURL = dataServerURL;
+		this.requestInit = requestInit;
+		qtreeURL = qtreeURL === 'auto' ? dataServerURL + 'seamask.qtree' : qtreeURL;
+
+		if (maskURL !== 'none') {
+			const maskloader = cacheUriPromise(loadImageData);
+			this.maskURL = maskURL = maskURL === 'auto' ? dataServerURL + 'mask/' : maskURL;
+			this.loadMaskFunc = (coord: XYZ) => maskloader(uriXYZ(maskURL, coord), requestInit);
+		}
+
+		this.initDone = Promise.all([
+			fetchJson<wxDataSetsMetasJSON>(dataServerURL + 'datasetsmeta.json', requestInit),
+			qtreeURL !== 'none' ? this.qtree.load(qtreeURL, requestInit) : Promise.resolve(),
+		]).then(([datasetsMetas, _]): void => {
+			Object.assign(this.datasetsMetas, datasetsMetas);
+		});
+	}
+
+	protected getDatasetInatance(datasetName: string): string | undefined {
+		return (this.datasetsMetas[datasetName] as DatasetShortMeta)?.instance;
+	}
+
+	/**
+	 * Create wxDataSetManager object for the given dataset name.
+	 * @memberof wxAPI
+	 * @param {string} datasetName - dataset name
+	 * @returns {wxDataSetManager} - wxDataSetManager object for the given dataset name
+	 */
+	async createDatasetManager(datasetName: string): Promise<wxDataSetManager> {
+		await this.initDone;
+		const instance = this.getDatasetInatance(datasetName);
+		if (!instance) throw new Error('Dataset/instance not found:' + datasetName);
+		const meta = await fetchJson<DatasetMeta>(this.dataServerURL + datasetName + '/' + instance + '/meta.json', this.requestInit);
+		return new wxDataSetManager({ datasetName, instance, meta, wxapi: this });
+	}
+
+	/**
+	 *  Creates all possible dataset managers
+	 * For each dataset in the datasets list, creates wxDataSetManager object.
+	 * Requests all datasets meta.json in parallel.
+	 * @memberof wxAPI
+	 * @returns {Promise<wxDataSetManager[]>} - list of all available dataset managers
+	 */
+	async createAllDatasetsManagers(): Promise<PromiseSettledResult<wxDataSetManager>[]> {
+		await this.initDone;
+		const res = Promise.allSettled(this.datasetsMetas.allDatasetsList.map((datasetName: string) => this.createDatasetManager(datasetName)));
+		return res;
+	}
+
+	/**
+	 * Returns datasets names which have given variable
+	 * @memberof wxAPI
+	 * @argument {string} variableName - variable name to search for in datasets
+	 * @returns {string[]} - list of datasets' names
+	 * */
+	async filterDatasetsByVariableName(variableName: string): Promise<string[]> {
+		await this.initDone;
+		return this.datasetsMetas.allDatasetsList.filter((datasetName) =>
+			(this.datasetsMetas[datasetName] as DatasetShortMeta)?.variables?.includes?.(variableName)
+		);
+	}
+
+	/**
+	 * Get the list of all available datasets' names
+	 * @memberof wxAPI
+	 * @returns {string[]} - list of all available datasets' names
+	 */
+	async getAllDatasetsNames(): Promise<string[]> {
+		await this.initDone;
+		return this.datasetsMetas.allDatasetsList;
+	}
 }
 
 /**
@@ -52,16 +160,17 @@ export interface Meta {
  * @description Class for managing WX datasets.
  * @param {string} dataSetsName - Name of the dataset.
  * @param {string} instance - current instance (instance or data time creataion in NC-file) of the dataset.
- * @param {Meta} meta - metadata.
+ * @param {DatasetMeta} meta - metadata.
  * @param {wxAPI} wxapi - Wx API control object.
  * */
 export class wxDataSetManager {
-	datasetName: string;
-	instance: string;
-	meta: Meta;
-	wxapi: wxAPI;
+	readonly datasetName: string;
+	readonly instance: string;
+	readonly meta: DatasetMeta;
+	readonly wxapi: wxAPI;
 
-	constructor({ datasetName, instance, meta, wxapi }: { datasetName: string; instance: string; meta: Meta; wxapi: wxAPI }) {
+	constructor({ datasetName, instance, meta, wxapi }: { datasetName: string; instance: string; meta: DatasetMeta; wxapi: wxAPI }) {
+		if (!wxapi.datasetsMetas.allDatasetsList.includes(datasetName)) throw new Error(`Dataset ${datasetName} not found`);
 		this.datasetName = datasetName;
 		this.instance = instance;
 		this.meta = meta;
@@ -115,7 +224,7 @@ export class wxDataSetManager {
 	 * min - minimum value of the variable
 	 * max - maximum value of the variable
 	 * */
-	getVariableMeta(variable: string): { units: string; min: number; max: number } | undefined {
+	getVariableMeta(variable: string): VariableMeta | undefined {
 		return this.meta.variablesMeta[variable];
 	}
 
@@ -171,91 +280,16 @@ export class wxDataSetManager {
 	 * */
 	async checkDatasetOutdated(): Promise<boolean> {
 		await this.wxapi.initDone;
-		if (!this.wxapi.datasetsNames.includes(this.datasetName)) throw new Error(`Dataset ${this.datasetName} not found`);
-		return (await this.wxapi.getDatasetInstance(this.datasetName)) === this.instance;
-	}
-}
-
-export interface wxAPIOptions extends WxTilesLibOptions {
-	dataServerURL: string;
-	maskURL?: 'none' | 'auto' | string;
-	qtreeURL?: 'none' | 'auto' | string;
-	requestInit?: RequestInit;
-}
-
-/**
- * wxAPI is a wrapper for WxTilesLib.
- * @class wxAPI
- * @argument {string} dataServerURL - URL of the data server
- * @argument {string} maskURL - URL of the mask server
- * @argument {string} qtreeURL - URL of the qtree data file
- * @argument {RequestInit} requestInit - request init object for fetching data
- * @argument {ColorStylesWeakMixed | undefined} colorStyles - color styles for the rendering
- * @argument {Units | undefined} unnits - units for the rendering
- * @argument {ColorSchemes | undefined} colorSchemes - color schemes for the rendering
- * */
-export class wxAPI {
-	readonly dataServerURL: string;
-	readonly maskURL?: string;
-	readonly requestInit?: RequestInit;
-	readonly datasetsNames: wxDataSetsNames = [];
-	readonly initDone: Promise<void>;
-	readonly qtree: QTree = new QTree();
-	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData>;
-
-	constructor({ dataServerURL, maskURL = 'auto', qtreeURL = 'auto', requestInit, colorStyles, units, colorSchemes }: wxAPIOptions) {
-		WxTilesLibSetup({ colorStyles, units, colorSchemes });
-
-		this.dataServerURL = dataServerURL;
-		maskURL = maskURL === 'auto' ? dataServerURL + 'mask/' : maskURL;
-		this.maskURL = maskURL;
-		qtreeURL = qtreeURL === 'auto' ? dataServerURL + 'seamask.qtree' : qtreeURL;
-		this.requestInit = requestInit;
-
-		const maskloader = cacheUriPromise(loadImageData);
-		this.loadMaskFunc =
-			maskURL !== 'none'
-				? async (coord: XYZ) => {
-						try {
-							return await maskloader(uriXYZ(maskURL, coord), requestInit);
-						} catch (e) {
-							throw new Error(`loading mask failure  message: ${e.message} maskURL: ${maskURL}`);
-						}
-				  }
-				: () => Promise.reject(new Error('maskURL not defined'));
-
-		this.initDone = Promise.all([
-			fetchJson<string[]>(dataServerURL + 'datasets.json', requestInit),
-			qtreeURL !== 'none' ? this.qtree.load(qtreeURL, requestInit) : Promise.resolve(),
-		]).then(([datasets, _]): void => {
-			this.datasetsNames.push(...datasets);
-		});
+		return (await this.getDatasetInstance()) === this.instance;
 	}
 
-	async getDatasetInstance(datasetName: string): Promise<string> {
+	protected async getDatasetInstance(): Promise<string> {
 		try {
-			const instances = await fetchJson<wxInstances>(this.dataServerURL + datasetName + '/instances.json', this.requestInit);
-			if (instances.length === 0) throw new Error(`No instances found for dataset ${datasetName}`);
+			const instances = await fetchJson<wxInstances>(this.wxapi.dataServerURL + this.datasetName + '/instances.json', this.wxapi.requestInit);
+			if (instances.length === 0) throw new Error(`No instances found for dataset ${this.datasetName}`);
 			return instances[instances.length - 1];
 		} catch (e) {
-			throw new Error(`getting dataset instances failure  message: ${e.message} datasetName: ${datasetName}`);
+			throw new Error(`getting dataset instances failure  message: ${e.message} datasetName: ${this.datasetName}`);
 		}
-	}
-
-	async createDatasetManager(datasetName: string): Promise<wxDataSetManager> {
-		await this.initDone;
-		if (!this.datasetsNames.includes(datasetName)) throw new Error('Dataset not found:' + datasetName);
-		const instance = await this.getDatasetInstance(datasetName);
-		const meta = await fetchJson<Meta>(this.dataServerURL + datasetName + '/' + instance + '/meta.json', this.requestInit);
-		return new wxDataSetManager({ datasetName, instance, meta, wxapi: this });
-	}
-
-	async createAllDatasetsManagers(): Promise<wxDataSetManager[]> {
-		await this.initDone;
-		return Promise.all(this.datasetsNames.map((datasetName: string) => this.createDatasetManager(datasetName)));
-	}
-
-	static filterDatasetsByVariableName(datasets: wxDataSetManager[], variableName: string): wxDataSetManager[] {
-		return datasets.filter((dataset) => dataset.meta.variables?.includes?.(variableName));
 	}
 }
