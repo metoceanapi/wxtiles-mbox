@@ -228,29 +228,27 @@ async function start() {
 		popup.setLngLat(e.lngLat);
 	}); //*/
 
-	/*/ DEMO: timesteps
+	// DEMO: timesteps
 	const tlength = wxmanager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {
 		await wxsource.setTime(t++ % tlength); // await always !!
-		setTimeout(nextTimeStep, 100);
+		setTimeout(nextTimeStep, 0);
 	};
 	setTimeout(nextTimeStep, 2000);
 	//*/
 
-	/** DEMO: Dynamic blur effect /
+	/*/ DEMO: Dynamic blur effect /
 	let b = 0;
-	let db = 5;
+	let db = 1;
 	const nextAnim = async () => {
-		await wxsource.updateCurrentStyleObject({ addDegrees: b }); // await always !!
+		await wxsource.updateCurrentStyleObject({ blurRadius: b }); // await always !!
 
 		b += db;
-		if (b > 360 || b < 0) db = -db;
+		if (b > 16 || b < 0) db = -db;
 		setTimeout(nextAnim, 1);
 	};
 	setTimeout(nextAnim, 2000); //*/
-
-	// setTimeout(() => wxsource.setTime(10), 3000);
 }
 
 start();

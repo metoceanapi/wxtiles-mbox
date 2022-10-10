@@ -22,12 +22,12 @@
 	},
 	"homepage": "https://github.com/metocean/wxtilembox#readme",
 	"devDependencies": {
-		"esbuild": "^0.15.5",
+		"esbuild": "^0.15.10",
 		"express": "^4.18.1",
-		"typescript": "^4.7.4"
+		"typescript": "^4.8.4"
 	},
 	"dependencies": {
-		"@types/mapbox-gl": "^2.7.5",
+		"@types/mapbox-gl": "^2.7.6",
 		"mapbox-gl": "^2.10.0"
 	}
 }

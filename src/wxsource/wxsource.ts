@@ -1,22 +1,25 @@
 import mapboxgl from 'mapbox-gl';
 
 import { type VariableMeta, type wxDataSetManager } from '../wxAPI/wxAPI';
-import { type ColorStyleStrict, type ColorStyleWeak, HashXYZ, refineColor, WxGetColorStyles, type XYZ, type DataPicture, RGBtoHEX } from '../utils/wxtools';
+import {
+	type ColorStyleStrict,
+	type ColorStyleWeak,
+	HashXYZ,
+	refineColor,
+	WxGetColorStyles,
+	type XYZ,
+	type DataPicture,
+	RGBtoHEX,
+	create2DContext,
+} from '../utils/wxtools';
 
 import { RawCLUT } from '../utils/RawCLUT';
-import { Painter } from './painter';
+import { Painter, type wxRasterData } from './painter';
 import { Loader, type wxData } from './loader';
 
-type CSIRaster = ImageData; // To shut up TS errors for CustomSourceInterface
-type wxRaster = HTMLCanvasElement; // Actual result of a Painter
 type wxDate = string | number | Date;
 interface RInit {
 	signal?: AbortSignal;
-}
-
-interface wxRasterData {
-	raster: wxRaster;
-	data: wxData;
 }
 
 export interface WxTileInfo {
@@ -32,36 +35,36 @@ export interface WxTileInfo {
 
 export type wxVars = [string] | [string, string];
 
-export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
-	type: 'custom' = 'custom'; // MAPBOX API
-	dataType: 'raster' = 'raster'; // MAPBOX API
-	id: string; // MAPBOX API
+export class WxTileSource implements mapboxgl.CustomSourceInterface<any> {
+	readonly type: 'custom' = 'custom'; // MAPBOX API
+	readonly dataType: 'raster' = 'raster'; // MAPBOX API
+	readonly id: string; // MAPBOX API
 
-	variables: wxVars; // variables of the dataset if vector then [eastward, northward]
-	wxdataset: wxDataSetManager;
-	ext: string; // tiles extension. png by default
+	readonly tileSize: number; // MAPBOX API default 256
+	readonly maxzoom?: number; // MAPBOX API
+	readonly scheme?: string; // MAPBOX API
+	readonly bounds?: [number, number, number, number]; // MAPBOX API
+	readonly attribution?: string; // MAPBOX API
 
-	map: mapboxgl.Map; // current map
+	protected readonly map: mapboxgl.Map; // current map
 
-	time: string = ''; // current time. is set in constructor by _setURLs()
+	protected readonly variables: wxVars; // variables of the dataset if vector then [eastward, northward]
+	protected readonly ext: string; // tiles extension. png by default
+	readonly wxdataset: wxDataSetManager;
+
+	protected time: string = ''; // current time. is set in constructor by _setURLs()
 	tilesURIs: string[] = []; // current URIs. is set in constructor by _setURLs()
-
-	tileSize: number; // MAPBOX API default 256
-	maxzoom?: number; // MAPBOX API
-	scheme?: string; // MAPBOX API
-	bounds?: [number, number, number, number]; // MAPBOX API
-	attribution?: string; // MAPBOX API
 
 	style!: ColorStyleStrict;
 	CLUT!: RawCLUT; // is set in constructor by setStyleName()
 
-	animation = false;
-	animationFrame = 0;
+	protected animation = false;
+	protected animationSeed = 0;
 
-	painter: Painter = new Painter(this);
-	loader: Loader = new Loader(this);
+	protected readonly painter: Painter = new Painter(this);
+	protected loader: Loader = new Loader(this);
 
-	tilesCache: Map<string, wxRasterData> = new Map();
+	protected tilesCache: Map<string, wxRasterData> = new Map();
 
 	constructor({
 		id,
@@ -121,15 +124,16 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		this.loader = new Loader(this);
 	}
 
-	async loadTile(tile: XYZ, requestInit?: RInit): Promise<CSIRaster> {
-		const raster_data = await this._loadTile(tile, this.tilesCache, requestInit);
-		const raster = this.animation
-			? this.painter.imprintVectorAnimationLinesStep(raster_data.data, raster_data.raster, this, this.animationFrame)
-			: raster_data.raster;
-		return raster as any; // to shut up TS errors
+	/*MB API*/
+	async loadTile(tile: XYZ, requestInit?: RInit): Promise<any> {
+		const raster_data = await this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
+		if (!this.animation) return raster_data.ctxFill.canvas;
+
+		this.painter.imprintVectorAnimationLinesStep(raster_data, this.animationSeed);
+		return raster_data.ctxStreamLines.canvas; // to shut up TS errors
 	}
 
-	protected async _loadTile(tile: XYZ, tilesCache: Map<string, wxRasterData>, requestInit?: RInit): Promise<wxRasterData> {
+	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: Map<string, wxRasterData>, requestInit?: RInit): Promise<wxRasterData> {
 		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
 
@@ -144,7 +148,11 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 			throw { status: 404 }; // happens when tile is cut by qTree or by Mask
 		}
 
-		const raster_data = { raster: this.painter.paint(data), data };
+		const ctxFill = create2DContext({ width: 256, height: 256 });
+		const ctxText = ctxFill; //  check if some browsers need separate canvas for text
+		const ctxStreamLines = this.variables.length === 2 ? create2DContext({ width: 256, height: 256 }) : ctxFill;
+		const raster_data: wxRasterData = { ctxFill, ctxText, ctxStreamLines, data };
+		this.painter.paint(raster_data);
 		tilesCache.set(HashXYZ(tile), raster_data);
 		return raster_data;
 	}
@@ -200,8 +208,6 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		await Promise.allSettled(this.coveringTiles().map((tile) => this.loader.cacheLoad(tile, tilesURIs, requestInit))); // fill up cache
 	}
 
-	// NOTE: even if repaint is false, time and URL are still set!!
-	// so, might be confusing when getTime() returns a new time, but the tiles are not repainted
 	async setTime(time_?: wxDate, requestInit?: RInit): Promise<string> {
 		const oldtime = this.time;
 		this._setURLsAndTime(time_);
@@ -218,23 +224,21 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 
 	protected async _reloadVisible(requestInit?: { signal?: AbortSignal }): Promise<void> {
 		const tilesCache = new Map();
-		await Promise.allSettled(this.coveringTiles().map((tile) => this._loadTile(tile, tilesCache, requestInit))); // fill up cache
+		await Promise.allSettled(this.coveringTiles().map((tile) => this._loadCacheDrawTile(tile, tilesCache, requestInit))); // fill up cache
 		if (requestInit?.signal?.aborted) return; // if we don't need to repaint, we are just need to cache the tiles inside the 'loader'
 		this.tilesCache = tilesCache; // replace cache
 		this._repaintVisible();
 	}
 
-	protected _repaintVisible(): void {
-		this.clearTiles();
-		this.update(); // it forces mapbox to reload visible tiles (hopefully from cache)
-	}
-
 	startAnimation(): void {
 		if (this.animation) return;
 		this.animation = true;
-		const animationStep = (frame: number) => {
-			if (!this.animation || this.variables.length < 2 || this.style.streamLineStatic || this.style.streamLineColor === 'none') return;
-			this.animationFrame = frame;
+		const animationStep = (seed: number) => {
+			if (!this.animation || this.variables.length < 2 || this.style.streamLineStatic || this.style.streamLineColor === 'none') {
+				this.animation = false;
+				return;
+			}
+			this.animationSeed = seed;
 			this._repaintVisible();
 			requestAnimationFrame(animationStep);
 		};
@@ -246,7 +250,8 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		this.animation = false;
 	}
 
-	getLayerInfoAtLatLon(lnglat: mapboxgl.LngLat) {
+	// MBOX dependant
+	getLayerInfoAtLatLon(lnglat: mapboxgl.LngLat): WxTileInfo | undefined {
 		const anymap = this.map as any;
 		const worldsize = anymap.transform.worldSize as number;
 		const zoom = Math.round(Math.log2(worldsize) - 8);
@@ -282,13 +287,18 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<CSIRaster> {
 		};
 	} // getData
 
-	// MBOX API
-	protected clearTiles() {
-		// COMING SOON in a future release
-		// but for now, we use the same algorithm as in mapbox-gl-js
-		(this.map as any).style?._clearSource?.(this.id);
-		// (this.map as any).style?._reloadSource(this.id); // TODO: check if this is needed // seems NOT
+	protected _repaintVisible(): void {
+		// this.clearTiles();
+		this.update(); // it forces mapbox to reload visible tiles (hopefully from cache)
 	}
+
+	// // MBOX API
+	// protected clearTiles() {
+	// 	// COMING SOON in a future release
+	// 	// but for now, we use the same algorithm as in mapbox-gl-js
+	// 	(this.map as any).style?._clearSource?.(this.id);
+	// 	// (this.map as any).style?._reloadSource(this.id); // TODO: check if this is needed // seems NOT
+	// }
 
 	// MBOX API get assigned by map.addSource
 	protected coveringTiles(): XYZ[] {

@@ -18,8 +18,8 @@ export interface wxData {
 }
 
 export class Loader {
-	protected wxsource: WxTileSource;
-	loadDataFunc: UriLoaderPromiseFunc<DataIntegral> = /*loadDataIntegral; //*/ cacheUriPromise(loadDataIntegral);
+	protected readonly wxsource: WxTileSource;
+	protected loadDataFunc: UriLoaderPromiseFunc<DataIntegral> = /*loadDataIntegral; //*/ cacheUriPromise(loadDataIntegral);
 
 	constructor(wxsource: WxTileSource) {
 		this.wxsource = wxsource;
