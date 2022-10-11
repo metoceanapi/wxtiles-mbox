@@ -23,13 +23,13 @@ export type colorMapTuple = [number, string];
 export interface ColorStyleWeak {
 	parent?: string;
 	name?: string;
-	fill?: string;
-	isolineColor?: string;
+	fill?: 'none' | 'gradient' | 'solid';
+	isolineColor?: 'none' | 'inverted' | 'fill' | string;
 	isolineText?: boolean;
-	vectorType?: string;
-	vectorColor?: string;
+	vectorType?: 'none' | 'arrows' | 'barbs';
+	vectorColor?: 'none' | 'inverted' | 'fill' | string;
 	vectorFactor?: number;
-	streamLineColor?: string;
+	streamLineColor?: 'none' | 'inverted' | 'fill' | string;
 	streamLineSpeedFactor?: number;
 	streamLineGridStep?: number;
 	streamLineSteps?: number;
@@ -44,7 +44,7 @@ export interface ColorStyleWeak {
 	addDegrees?: number;
 	units?: string;
 	extraUnits?: Units; //{ [name: string]: [string, number, ?number] };
-	mask?: string;
+	mask?: 'land' | 'sea' | 'none';
 }
 
 export interface ColorStylesWeakMixed {
@@ -58,13 +58,13 @@ export interface ColorStylesIncomplete {
 export interface ColorStyleStrict extends ColorStyleWeak {
 	parent?: string;
 	name: string;
-	fill: string;
-	isolineColor: string;
+	fill: 'none' | 'gradient' | 'solid';
+	isolineColor: 'none' | 'inverted' | 'fill' | string;
 	isolineText: boolean;
-	vectorType: string;
-	vectorColor: string;
+	vectorType: 'none' | 'arrows' | 'barbs';
+	vectorColor: 'none' | 'inverted' | 'fill' | string;
 	vectorFactor: number;
-	streamLineColor: string;
+	streamLineColor: 'none' | 'inverted' | 'fill' | string;
 	streamLineSpeedFactor: number;
 	streamLineGridStep?: number;
 	streamLineSteps?: number;
@@ -79,7 +79,7 @@ export interface ColorStyleStrict extends ColorStyleWeak {
 	addDegrees: number;
 	units: string;
 	extraUnits?: Units; //{ [name: string]: [string, number, ?number] };
-	mask?: string;
+	mask?: 'land' | 'sea' | 'none';
 }
 
 export interface ColorStylesStrict {
@@ -285,15 +285,7 @@ export interface DataIntegral extends DataPicture {
 	radius: number;
 }
 
-export function create2DContext({
-	width,
-	height,
-	willReadFrequently = true,
-}: {
-	width: number;
-	height: number;
-	willReadFrequently?: boolean;
-}): CanvasRenderingContext2D {
+export function create2DContext(width: number, height: number, willReadFrequently = true): CanvasRenderingContext2D {
 	const context = Object.assign(document.createElement('canvas'), { width, height, imageSmoothingEnabled: false }).getContext('2d', {
 		willReadFrequently,
 	});
@@ -303,7 +295,7 @@ export function create2DContext({
 
 function imageToData(image: ImageBitmap): ImageData {
 	const { width, height } = image;
-	const context = create2DContext(image);
+	const context = create2DContext(width, height);
 	context.drawImage(image, 0, 0);
 	return context.getImageData(0, 0, width, height);
 }

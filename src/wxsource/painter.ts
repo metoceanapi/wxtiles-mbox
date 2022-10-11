@@ -46,6 +46,7 @@ export class Painter {
 
 	imprintVectorAnimationLinesStep({ data, ctxFill, ctxStreamLines }: wxRasterData, seed: number) {
 		const { wxsource } = this;
+		ctxStreamLines.clearRect(0, 0, wxsource.tileSize, wxsource.tileSize);
 		ctxStreamLines.drawImage(ctxFill.canvas, 0, 0);
 		if (data.slines.length === 0 || wxsource.style.streamLineStatic || wxsource.style.streamLineColor === 'none') return;
 		_drawVectorAnimationLinesStep(data, ctxStreamLines, wxsource, seed);
@@ -151,6 +152,7 @@ function _printVectorsStatic(data: DataPicture[], ctx: CanvasRenderingContext2D,
 
 	ctx.textAlign = 'center';
 	ctx.textBaseline = 'middle';
+	ctx.fillStyle = style.vectorColor;
 
 	const addDegrees = style.addDegrees ? 0.017453292519943 * style.addDegrees : 0;
 
@@ -172,9 +174,6 @@ function _printVectorsStatic(data: DataPicture[], ctx: CanvasRenderingContext2D,
 				case 'fill':
 					ctx.fillStyle = RGBtoHEX(CLUT.colorsI[l.raw[di]]); // alfa = 255
 					break;
-				default: // put color directly from vectorColor
-					ctx.fillStyle = style.vectorColor;
-					break;
 			} // switch isoline_style
 
 			ctx.save();
@@ -193,6 +192,7 @@ function _printDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, u
 	ctx.font = '50px arrows';
 	ctx.textAlign = 'center';
 	ctx.textBaseline = 'middle';
+	ctx.fillStyle = style.vectorColor;
 	const vecChar = 'L';
 
 	const gridStep = 32; //Math.min(2 ** (zdif + 5), 128);
@@ -208,9 +208,6 @@ function _printDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, u
 					break;
 				case 'fill':
 					ctx.fillStyle = RGBtoHEX(CLUT.colorsI[data.raw[di]]); // alfa = 255
-					break;
-				default: // put color directly from vectorColor
-					ctx.fillStyle = style.vectorColor;
 					break;
 			} // switch isoline_style
 
@@ -229,6 +226,7 @@ function _drawStreamLinesStatic(wxdata: wxData, ctx: CanvasRenderingContext2D, {
 
 	const l = data[0];
 	ctx.lineWidth = 1;
+	ctx.strokeStyle = style.streamLineColor;
 	for (let i = slines.length; i--; ) {
 		const sLine = slines[i];
 		for (let k = 0; k < sLine.length - 1; ++k) {
@@ -243,9 +241,6 @@ function _drawStreamLinesStatic(wxdata: wxData, ctx: CanvasRenderingContext2D, {
 				case 'fill':
 					ctx.strokeStyle = RGBtoHEX(CLUT.colorsI[l.raw[di]]); // alfa = 255
 					break;
-				default: // put color directly from vectorColor
-					ctx.strokeStyle = style.streamLineColor;
-					break;
 			} // switch isoline_style
 
 			ctx.beginPath();
@@ -257,11 +252,12 @@ function _drawStreamLinesStatic(wxdata: wxData, ctx: CanvasRenderingContext2D, {
 } // _drawStreamLinesStatic
 
 function _drawVectorAnimationLinesStep(wxdata: wxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxTileSource, seed: number): void {
-	// 'timeStemp' is a time tick given by the browser's scheduller
+	// 'seed' is a time tick given by the browser's scheduller
 	const { data, slines } = wxdata;
 	// if (!slines.length || !style.streamLineStatic || style.streamLineColor === 'none') return; // done by the caller!!!
 	const l = data[0];
 
+	let baseColor = style.streamLineColor.substring(0, 7);
 	seed = seed >> 5;
 	for (let i = 0; i < slines.length; ++i) {
 		const sLine = slines[i];
@@ -278,16 +274,12 @@ function _drawVectorAnimationLinesStep(wxdata: wxData, ctx: CanvasRenderingConte
 			ctx.lineWidth = w;
 
 			const di = p0.x + 1 + (p0.y + 1) * 258;
-			let baseColor;
 			switch (style.streamLineColor) {
 				case 'inverted':
 					baseColor = RGBtoHEX(~CLUT.colorsI[l.raw[di]]); // alfa = 255
 					break;
 				case 'fill':
 					baseColor = RGBtoHEX(CLUT.colorsI[l.raw[di]]); // alfa = 255
-					break;
-				default: // put color directly from vectorColor
-					baseColor = style.streamLineColor;
 					break;
 			} // switch isoline_style
 

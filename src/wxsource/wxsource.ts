@@ -148,9 +148,9 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<any> {
 			throw { status: 404 }; // happens when tile is cut by qTree or by Mask
 		}
 
-		const ctxFill = create2DContext({ width: 256, height: 256 });
+		const ctxFill = create2DContext(256, 256);
 		const ctxText = ctxFill; //  check if some browsers need separate canvas for text
-		const ctxStreamLines = this.variables.length === 2 ? create2DContext({ width: 256, height: 256 }) : ctxFill;
+		const ctxStreamLines = this.variables.length === 2 ? create2DContext(256, 256, false) : ctxFill;
 		const raster_data: wxRasterData = { ctxFill, ctxText, ctxStreamLines, data };
 		this.painter.paint(raster_data);
 		tilesCache.set(HashXYZ(tile), raster_data);
