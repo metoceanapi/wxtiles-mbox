@@ -1,5 +1,15 @@
 import { RawCLUT } from '../utils/RawCLUT';
-import { type ColorStyleStrict, WxGetColorStyles, refineColor, type XYZ, HashXYZ, RGBtoHEX, type DataPicture, create2DContext } from '../utils/wxtools';
+import {
+	type ColorStyleStrict,
+	WxGetColorStyles,
+	refineColor,
+	type XYZ,
+	HashXYZ,
+	RGBtoHEX,
+	type DataPicture,
+	create2DContext,
+	type ColorStyleWeak,
+} from '../utils/wxtools';
 import { wxDataSetManager, type VariableMeta } from '../wxAPI/wxAPI';
 import { Loader, type wxData } from './loader';
 import { Painter, type wxRasterData } from './painter';
@@ -32,10 +42,7 @@ export class WxLayer {
 	tilesURIs: string[]; // current URIs. is set in constructor by _setURLs()
 
 	style: ColorStyleStrict;
-	CLUT: RawCLUT; // is set in constructor by setStyleName()
-
-	protected animation = false;
-	protected animationSeed = 0;
+	CLUT: RawCLUT; // is set in constructor by _updateCurrentStyleObject()
 
 	protected tilesCache: Map<string, wxRasterData> = new Map();
 
@@ -69,9 +76,7 @@ export class WxLayer {
 		this.ext = ext;
 		this.currentMeta = this._getCurrentMeta();
 		[this.tilesURIs, this.time] = this._createURLsAndTime(time);
-		this.style = Object.assign(this.getCurrentStyleObjectCopy(), WxGetColorStyles()[wxstyleName]); // deep copy, so could be (and is) changed
-		this.style.streamLineColor = refineColor(this.style.streamLineColor);
-		this.CLUT = this._prepareCLUTfromCurrentStyle(); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
+		[this.style, this.CLUT] = this._createCurrentStyleObject(WxGetColorStyles()[wxstyleName]);
 	} // constructor
 
 	getLayerInfoAtLatLon(lnglat: mapboxgl.LngLat, anymap: any): WxTileInfo | undefined {
@@ -96,6 +101,13 @@ export class WxLayer {
 	getCurrentStyleObjectCopy(): ColorStyleStrict {
 		return Object.assign({}, this.style);
 	} // getCurrentStyleObjectCopy
+
+	protected _createCurrentStyleObject(style_?: ColorStyleWeak): [ColorStyleStrict, RawCLUT] {
+		const style = Object.assign(this.getCurrentStyleObjectCopy(), style_); // deep copy, so could be (and is) changed
+		style.streamLineColor = refineColor(this.style.streamLineColor);
+		const CLUT = this._prepareCLUTfromCurrentStyle(); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
+		return [style, CLUT];
+	}
 
 	getTime(): string {
 		return this.time;

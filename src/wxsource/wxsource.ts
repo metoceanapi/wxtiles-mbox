@@ -16,6 +16,9 @@ export class WxTileSource extends WxLayer implements mapboxgl.CustomSourceInterf
 	readonly bounds?: [number, number, number, number]; // MAPBOX API
 	readonly attribution?: string; // MAPBOX API
 
+	protected animation = false;
+	protected animationSeed = 0;
+
 	constructor({
 		time,
 		variables,
@@ -85,9 +88,7 @@ export class WxTileSource extends WxLayer implements mapboxgl.CustomSourceInterf
 	}
 
 	async updateCurrentStyleObject(style?: ColorStyleWeak, reload = true, requestInit?: RInit): Promise<void> {
-		this.style = Object.assign(this.getCurrentStyleObjectCopy(), style); // deep copy, so could be (and is) changed
-		this.style.streamLineColor = refineColor(this.style.streamLineColor);
-		this.CLUT = this._prepareCLUTfromCurrentStyle(); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
+		[this.style, this.CLUT] = this._createCurrentStyleObject(style);
 		reload && (await this._reloadVisible(requestInit));
 	}
 
