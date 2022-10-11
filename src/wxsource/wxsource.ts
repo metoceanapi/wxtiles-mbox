@@ -203,8 +203,7 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<any> {
 	}
 
 	async preloadTime(time_: wxDate, requestInit?: RInit): Promise<void> {
-		const time = this.wxdataset.getValidTime(time_);
-		const tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext: this.ext }));
+		const [tilesURIs] = this._createURLsAndTime(time_);
 		await Promise.allSettled(this.coveringTiles().map((tile) => this.loader.cacheLoad(tile, tilesURIs, requestInit))); // fill up cache
 	}
 
@@ -216,10 +215,14 @@ export class WxTileSource implements mapboxgl.CustomSourceInterface<any> {
 		return this.time;
 	}
 
+	protected _createURLsAndTime(time_?: wxDate): [string[], string] {
+		const time = this.wxdataset.getValidTime(time_);
+		const tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext: this.ext }));
+		return [tilesURIs, time];
+	}
+
 	protected _setURLsAndTime(time_?: wxDate): void {
-		this.time = this.wxdataset.getValidTime(time_);
-		const { time, ext } = this;
-		this.tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext }));
+		[this.tilesURIs, this.time] = this._createURLsAndTime(time_);
 	}
 
 	protected async _reloadVisible(requestInit?: { signal?: AbortSignal }): Promise<void> {
