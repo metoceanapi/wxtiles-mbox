@@ -67,7 +67,7 @@ export interface wxAPIOptions extends WxTilesLibOptions {
  * @argument {string} qtreeURL - URL of the qtree data file
  * @argument {RequestInit} requestInit - request init object for fetching data
  * @argument {ColorStylesWeakMixed | undefined} colorStyles - color styles for the rendering
- * @argument {Units | undefined} unnits - units for the rendering
+ * @argument {Units | undefined} units - units for the rendering
  * @argument {ColorSchemes | undefined} colorSchemes - color schemes for the rendering
  * */
 export class wxAPI {

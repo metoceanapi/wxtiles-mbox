@@ -2,7 +2,7 @@ import { TileType } from '../utils/qtree';
 import { blurData, cacheUriPromise, type DataIntegral, type DataPicture, loadDataIntegral, UriLoaderPromiseFunc, uriXYZ, type XYZ } from '../utils/wxtools';
 import { type BoundaryMeta } from '../wxAPI/wxAPI';
 import { applyMask, makeBox, splitCoords, subData, subDataDegree } from './loadertools';
-import { type WxTileSource } from './wxsource';
+import { type WxLayer } from './wxlayer';
 
 interface SLinePoint {
 	x: number;
@@ -18,10 +18,10 @@ export interface wxData {
 }
 
 export class Loader {
-	protected readonly wxsource: WxTileSource;
+	protected readonly wxsource: WxLayer;
 	protected loadDataFunc: UriLoaderPromiseFunc<DataIntegral> = /*loadDataIntegral; //*/ cacheUriPromise(loadDataIntegral);
 
-	constructor(wxsource: WxTileSource) {
+	constructor(wxsource: WxLayer) {
 		this.wxsource = wxsource;
 	}
 
@@ -29,7 +29,7 @@ export class Loader {
 		const preloaded = await this.cacheLoad(tile, this.wxsource.tilesURIs, requestInit);
 		if (!preloaded) return null;
 		const { rawdata, subCoords, tileType } = preloaded;
-		const { units } = this.wxsource.getCurrentMeta();
+		const { units } = this.wxsource.currentMeta;
 		const interpolator = units === 'degree' ? subDataDegree : subData;
 		const processor = (d: DataIntegral) => interpolator(blurData(d, this.wxsource.style.blurRadius), subCoords);
 		const data = rawdata.map(processor); // preprocess all loaded data
@@ -55,6 +55,10 @@ export class Loader {
 		const rawdata = await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
 		return { rawdata, subCoords, tileType };
 		// we don't need to process data, as it's for cache preloading only
+	}
+
+	clearCache(): void {
+		this.loadDataFunc = cacheUriPromise(loadDataIntegral);
 	}
 
 	protected async _applyMask(data: DataPicture[], tile: XYZ, tileType: TileType, needCopy: boolean): Promise<void> {

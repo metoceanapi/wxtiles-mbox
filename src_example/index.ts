@@ -142,7 +142,6 @@ async function start() {
 	await map.once('load');
 
 	const wxsource = new WxTileSource({
-		map,
 		id: 'wxsource',
 		wxstyleName: 'base',
 		wxdataset: wxmanager,
@@ -212,9 +211,9 @@ async function start() {
 	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false }).setLngLat([0, 0]).setHTML('').addTo(map);
 	map.on('mousemove', (e) => {
 		popup.setHTML(`${e.lngLat}`);
-		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap());
+		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap(), map);
 		if (tileInfo) {
-			const { min, max } = wxsource.getCurrentMeta();
+			const { min, max } = wxsource.currentMeta;
 			let content = `lnglat=(${e.lngLat.lng.toFixed(2)}, ${e.lngLat.lat.toFixed(2)})<br>
 			dataset=${wxmanager.datasetName}<br>
 			variables=${wxsource.variables}<br>
@@ -228,12 +227,12 @@ async function start() {
 		popup.setLngLat(e.lngLat);
 	}); //*/
 
-	// DEMO: timesteps
+	/*/ DEMO: timesteps
 	const tlength = wxmanager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {
 		await wxsource.setTime(t++ % tlength); // await always !!
-		setTimeout(nextTimeStep, 0);
+		setTimeout(nextTimeStep, 100);
 	};
 	setTimeout(nextTimeStep, 2000);
 	//*/

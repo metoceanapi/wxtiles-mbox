@@ -1,6 +1,6 @@
-import { create2DContext, type DataPicture, HEXtoRGBA, RGBtoHEX } from '../utils/wxtools';
+import { type DataPicture, HEXtoRGBA, RGBtoHEX } from '../utils/wxtools';
 import { type wxData } from './loader';
-import { type WxTileSource } from './wxsource';
+import { type WxLayer } from './wxlayer';
 
 interface IsoInfo {
 	x: number;
@@ -19,21 +19,20 @@ export interface wxRasterData {
 }
 
 export class Painter {
-	protected wxsource: WxTileSource;
+	protected wxsource: WxLayer;
 
-	constructor(wxsource: WxTileSource) {
+	constructor(wxsource: WxLayer) {
 		this.wxsource = wxsource;
 	}
 
 	paint({ data, ctxFill, ctxText, ctxStreamLines }: wxRasterData): void {
 		const { wxsource } = this;
-		const { tileSize } = wxsource;
-		const { units } = wxsource.getCurrentMeta();
-		const imageData = new ImageData(tileSize, tileSize); //new ImageData(tileSize, tileSize);
+		const { units } = wxsource.currentMeta;
+		const imageData = new ImageData(256, 256); //new ImageData(256, 256);
 		const imageBuffer = new Uint32Array(imageData.data.buffer); // a usefull representation of image's bytes (same memory)
-		ctxFill.clearRect(0, 0, tileSize, tileSize);
-		ctxText.clearRect(0, 0, tileSize, tileSize);
-		ctxStreamLines.clearRect(0, 0, tileSize, tileSize);
+		ctxFill.clearRect(0, 0, 256, 256);
+		ctxText.clearRect(0, 0, 256, 256);
+		ctxStreamLines.clearRect(0, 0, 256, 256);
 
 		_fill(data.data[0], imageBuffer, wxsource);
 		const isoInfo = _drawIsolines(imageBuffer, data.data[0], wxsource);
@@ -46,14 +45,14 @@ export class Painter {
 
 	imprintVectorAnimationLinesStep({ data, ctxFill, ctxStreamLines }: wxRasterData, seed: number) {
 		const { wxsource } = this;
-		ctxStreamLines.clearRect(0, 0, wxsource.tileSize, wxsource.tileSize);
+		ctxStreamLines.clearRect(0, 0, 256, 256);
 		ctxStreamLines.drawImage(ctxFill.canvas, 0, 0);
 		if (data.slines.length === 0 || wxsource.style.streamLineStatic || wxsource.style.streamLineColor === 'none') return;
 		_drawVectorAnimationLinesStep(data, ctxStreamLines, wxsource, seed);
 	} // imprintVectorAnimationLinesStep
 }
 
-function _fill(data: DataPicture, imageBuffer: Uint32Array, { CLUT, style }: WxTileSource) {
+function _fill(data: DataPicture, imageBuffer: Uint32Array, { CLUT, style }: WxLayer) {
 	const { raw } = data; // scalar data
 	const { colorsI } = CLUT;
 	// fill: none, gradient, solid
@@ -68,7 +67,7 @@ function _fill(data: DataPicture, imageBuffer: Uint32Array, { CLUT, style }: WxT
 	}
 } // _fill
 
-function _drawIsolines(imageBuffer: Uint32Array, data: DataPicture, { CLUT, style }: WxTileSource): IsoInfo[] {
+function _drawIsolines(imageBuffer: Uint32Array, data: DataPicture, { CLUT, style }: WxLayer): IsoInfo[] {
 	const { raw } = data; // scalar data
 	const { levelIndex, colorsI } = CLUT;
 	const info: IsoInfo[] = []; // numbers on isolines
@@ -112,7 +111,7 @@ function _drawIsolines(imageBuffer: Uint32Array, data: DataPicture, { CLUT, styl
 	return info;
 } // _drawIsolines
 
-function _printIsolineText(info: IsoInfo[], ctx: CanvasRenderingContext2D, { CLUT }: WxTileSource): void {
+function _printIsolineText(info: IsoInfo[], ctx: CanvasRenderingContext2D, { CLUT }: WxLayer): void {
 	// drawing Info
 	if (info.length) {
 		ctx.font = '1.1em Sans-serif';
@@ -134,7 +133,7 @@ function _printIsolineText(info: IsoInfo[], ctx: CanvasRenderingContext2D, { CLU
 	} // if info.length
 } // _printIsolineText
 
-function _printVectorsStatic(data: DataPicture[], ctx: CanvasRenderingContext2D, { CLUT, style }: WxTileSource): void {
+function _printVectorsStatic(data: DataPicture[], ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer): void {
 	if (!CLUT.DataToKnots || style.vectorColor === 'none' || style.vectorType === 'none') return;
 	if (data.length !== 3) throw new Error('data.length !== 3');
 	const [l, u, v] = data;
@@ -185,7 +184,7 @@ function _printVectorsStatic(data: DataPicture[], ctx: CanvasRenderingContext2D,
 	} // for y
 } // _printVectorsStatic
 
-function _printDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, units: string, { CLUT, style }: WxTileSource): void {
+function _printDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, units: string, { CLUT, style }: WxLayer): void {
 	if (units !== 'degree') return;
 	const addDegrees = 0.017453292519943 * style.addDegrees;
 
@@ -220,7 +219,7 @@ function _printDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, u
 	} // for y
 } // _printDegreesStatic
 
-function _drawStreamLinesStatic(wxdata: wxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxTileSource): void {
+function _drawStreamLinesStatic(wxdata: wxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer): void {
 	const { data, slines } = wxdata;
 	if (!slines.length || !style.streamLineStatic || style.streamLineColor === 'none') return;
 
@@ -251,7 +250,7 @@ function _drawStreamLinesStatic(wxdata: wxData, ctx: CanvasRenderingContext2D, {
 	}
 } // _drawStreamLinesStatic
 
-function _drawVectorAnimationLinesStep(wxdata: wxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxTileSource, seed: number): void {
+function _drawVectorAnimationLinesStep(wxdata: wxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer, seed: number): void {
 	// 'seed' is a time tick given by the browser's scheduller
 	const { data, slines } = wxdata;
 	// if (!slines.length || !style.streamLineStatic || style.streamLineColor === 'none') return; // done by the caller!!!
