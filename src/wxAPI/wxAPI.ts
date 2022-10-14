@@ -52,7 +52,7 @@ export interface DatasetMeta {
 	boundaries?: AllBoundariesMeta;
 }
 
-export interface wxAPIOptions extends WxTilesLibOptions {
+export interface WxAPIOptions extends WxTilesLibOptions {
 	dataServerURL: string;
 	maskURL?: 'none' | 'auto' | string;
 	qtreeURL?: 'none' | 'auto' | string;
@@ -60,8 +60,8 @@ export interface wxAPIOptions extends WxTilesLibOptions {
 }
 
 /**
- * wxAPI is a wrapper for WxTilesLib.
- * @class wxAPI
+ * WxAPI is a wrapper for WxTilesLib.
+ * @class WxAPI
  * @argument {string} dataServerURL - URL of the data server
  * @argument {string} maskURL - URL of the mask server
  * @argument {string} qtreeURL - URL of the qtree data file
@@ -70,7 +70,7 @@ export interface wxAPIOptions extends WxTilesLibOptions {
  * @argument {Units | undefined} units - units for the rendering
  * @argument {ColorSchemes | undefined} colorSchemes - color schemes for the rendering
  * */
-export class wxAPI {
+export class WxAPI {
 	readonly dataServerURL: string;
 	readonly maskURL?: string;
 	readonly requestInit?: RequestInit;
@@ -79,7 +79,7 @@ export class wxAPI {
 	readonly qtree: QTree = new QTree();
 	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData> = () => Promise.reject(new Error('maskURL not defined'));
 
-	constructor({ dataServerURL, maskURL = 'auto', qtreeURL = 'auto', requestInit, colorStyles, units, colorSchemes }: wxAPIOptions) {
+	constructor({ dataServerURL, maskURL = 'auto', qtreeURL = 'auto', requestInit, colorStyles, units, colorSchemes }: WxAPIOptions) {
 		WxTilesLibSetup({ colorStyles, units, colorSchemes });
 
 		this.dataServerURL = dataServerURL;
@@ -105,27 +105,27 @@ export class wxAPI {
 	}
 
 	/**
-	 * Create wxDataSetManager object for the given dataset name.
-	 * @memberof wxAPI
+	 * Create WxDataSetManager object for the given dataset name.
+	 * @memberof WxAPI
 	 * @param {string} datasetName - dataset name
-	 * @returns {wxDataSetManager} - wxDataSetManager object for the given dataset name
+	 * @returns {WxDataSetManager} - WxDataSetManager object for the given dataset name
 	 */
-	async createDatasetManager(datasetName: string): Promise<wxDataSetManager> {
+	async createDatasetManager(datasetName: string): Promise<WxDataSetManager> {
 		await this.initDone;
 		const instance = this.getDatasetInatance(datasetName);
 		if (!instance) throw new Error('Dataset/instance not found:' + datasetName);
 		const meta = await fetchJson<DatasetMeta>(this.dataServerURL + datasetName + '/' + instance + '/meta.json', this.requestInit);
-		return new wxDataSetManager({ datasetName, instance, meta, wxapi: this });
+		return new WxDataSetManager({ datasetName, instance, meta, wxapi: this });
 	}
 
 	/**
 	 *  Creates all possible dataset managers
-	 * For each dataset in the datasets list, creates wxDataSetManager object.
+	 * For each dataset in the datasets list, creates WxDataSetManager object.
 	 * Requests all datasets meta.json in parallel.
-	 * @memberof wxAPI
-	 * @returns {Promise<wxDataSetManager[]>} - list of all available dataset managers
+	 * @memberof WxAPI
+	 * @returns {Promise<WxDataSetManager[]>} - list of all available dataset managers
 	 */
-	async createAllDatasetsManagers(): Promise<PromiseSettledResult<wxDataSetManager>[]> {
+	async createAllDatasetsManagers(): Promise<PromiseSettledResult<WxDataSetManager>[]> {
 		await this.initDone;
 		const res = Promise.allSettled(this.datasetsMetas.allDatasetsList.map((datasetName: string) => this.createDatasetManager(datasetName)));
 		return res;
@@ -133,7 +133,7 @@ export class wxAPI {
 
 	/**
 	 * Returns datasets names which have given variable
-	 * @memberof wxAPI
+	 * @memberof WxAPI
 	 * @argument {string} variableName - variable name to search for in datasets
 	 * @returns {string[]} - list of datasets' names
 	 * */
@@ -146,7 +146,7 @@ export class wxAPI {
 
 	/**
 	 * Get the list of all available datasets' names
-	 * @memberof wxAPI
+	 * @memberof WxAPI
 	 * @returns {string[]} - list of all available datasets' names
 	 */
 	async getAllDatasetsNames(): Promise<string[]> {
@@ -156,20 +156,20 @@ export class wxAPI {
 }
 
 /**
- * @class wxDataSetManager
+ * @class WxDataSetManager
  * @description Class for managing WX datasets.
  * @param {string} dataSetsName - Name of the dataset.
  * @param {string} instance - current instance (instance or data time creataion in NC-file) of the dataset.
  * @param {DatasetMeta} meta - metadata.
- * @param {wxAPI} wxapi - Wx API control object.
+ * @param {WxAPI} wxapi - Wx API control object.
  * */
-export class wxDataSetManager {
+export class WxDataSetManager {
 	readonly datasetName: string;
 	readonly instance: string;
 	readonly meta: DatasetMeta;
-	readonly wxapi: wxAPI;
+	readonly wxapi: WxAPI;
 
-	constructor({ datasetName, instance, meta, wxapi }: { datasetName: string; instance: string; meta: DatasetMeta; wxapi: wxAPI }) {
+	constructor({ datasetName, instance, meta, wxapi }: { datasetName: string; instance: string; meta: DatasetMeta; wxapi: WxAPI }) {
 		if (!wxapi.datasetsMetas.allDatasetsList.includes(datasetName)) throw new Error(`Dataset ${datasetName} not found`);
 		this.datasetName = datasetName;
 		this.instance = instance;
@@ -179,7 +179,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get closets valid time to the given time.
-	 * @memberof wxDataSetManager
+	 * @memberof WxDataSetManager
 	 * @argument {number} time - either a number of a step in dataset's time array or seconds since epoch
 	 * @argument {string} time - time convertable to a Date object
 	 * @argument {Date} time - Date object
@@ -199,7 +199,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's times.
-	 * @memberof wxDataSetManager
+	 * @memberof WxDataSetManager
 	 * @returns {string[]} - copy of dataset's times
 	 * */
 	getTimes(): string[] {
@@ -208,7 +208,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's variables.
-	 * @memberof wxDataSetManager
+	 * @memberof WxDataSetManager
 	 * @returns {string[]} - copy of dataset's variables
 	 * */
 	getVariables(): string[] {
@@ -217,7 +217,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's variable meta.
-	 * @memberof wxDataSetManager
+	 * @memberof WxDataSetManager
 	 * @argument {string} variable - variable name
 	 * @returns {units, min, max} - some of dataset's variable meta
 	 * unit - unit of the variable
@@ -230,7 +230,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's native maximum zoom level.
-	 * @memberof wxDataSetManager
+	 * @memberof WxDataSetManager
 	 * @returns {number} - maximum zoom level of the dataset
 	 * */
 	getMaxZoom(): number {
@@ -239,7 +239,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Get dataset's boundaries.
-	 * @memberof wxDataSetManager
+	 * @memberof WxDataSetManager
 	 * @returns {[west, north, east, south]} - dataset's boundaries
 	 * */
 	getBoundaries(): [number, number, number, number] | undefined {
@@ -251,7 +251,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Createts dataset's current URI ready for fetching tiles.
-	 * @memberof wxDataSetManager
+	 * @memberof WxDataSetManager
 	 * @argument {string} variable - variable of the dataset
 	 * @argument {string | number | Date} time - time of the dataset
 	 * @argument {string} ext - zoom level of the dataset
@@ -265,7 +265,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Check if given variable is available in the dataset.
-	 * @memberof wxDataSetManager
+	 * @memberof WxDataSetManager
 	 * @argument {string} variable - variable name
 	 * @returns {boolean} - true if variable is available in the dataset
 	 * */
@@ -275,7 +275,7 @@ export class wxDataSetManager {
 
 	/**
 	 * Check if dataset's instance updated (fresh data is arrived) since datasset object was created
-	 * @memberof wxDataSetManager
+	 * @memberof WxDataSetManager
 	 * @returns {boolean} - true if dataset's instance updated since datasset object was created
 	 * */
 	async checkDatasetOutdated(): Promise<boolean> {

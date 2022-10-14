@@ -1,12 +1,10 @@
 import mapboxgl from 'mapbox-gl';
 
-import { type wxDataSetManager } from '../wxAPI/wxAPI';
-import { type ColorStyleWeak, refineColor, WxGetColorStyles, type XYZ } from '../utils/wxtools';
-import { type RInit, type wxDate, WxLayer, type wxVars, type WxTileInfo } from '../wxlayer/wxlayer';
+import { type WxDataSetManager } from '../wxAPI/wxAPI';
+import { type ColorStyleWeak, WxGetColorStyles, type XYZ, type ColorStyleStrict } from '../utils/wxtools';
+import { type RInit, type WxDate, WxLayer, type WxVars, type WxTileInfo, type WxLayerAPI } from '../wxlayer/wxlayer';
 
-export { type wxDate, type wxVars, type WxTileInfo, type RInit, type ColorStyleWeak, type XYZ };
-
-export class WxTileSource extends WxLayer implements mapboxgl.CustomSourceInterface<any> {
+export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<any> {
 	readonly id: string; // MAPBOX API
 	readonly type: 'custom' = 'custom'; // MAPBOX API
 	readonly dataType: 'raster' = 'raster'; // MAPBOX API
@@ -16,8 +14,10 @@ export class WxTileSource extends WxLayer implements mapboxgl.CustomSourceInterf
 	readonly bounds?: [number, number, number, number]; // MAPBOX API
 	readonly attribution?: string; // MAPBOX API
 
+	// Wx implementation
 	protected animation = false;
 	protected animationSeed = 0;
+	readonly layer: WxLayer;
 
 	constructor({
 		time,
@@ -32,9 +32,9 @@ export class WxTileSource extends WxLayer implements mapboxgl.CustomSourceInterf
 		bounds,
 		attribution = 'wxTiles',
 	}: {
-		time?: wxDate;
-		variables: wxVars;
-		wxdataset: wxDataSetManager;
+		time?: WxDate;
+		variables: WxVars;
+		wxdataset: WxDataSetManager;
 		ext?: string;
 		wxstyleName?: string;
 
@@ -44,15 +44,53 @@ export class WxTileSource extends WxLayer implements mapboxgl.CustomSourceInterf
 		bounds?: [number, number, number, number];
 		attribution?: string;
 	}) {
-		super({ time, variables, wxdataset, ext, wxstyleName });
-
 		this.id = id; // MAPBOX API
 		this.attribution = attribution; // MAPBOX API
 		this.maxzoom = maxzoom; // MAPBOX API
 		this.scheme = scheme; // MAPBOX API
 		this.bounds = bounds || wxdataset.getBoundaries(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
 
-		this.setStyleByName(wxstyleName, false);
+		this.layer = new WxLayer({ time, variables, wxdataset, ext, wxstyleName });
+	}
+
+	// Layer wrap
+	clearCache(): void {
+		this.layer.clearCache();
+	}
+
+	// Layer wrap
+	getCurrentStyleObjectCopy(): ColorStyleStrict {
+		return this.layer.getCurrentStyleObjectCopy();
+	}
+
+	// Layer wrap
+	getTime(): string {
+		return this.layer.getTime();
+	}
+
+	async setTime(time_?: WxDate, requestInit?: RInit): Promise<string> {
+		const oldtime = this.layer.getTime();
+		this.layer.setURLsAndTime(time_);
+		await this._reloadVisible(requestInit);
+		if (requestInit?.signal?.aborted) this.layer.setURLsAndTime(oldtime); // restore old time and URLs
+		return this.layer.getTime();
+	}
+
+	async preloadTime(time_: WxDate, requestInit?: RInit): Promise<void> {
+		return this.layer.preloadTime(time_, this.coveringTiles(), requestInit);
+	}
+
+	getLayerInfoAtLatLon(lnglat: mapboxgl.LngLat, anymap: any): WxTileInfo | undefined {
+		const worldsize = anymap.transform.worldSize as number;
+		const zoom = Math.round(Math.log2(worldsize) - 8);
+		const tilesize = worldsize / (2 << (zoom - 1));
+		const mapPixCoord = anymap.transform.project(lnglat) as mapboxgl.Point;
+		const tileCoord = mapPixCoord.div(tilesize);
+		tileCoord.x = Math.floor(tileCoord.x);
+		tileCoord.y = Math.floor(tileCoord.y);
+		const tilePixel_ = mapPixCoord.sub(tileCoord.mult(tilesize)); // tile pixel coordinates
+		const tilePixel = tilePixel_.mult(255 / tilesize).round(); // convert to 256x256 pixel coordinates
+		return this.layer.getTileData({ x: tileCoord.x, y: tileCoord.y, z: zoom }, tilePixel);
 	}
 
 	stopAnimation(): void {
@@ -63,57 +101,39 @@ export class WxTileSource extends WxLayer implements mapboxgl.CustomSourceInterf
 		if (this.animation) return;
 		this.animation = true;
 		const animationStep = (seed: number) => {
-			if (!this.animation || this.variables.length < 2 || this.style.streamLineStatic || this.style.streamLineColor === 'none') {
+			if (!this.animation || this.layer.variables.length < 2 || this.layer.style.streamLineStatic || this.layer.style.streamLineColor === 'none') {
 				this.animation = false;
 				return;
 			}
+
 			this.animationSeed = seed;
-			this._repaintVisible();
+			this.update();
 			requestAnimationFrame(animationStep);
 		};
 
 		requestAnimationFrame(animationStep);
 	}
 
-	async preloadTime(time_: wxDate, requestInit?: RInit): Promise<void> {
-		return this._preloadTime(time_, this.coveringTiles(), requestInit);
-	}
-
-	async setTime(time_?: wxDate, requestInit?: RInit): Promise<string> {
-		const oldtime = this.time;
-		this._setURLsAndTime(time_);
-		await this._reloadVisible(requestInit);
-		if (requestInit?.signal?.aborted) this._setURLsAndTime(oldtime); // restore old time and URLs
-		return this.time;
-	}
-
-	async updateCurrentStyleObject(style?: ColorStyleWeak, reload = true, requestInit?: RInit): Promise<void> {
-		[this.style, this.CLUT] = this._createCurrentStyleObject(style);
-		reload && (await this._reloadVisible(requestInit));
-	}
-
 	async setStyleByName(wxstyleName: string, reload = true): Promise<void> {
 		return this.updateCurrentStyleObject(WxGetColorStyles()[wxstyleName], reload);
 	}
 
-	protected async _reloadVisible(requestInit?: { signal?: AbortSignal }): Promise<void> {
-		const tilesCache = new Map();
-		await Promise.allSettled(this.coveringTiles().map((tile) => this._loadCacheDrawTile(tile, tilesCache, requestInit))); // fill up cache
-		if (requestInit?.signal?.aborted) return; // if we don't need to repaint, we are just need to cache the tiles inside the 'loader'
-		this.tilesCache = tilesCache; // replace cache
-		this._repaintVisible();
+	async updateCurrentStyleObject(style?: ColorStyleWeak, reload = true, requestInit?: RInit): Promise<void> {
+		this.layer.updateCurrentStyleObject(style);
+		if (reload) return this._reloadVisible(requestInit);
 	}
 
-	protected _repaintVisible(): void {
-		this.update(); // it forces mapbox to reload visible tiles (hopefully from cache)
+	protected async _reloadVisible(requestInit?: { signal?: AbortSignal }): Promise<void> {
+		await this.layer.reloadTiles(this.coveringTiles(), requestInit);
+		if (!requestInit?.signal?.aborted) this.update();
 	}
 
 	/*MB API*/
 	async loadTile(tile: XYZ, requestInit?: RInit): Promise<any> {
-		const raster_data = await this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
+		const raster_data = await this.layer.loadTile(tile, requestInit);
 		if (!this.animation) return raster_data.ctxFill.canvas;
 
-		this.painter.imprintVectorAnimationLinesStep(raster_data, this.animationSeed);
+		this.layer.painter.imprintVectorAnimationLinesStep(raster_data, this.animationSeed);
 		return raster_data.ctxStreamLines.canvas; // to shut up TS errors
 	}
 

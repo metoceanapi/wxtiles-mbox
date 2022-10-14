@@ -12,7 +12,8 @@
 		"strictFunctionTypes": true,
 		"strictPropertyInitialization": true,
 		"lib": ["es2020", "dom"],
-		"allowJs": true,
+		"target": "ES2020",
+		"allowJs": true, 
 		"sourceMap": true,
 		"resolveJsonModule": true
 	}

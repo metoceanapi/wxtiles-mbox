@@ -18,20 +18,20 @@ export interface wxData {
 }
 
 export class Loader {
-	protected readonly wxsource: WxLayer;
+	protected readonly layer: WxLayer;
 	protected loadDataFunc: UriLoaderPromiseFunc<DataIntegral> = /*loadDataIntegral; //*/ cacheUriPromise(loadDataIntegral);
 
-	constructor(wxsource: WxLayer) {
-		this.wxsource = wxsource;
+	constructor(layer: WxLayer) {
+		this.layer = layer;
 	}
 
 	async load(tile: XYZ, requestInit?: { signal?: AbortSignal }): Promise<wxData | null> {
-		const preloaded = await this.cacheLoad(tile, this.wxsource.tilesURIs, requestInit);
+		const preloaded = await this.cacheLoad(tile, this.layer.tilesURIs, requestInit);
 		if (!preloaded) return null;
 		const { rawdata, subCoords, tileType } = preloaded;
-		const { units } = this.wxsource.currentMeta;
+		const { units } = this.layer.currentMeta;
 		const interpolator = units === 'degree' ? subDataDegree : subData;
-		const processor = (d: DataIntegral) => interpolator(blurData(d, this.wxsource.style.blurRadius), subCoords);
+		const processor = (d: DataIntegral) => interpolator(blurData(d, this.layer.style.blurRadius), subCoords);
 		const data = rawdata.map(processor); // preprocess all loaded data
 		this._vectorMagnitudesPrepare(data); // if vector data, prepare magnitudes
 		await this._applyMask(data, tile, tileType, !subCoords && rawdata.length === 1); // apply mask if needed
@@ -49,9 +49,9 @@ export class Loader {
 		const tileType = this._checkTypeAndMask(tile);
 		if (!tileType) return null; // tile is cut by mask
 
-		const { upCoords, subCoords } = splitCoords(tile, this.wxsource.wxdataset.meta.maxZoom);
+		const { upCoords, subCoords } = splitCoords(tile, this.layer.wxdataset.meta.maxZoom);
 		const URLs = uris.map((uri) => uriXYZ(uri, upCoords));
-		const requestInitCopy = Object.assign({}, this.wxsource.wxdataset.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
+		const requestInitCopy = Object.assign({}, this.layer.wxdataset.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
 		const rawdata = await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
 		return { rawdata, subCoords, tileType };
 		// we don't need to process data, as it's for cache preloading only
@@ -62,7 +62,7 @@ export class Loader {
 	}
 
 	protected async _applyMask(data: DataPicture[], tile: XYZ, tileType: TileType, needCopy: boolean): Promise<void> {
-		const { style } = this.wxsource;
+		const { style } = this.layer;
 		if ((style.mask === 'land' || style.mask === 'sea') && tileType === TileType.Mixed) {
 			if (needCopy) {
 				// !!make a copy before masking!! or original data will be spoiled
@@ -73,7 +73,7 @@ export class Loader {
 
 			let maskImage: ImageData;
 			try {
-				maskImage = await this.wxsource.wxdataset.wxapi.loadMaskFunc(tile);
+				maskImage = await this.layer.wxdataset.wxapi.loadMaskFunc(tile);
 			} catch (e) {
 				style.mask = undefined;
 				console.log("Can't load Mask. Masking is Turned OFF");
@@ -92,7 +92,7 @@ export class Loader {
 		l.dmul = (l.dmax - l.dmin) / 65535;
 		for (let i = 0; i < 258 * 258; ++i) {
 			if (!u.raw[i] || !v.raw[i]) {
-				l.raw[i] = 0;
+				// l.raw[i] = 0; // by default it's 0
 				continue;
 			} // NODATA
 			const _u = u.dmin + u.dmul * u.raw[i]; // unpack U data
@@ -102,11 +102,11 @@ export class Loader {
 	}
 
 	protected _checkTypeAndMask(coords: XYZ): TileType | undefined {
-		const { mask } = this.wxsource.style;
+		const { mask } = this.layer.style;
 		// Check by QTree
 		var tileType: TileType | undefined = TileType.Mixed;
 		if (mask === 'land' || mask === 'sea') {
-			tileType = this.wxsource.wxdataset.wxapi.qtree.check(coords); // check 'type' of a tile
+			tileType = this.layer.wxdataset.wxapi.qtree.check(coords); // check 'type' of a tile
 			if (mask === tileType) {
 				return undefined; // cut by QTree
 			}
@@ -116,7 +116,7 @@ export class Loader {
 	}
 
 	protected _checkInsideBoundaries(coords: XYZ): boolean {
-		const { boundaries } = this.wxsource.wxdataset.meta;
+		const { boundaries } = this.layer.wxdataset.meta;
 		if (boundaries?.boundaries180) {
 			const bbox = makeBox(coords);
 			const rectIntersect = (b: BoundaryMeta) => !(bbox.west > b.east || b.west > bbox.east || bbox.south > b.north || b.south > bbox.north);
@@ -130,7 +130,7 @@ export class Loader {
 
 	protected _createStreamLines(data: DataPicture[]): SLine[] {
 		if (data.length !== 3) return [];
-		const { style } = this.wxsource;
+		const { style } = this.layer;
 		if (style.streamLineColor === 'none') return [];
 		const streamLines: SLine[] = []; // an array of stremllines. Each section of streamline represents a position and size of a particle.
 

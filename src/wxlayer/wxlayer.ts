@@ -10,11 +10,11 @@ import {
 	create2DContext,
 	type ColorStyleWeak,
 } from '../utils/wxtools';
-import { wxDataSetManager, type VariableMeta } from '../wxAPI/wxAPI';
+import { WxDataSetManager, type VariableMeta } from '../wxAPI/wxAPI';
 import { Loader, type wxData } from './loader';
 import { Painter, type wxRasterData } from './painter';
 
-export type wxDate = string | number | Date;
+export type WxDate = string | number | Date;
 export interface RInit {
 	signal?: AbortSignal;
 }
@@ -30,23 +30,50 @@ export interface WxTileInfo {
 	dataUnits: string;
 }
 
-export type wxVars = [string] | [string, string];
+export type WxVars = [string] | [string, string];
+
+export interface LngLat {
+	lng: number;
+	lat: number;
+}
+
+export interface WxLayerAPI {
+	// protected animation = false;
+	// protected animationSeed = 0;
+	// protected readonly layer: WxLayer;
+
+	clearCache(): void;
+
+	getTime(): string;
+	setTime(time_?: WxDate, requestInit?: RInit): Promise<string>;
+	preloadTime(time_: WxDate, requestInit?: RInit): Promise<void>;
+
+	getLayerInfoAtLatLon(lnglat: LngLat, anymap: any): WxTileInfo | undefined;
+
+	getCurrentStyleObjectCopy(): ColorStyleStrict;
+
+	stopAnimation(): void;
+	startAnimation(): void;
+
+	setStyleByName(wxstyleName: string, reload: boolean): Promise<void>;
+	updateCurrentStyleObject(style?: ColorStyleWeak, reload?: boolean, requestInit?: RInit): Promise<void>;
+}
 
 export class WxLayer {
-	protected readonly variables: wxVars; // variables of the dataset if vector then [eastward, northward]
 	protected readonly ext: string; // tiles extension. png by default
-	readonly wxdataset: wxDataSetManager;
+	readonly variables: WxVars; // variables of the dataset if vector then [eastward, northward]
+	readonly wxdataset: WxDataSetManager;
 	readonly currentMeta: VariableMeta;
 
-	protected time: string; // current time. is set in constructor by _setURLs()
-	tilesURIs: string[]; // current URIs. is set in constructor by _setURLs()
+	protected time: string;
+	tilesURIs: string[];
 
 	style: ColorStyleStrict;
-	CLUT: RawCLUT; // is set in constructor by _updateCurrentStyleObject()
+	CLUT: RawCLUT;
 
 	protected tilesCache: Map<string, wxRasterData> = new Map();
 
-	protected readonly painter: Painter = new Painter(this);
+	readonly painter: Painter = new Painter(this);
 	protected readonly loader: Loader = new Loader(this);
 
 	constructor({
@@ -56,19 +83,19 @@ export class WxLayer {
 		ext = 'png',
 		wxstyleName = 'base',
 	}: {
-		time?: wxDate;
-		variables: wxVars;
-		wxdataset: wxDataSetManager;
+		time?: WxDate;
+		variables: WxVars;
+		wxdataset: WxDataSetManager;
 		ext?: string;
 		wxstyleName?: string;
 	}) {
 		// check variables
 		if (!variables?.length || variables.length > 2) {
-			throw new Error(`wxTileSource ${wxdataset.datasetName}: only 1 or 2 variables are supported but ${variables.length} were given`);
+			throw new Error(`WxTileSource ${wxdataset.datasetName}: only 1 or 2 variables are supported but ${variables.length} were given`);
 		}
 
 		variables.forEach((v) => {
-			if (!wxdataset.checkVariableValid(v)) throw new Error(`wxTileSource ${wxdataset.datasetName}: variable ${v} is not valid`);
+			if (!wxdataset.checkVariableValid(v)) throw new Error(`WxTileSource ${wxdataset.datasetName}: variable ${v} is not valid`);
 		});
 
 		this.variables = variables;
@@ -79,18 +106,13 @@ export class WxLayer {
 		[this.style, this.CLUT] = this._createCurrentStyleObject(WxGetColorStyles()[wxstyleName]);
 	} // constructor
 
-	getLayerInfoAtLatLon(lnglat: mapboxgl.LngLat, anymap: any): WxTileInfo | undefined {
-		const worldsize = anymap.transform.worldSize as number;
-		const zoom = Math.round(Math.log2(worldsize) - 8);
-		const tilesize = worldsize / (2 << (zoom - 1));
-		const mapPixCoord = anymap.transform.project(lnglat) as mapboxgl.Point;
-		const tileCoord = mapPixCoord.div(tilesize);
-		tileCoord.x = Math.floor(tileCoord.x);
-		tileCoord.y = Math.floor(tileCoord.y);
-		const tilePixel_ = mapPixCoord.sub(tileCoord.mult(tilesize)); // tile pixel coordinates
-		const tilePixel = tilePixel_.mult(255 / tilesize).round(); // convert to 256x256 pixel coordinates
-		return this._getTileData({ x: tileCoord.x, y: tileCoord.y, z: zoom }, tilePixel);
-	} // getLayerInfoAtLatLon
+	get nonanimatable(): boolean {
+		return this.variables.length < 2 || this.style.streamLineStatic || this.style.streamLineColor === 'none';
+	} // animatable
+
+	getTime(): string {
+		return this.time;
+	} // getTime
 
 	// Beter to use when loading is not in progress // I beleive you don't need it, but it is here just in case
 	clearCache(): void {
@@ -102,16 +124,40 @@ export class WxLayer {
 		return Object.assign({}, this.style);
 	} // getCurrentStyleObjectCopy
 
-	protected _createCurrentStyleObject(style_?: ColorStyleWeak): [ColorStyleStrict, RawCLUT] {
-		const style = Object.assign(this.getCurrentStyleObjectCopy(), style_); // deep copy, so could be (and is) changed
-		style.streamLineColor = refineColor(this.style.streamLineColor);
-		const CLUT = this._prepareCLUTfromCurrentStyle(); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
-		return [style, CLUT];
+	updateCurrentStyleObject(style?: ColorStyleWeak): void {
+		[this.style, this.CLUT] = this._createCurrentStyleObject(style);
 	}
 
-	getTime(): string {
-		return this.time;
-	} // getTime
+	getTileData(tileCoord: XYZ, tilePixel: { x: number; y: number }): WxTileInfo | undefined {
+		const tile = this.tilesCache.get(HashXYZ(tileCoord));
+		if (!tile) return; // no tile
+		const tileData = this._getPixelInfo(tilePixel, tile.data.data);
+		if (!tileData) return; // oops! no data at the pixel
+		const { raw, data } = tileData;
+		const rgba = raw.map((r) => this.CLUT.colorsI[r]);
+		const hexColor = rgba.map(RGBtoHEX);
+		const inStyleUnits = data.map((d) => this.CLUT.DataToStyle(d));
+		return { data, raw, rgba, hexColor, inStyleUnits, tilePoint: tilePixel, styleUnits: this.style.units, dataUnits: this.currentMeta.units };
+	} // _getTileData
+
+	setURLsAndTime(time_?: WxDate): void {
+		[this.tilesURIs, this.time] = this._createURLsAndTime(time_);
+	} // _setURLsAndTime
+
+	async loadTile(tile: XYZ, requestInit?: RInit): Promise<wxRasterData> {
+		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
+	} // _loadTile
+
+	async preloadTime(time_: WxDate, tiles: XYZ[], requestInit?: RInit): Promise<void> {
+		const [tilesURIs] = this._createURLsAndTime(time_);
+		await Promise.allSettled(tiles.map((tile) => this.loader.cacheLoad(tile, tilesURIs, requestInit))); // fill up cache
+	} // _preloadTime
+
+	async reloadTiles(tiles: XYZ[], requestInit?: RInit): Promise<void> {
+		const tilesCache = new Map();
+		await Promise.allSettled(tiles.map((tile) => this._loadCacheDrawTile(tile, tilesCache, requestInit))); // fill up cache
+		if (!requestInit?.signal?.aborted) this.tilesCache = tilesCache; // replace cache
+	} // _reloadTiles
 
 	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: Map<string, wxRasterData>, requestInit?: RInit): Promise<wxRasterData> {
 		const tileData = tilesCache.get(HashXYZ(tile));
@@ -130,22 +176,24 @@ export class WxLayer {
 
 		const ctxFill = create2DContext(256, 256);
 		const ctxText = ctxFill; //  check if some browsers need separate canvas for text
-		const ctxStreamLines = this.variables.length === 2 ? create2DContext(256, 256, false) : ctxFill;
+		const ctxStreamLines = this.variables.length === 2 ? create2DContext(256, 256) : ctxFill;
 		const raster_data: wxRasterData = { ctxFill, ctxText, ctxStreamLines, data };
 		this.painter.paint(raster_data);
 		tilesCache.set(HashXYZ(tile), raster_data);
 		return raster_data;
 	} // _loadCacheDrawTile
 
-	protected async _preloadTime(time_: wxDate, tiles: XYZ[], requestInit?: RInit): Promise<void> {
-		const [tilesURIs] = this._createURLsAndTime(time_);
-		await Promise.allSettled(tiles.map((tile) => this.loader.cacheLoad(tile, tilesURIs, requestInit))); // fill up cache
-	} // _preloadTime
+	protected _createCurrentStyleObject(style_?: ColorStyleWeak): [ColorStyleStrict, RawCLUT] {
+		const style = Object.assign(this.getCurrentStyleObjectCopy(), style_); // deep copy, so could be (and is) changed
+		style.streamLineColor = refineColor(style.streamLineColor);
+		const CLUT = this._prepareCLUT(style); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
+		return [style, CLUT];
+	}
 
 	protected _getCurrentMeta(): VariableMeta {
 		const metas = this.variables.map((v) => {
 			const meta = this.wxdataset.meta.variablesMeta[v];
-			if (!meta) throw new Error(`wxTileSource ${this.wxdataset.datasetName}: variable ${v} is not valid`);
+			if (!meta) throw new Error(`WxTileSource ${this.wxdataset.datasetName}: variable ${v} is not valid`);
 			return meta;
 		});
 		let { min, max, units } = metas[0];
@@ -163,18 +211,6 @@ export class WxLayer {
 		return { min, max, units };
 	} // _getCurrentMeta
 
-	protected _getTileData(tileCoord: XYZ, tilePixel: { x: number; y: number }): WxTileInfo | undefined {
-		const tile = this.tilesCache.get(HashXYZ(tileCoord));
-		if (!tile) return; // no tile
-		const tileData = this._getPixelInfo(tilePixel, tile.data.data);
-		if (!tileData) return; // oops! no data at the pixel
-		const { raw, data } = tileData;
-		const rgba = raw.map((r) => this.CLUT.colorsI[r]);
-		const hexColor = rgba.map(RGBtoHEX);
-		const inStyleUnits = data.map((d) => this.CLUT.DataToStyle(d));
-		return { data, raw, rgba, hexColor, inStyleUnits, tilePoint: tilePixel, styleUnits: this.style.units, dataUnits: this.currentMeta.units };
-	} // _getTileData
-
 	// x, y - pixel on tile
 	protected _getPixelInfo({ x, y }: { x: number; y: number }, data: DataPicture[]): { raw: number[]; data: number[] } | undefined {
 		const index = (y + 1) * 258 + (x + 1);
@@ -185,18 +221,14 @@ export class WxLayer {
 		};
 	} // _getPixelInfo
 
-	protected _prepareCLUTfromCurrentStyle(): RawCLUT {
+	protected _prepareCLUT(style: ColorStyleStrict): RawCLUT {
 		const { min, max, units } = this.currentMeta;
-		return new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
-	} // _prepareCLUTfromCurrentStyle
+		return new RawCLUT(style, units, [min, max], this.variables.length === 2);
+	} // _prepareCLUTf
 
-	protected _createURLsAndTime(time_?: wxDate): [string[], string] {
+	protected _createURLsAndTime(time_?: WxDate): [string[], string] {
 		const time = this.wxdataset.getValidTime(time_);
 		const tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext: this.ext }));
 		return [tilesURIs, time];
 	} // _createURLsAndTime
-
-	protected _setURLsAndTime(time_?: wxDate): void {
-		[this.tilesURIs, this.time] = this._createURLsAndTime(time_);
-	} // _setURLsAndTime
 }

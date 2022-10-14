@@ -19,14 +19,14 @@ export interface wxRasterData {
 }
 
 export class Painter {
-	protected wxsource: WxLayer;
+	protected layer: WxLayer;
 
-	constructor(wxsource: WxLayer) {
-		this.wxsource = wxsource;
+	constructor(layer: WxLayer) {
+		this.layer = layer;
 	}
 
 	paint({ data, ctxFill, ctxText, ctxStreamLines }: wxRasterData): void {
-		const { wxsource } = this;
+		const { layer: wxsource } = this;
 		const { units } = wxsource.currentMeta;
 		const imageData = new ImageData(256, 256); //new ImageData(256, 256);
 		const imageBuffer = new Uint32Array(imageData.data.buffer); // a usefull representation of image's bytes (same memory)
@@ -44,7 +44,7 @@ export class Painter {
 	} // paint
 
 	imprintVectorAnimationLinesStep({ data, ctxFill, ctxStreamLines }: wxRasterData, seed: number) {
-		const { wxsource } = this;
+		const { layer: wxsource } = this;
 		ctxStreamLines.clearRect(0, 0, 256, 256);
 		ctxStreamLines.drawImage(ctxFill.canvas, 0, 0);
 		if (data.slines.length === 0 || wxsource.style.streamLineStatic || wxsource.style.streamLineColor === 'none') return;

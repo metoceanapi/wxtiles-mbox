@@ -1,10 +1,7 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl';
 
-import { wxAPI } from '../src/wxAPI/wxAPI';
-import { type WxTileInfo, WxTileSource, type wxVars } from '../src/wxsource/wxsource';
-import { createLegend } from '../src/utils/RawCLUT';
-import { ColorStyleStrict } from '../src/utils/wxtools';
+import { WxAPI, WxTileSource, WxCreateLegend, type ColorStyleStrict, type WxTileInfo, type WxVars } from '../src/index';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
 class LegendControl {
@@ -36,7 +33,7 @@ class LegendControl {
 		const { _canvas } = this;
 		const { width, height } = _canvas;
 		const halfHeight = (16 + height) >> 2;
-		const legend = createLegend(width - 50, style);
+		const legend = WxCreateLegend(width - 50, style);
 
 		// draw legend
 		const ctx = _canvas.getContext('2d')!;
@@ -105,24 +102,6 @@ class LegendControl {
 	}
 }
 async function start() {
-	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
-	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
-	const myHeaders = new Headers();
-	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
-	const wxapi = new wxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit: { headers: myHeaders } });
-
-	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
-	// const variables: wxVars = ['air.temperature.at-2m'];
-	const variables: wxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
-
-	// const datasetName = 'ww3-ecmwf.global';
-	// const variables = ['wave.direction.mean'];
-
-	// const datasetName = 'obs-radar.rain.nzl.national';
-	// const variables = ['reflectivity'];
-
-	const wxmanager = await wxapi.createDatasetManager(datasetName);
-
 	const map = new mapboxgl.Map({
 		container: 'map',
 		style: 'mapbox://styles/mapbox/light-v10',
@@ -132,6 +111,24 @@ async function start() {
 		zoom: 6,
 		// projection: { name: 'globe' },
 	});
+
+	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
+	const myHeaders = new Headers();
+	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
+	const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit: { headers: myHeaders } });
+
+	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	const variables: WxVars = ['air.temperature.at-2m'];
+	// const variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
+
+	// const datasetName = 'ww3-ecmwf.global';
+	// const variables = ['wave.direction.mean'];
+
+	// const datasetName = 'obs-radar.rain.nzl.national';
+	// const variables = ['reflectivity'];
+
+	const wxmanager = await wxapi.createDatasetManager(datasetName);
 
 	const legendControl = new LegendControl(map);
 
@@ -146,7 +143,7 @@ async function start() {
 		wxstyleName: 'base',
 		wxdataset: wxmanager,
 		variables,
-		// time: 0,
+		time: 0,
 	});
 
 	map.addSource(wxsource.id, wxsource);
@@ -159,7 +156,7 @@ async function start() {
 
 	// addSkyAndTerrain(map);
 	// addRaster(map, wxmanager.createURI({ variable: variables[0] }), wxmanager.getMaxZoom());
-	addPoints(map);
+	// addPoints(map);
 
 	// await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: true }); // await always !!
 	await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: false, levels: undefined }); // await always !!
@@ -170,12 +167,12 @@ async function start() {
 	/*/ DEMO: abort
 	const abortController = new AbortController();
 	console.log('setTime(5)');
-	const prom = wxsource.setTime(5, { requestInit: abortController });
+	const prom = wxsource.setTime(5, abortController);
 	abortController.abort(); // aborts the request
 	await prom; // await always !! even if aborted
 	console.log('aborted');
 	await wxsource.setTime(5); // no abort
-	console.log('setTime(5) done');//*/
+	console.log('setTime(5) done'); //*/
 
 	/*/ DEMO: preload a timestep
 	map.once('click', async () => {
@@ -207,16 +204,16 @@ async function start() {
 		i = (i + 1) % u.length;
 	}); //*/
 
-	/*/ DEMO: read lon lat data
+	// DEMO: read lon lat data
 	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false }).setLngLat([0, 0]).setHTML('').addTo(map);
 	map.on('mousemove', (e) => {
 		popup.setHTML(`${e.lngLat}`);
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap(), map);
 		if (tileInfo) {
-			const { min, max } = wxsource.currentMeta;
+			const { min, max } = wxsource.layer.currentMeta;
 			let content = `lnglat=(${e.lngLat.lng.toFixed(2)}, ${e.lngLat.lat.toFixed(2)})<br>
 			dataset=${wxmanager.datasetName}<br>
-			variables=${wxsource.variables}<br>
+			variables=${wxsource.layer.variables}<br>
 			style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
 			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>
 			min=${min.toFixed(2)} ${tileInfo.dataUnits}, max=${max.toFixed(2)} ${tileInfo.dataUnits}<br>

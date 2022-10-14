@@ -6,7 +6,7 @@ function clamp(val: number, min: number, max: number) {
 	return val > max ? max : val < min ? min : val;
 }
 
-interface Tick {
+export interface Tick {
 	data: number;
 	dataString: string;
 	color: string;
@@ -63,7 +63,7 @@ export class RawCLUT {
 		}
 
 		const lSize = 65536;
-		const legend = createLegend(lSize, style);
+		const legend = WxCreateLegend(lSize, style);
 		this.ticks = legend.ticks;
 		const lMin = legend.ticks[0].data;
 		const lMax = legend.ticks[legend.ticks.length - 1].data;
@@ -107,7 +107,7 @@ function numToString(n: number) {
 	return ns;
 }
 
-export interface Legend {
+export interface WxLegend {
 	size: number;
 	showBelowMin: boolean;
 	showAboveMax: boolean;
@@ -116,8 +116,8 @@ export interface Legend {
 	ticks: Tick[];
 }
 
-export function createLegend(size: number, style: ColorStyleStrict): Legend {
-	const legend: Legend = {
+export function WxCreateLegend(size: number, style: ColorStyleStrict): WxLegend {
+	const legend: WxLegend = {
 		size,
 		showBelowMin: style.showBelowMin,
 		showAboveMax: style.showAboveMax,
