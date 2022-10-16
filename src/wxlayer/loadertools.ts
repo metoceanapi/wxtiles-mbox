@@ -1,6 +1,6 @@
 import { coordToPixel, PixelsToLonLat } from '../utils/mercator';
 import { DataPicture, XYZ } from '../utils/wxtools';
-import { BoundaryMeta } from '../wxAPI/wxAPI';
+import { WxBoundaryMeta } from '../wxAPI/wxAPI';
 
 function interpolatorDegreeLinear(start: number, end: number, amount: number): number {
 	const shortestAngle = ((((end - start) % 360) + 540) % 360) - 180;
@@ -195,7 +195,7 @@ export function applyMask(data: DataPicture, mask: ImageData, maskType: 'land' |
 	return data;
 }
 
-export function makeBox(coords: XYZ): BoundaryMeta {
+export function makeBox(coords: XYZ): WxBoundaryMeta {
 	const [px, py] = coordToPixel(coords.x, coords.y);
 	const [west, north] = PixelsToLonLat(px, py, coords.z);
 	const [east, south] = PixelsToLonLat(px + 256, py + 256, coords.z);

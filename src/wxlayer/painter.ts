@@ -1,5 +1,5 @@
 import { type DataPicture, HEXtoRGBA, RGBtoHEX } from '../utils/wxtools';
-import { type wxData } from './loader';
+import { type WxData } from './loader';
 import { type WxLayer } from './wxlayer';
 
 interface IsoInfo {
@@ -11,11 +11,11 @@ interface IsoInfo {
 	mli: number;
 }
 
-export interface wxRasterData {
+export interface WxRasterData {
 	ctxFill: CanvasRenderingContext2D;
 	ctxText: CanvasRenderingContext2D;
 	ctxStreamLines: CanvasRenderingContext2D;
-	data: wxData;
+	data: WxData;
 }
 
 export class Painter {
@@ -25,30 +25,30 @@ export class Painter {
 		this.layer = layer;
 	}
 
-	paint({ data, ctxFill, ctxText, ctxStreamLines }: wxRasterData): void {
-		const { layer: wxsource } = this;
-		const { units } = wxsource.currentMeta;
+	paint({ data, ctxFill, ctxText, ctxStreamLines }: WxRasterData): void {
+		const { layer } = this;
+		const { units } = layer.currentMeta;
 		const imageData = new ImageData(256, 256); //new ImageData(256, 256);
 		const imageBuffer = new Uint32Array(imageData.data.buffer); // a usefull representation of image's bytes (same memory)
 		ctxFill.clearRect(0, 0, 256, 256);
 		ctxText.clearRect(0, 0, 256, 256);
 		ctxStreamLines.clearRect(0, 0, 256, 256);
 
-		_fill(data.data[0], imageBuffer, wxsource);
-		const isoInfo = _drawIsolines(imageBuffer, data.data[0], wxsource);
+		_fill(data.data[0], imageBuffer, layer);
+		const isoInfo = _drawIsolines(imageBuffer, data.data[0], layer);
 		ctxFill.putImageData(imageData, 0, 0);
-		_printIsolineText(isoInfo, ctxText, wxsource);
-		_printVectorsStatic(data.data, ctxText, wxsource);
-		_printDegreesStatic(data.data[0], ctxText, units, wxsource);
-		_drawStreamLinesStatic(data, ctxText, wxsource);
+		_printIsolineText(isoInfo, ctxText, layer);
+		_printVectorsStatic(data.data, ctxText, layer);
+		_printDegreesStatic(data.data[0], ctxText, units, layer);
+		_drawStreamLinesStatic(data, ctxText, layer);
 	} // paint
 
-	imprintVectorAnimationLinesStep({ data, ctxFill, ctxStreamLines }: wxRasterData, seed: number) {
-		const { layer: wxsource } = this;
+	imprintVectorAnimationLinesStep({ data, ctxFill, ctxStreamLines }: WxRasterData, seed: number) {
+		const { layer } = this;
 		ctxStreamLines.clearRect(0, 0, 256, 256);
 		ctxStreamLines.drawImage(ctxFill.canvas, 0, 0);
-		if (data.slines.length === 0 || wxsource.style.streamLineStatic || wxsource.style.streamLineColor === 'none') return;
-		_drawVectorAnimationLinesStep(data, ctxStreamLines, wxsource, seed);
+		if (data.slines.length === 0 || layer.style.streamLineStatic || layer.style.streamLineColor === 'none') return;
+		_drawVectorAnimationLinesStep(data, ctxStreamLines, layer, seed);
 	} // imprintVectorAnimationLinesStep
 }
 
@@ -219,7 +219,7 @@ function _printDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, u
 	} // for y
 } // _printDegreesStatic
 
-function _drawStreamLinesStatic(wxdata: wxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer): void {
+function _drawStreamLinesStatic(wxdata: WxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer): void {
 	const { data, slines } = wxdata;
 	if (!slines.length || !style.streamLineStatic || style.streamLineColor === 'none') return;
 
@@ -250,7 +250,7 @@ function _drawStreamLinesStatic(wxdata: wxData, ctx: CanvasRenderingContext2D, {
 	}
 } // _drawStreamLinesStatic
 
-function _drawVectorAnimationLinesStep(wxdata: wxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer, seed: number): void {
+function _drawVectorAnimationLinesStep(wxdata: WxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer, seed: number): void {
 	// 'seed' is a time tick given by the browser's scheduller
 	const { data, slines } = wxdata;
 	// if (!slines.length || !style.streamLineStatic || style.streamLineColor === 'none') return; // done by the caller!!!

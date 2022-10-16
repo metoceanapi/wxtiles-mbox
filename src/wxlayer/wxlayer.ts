@@ -1,6 +1,6 @@
 import { RawCLUT } from '../utils/RawCLUT';
 import {
-	type ColorStyleStrict,
+	type WxColorStyleStrict,
 	WxGetColorStyles,
 	refineColor,
 	type XYZ,
@@ -8,14 +8,16 @@ import {
 	RGBtoHEX,
 	type DataPicture,
 	create2DContext,
-	type ColorStyleWeak,
+	type WxColorStyleWeak,
+	WXLOG,
 } from '../utils/wxtools';
-import { WxDataSetManager, type VariableMeta } from '../wxAPI/wxAPI';
-import { Loader, type wxData } from './loader';
-import { Painter, type wxRasterData } from './painter';
+import { type WxVariableMeta } from '../wxAPI/wxAPI';
+import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
+import { Loader, type WxData } from './loader';
+import { Painter, type WxRasterData } from './painter';
 
 export type WxDate = string | number | Date;
-export interface RInit {
+export interface WxRequestInit {
 	signal?: AbortSignal;
 }
 
@@ -32,7 +34,7 @@ export interface WxTileInfo {
 
 export type WxVars = [string] | [string, string];
 
-export interface LngLat {
+export interface WxLngLat {
 	lng: number;
 	lat: number;
 }
@@ -45,33 +47,33 @@ export interface WxLayerAPI {
 	clearCache(): void;
 
 	getTime(): string;
-	setTime(time_?: WxDate, requestInit?: RInit): Promise<string>;
-	preloadTime(time_: WxDate, requestInit?: RInit): Promise<void>;
+	setTime(time_?: WxDate, requestInit?: WxRequestInit): Promise<string>;
+	preloadTime(time_: WxDate, requestInit?: WxRequestInit): Promise<void>;
 
-	getLayerInfoAtLatLon(lnglat: LngLat, anymap: any): WxTileInfo | undefined;
+	getLayerInfoAtLatLon(lnglat: WxLngLat, anymap: any): WxTileInfo | undefined;
 
-	getCurrentStyleObjectCopy(): ColorStyleStrict;
+	getCurrentStyleObjectCopy(): WxColorStyleStrict;
 
 	stopAnimation(): void;
 	startAnimation(): void;
 
 	setStyleByName(wxstyleName: string, reload: boolean): Promise<void>;
-	updateCurrentStyleObject(style?: ColorStyleWeak, reload?: boolean, requestInit?: RInit): Promise<void>;
+	updateCurrentStyleObject(style?: WxColorStyleWeak, reload?: boolean, requestInit?: WxRequestInit): Promise<void>;
 }
 
 export class WxLayer {
 	protected readonly ext: string; // tiles extension. png by default
 	readonly variables: WxVars; // variables of the dataset if vector then [eastward, northward]
-	readonly wxdataset: WxDataSetManager;
-	readonly currentMeta: VariableMeta;
+	readonly wxdatasetManager: WxDataSetManager;
+	readonly currentMeta: WxVariableMeta;
 
 	protected time: string;
 	tilesURIs: string[];
 
-	style: ColorStyleStrict;
+	style: WxColorStyleStrict;
 	CLUT: RawCLUT;
 
-	protected tilesCache: Map<string, wxRasterData> = new Map();
+	protected tilesCache: Map<string, WxRasterData> = new Map();
 
 	readonly painter: Painter = new Painter(this);
 	protected readonly loader: Loader = new Loader(this);
@@ -79,31 +81,32 @@ export class WxLayer {
 	constructor({
 		time,
 		variables,
-		wxdataset,
+		wxdatasetManager,
 		ext = 'png',
 		wxstyleName = 'base',
 	}: {
 		time?: WxDate;
 		variables: WxVars;
-		wxdataset: WxDataSetManager;
+		wxdatasetManager: WxDataSetManager;
 		ext?: string;
 		wxstyleName?: string;
 	}) {
 		// check variables
 		if (!variables?.length || variables.length > 2) {
-			throw new Error(`WxTileSource ${wxdataset.datasetName}: only 1 or 2 variables are supported but ${variables.length} were given`);
+			throw new Error(`WxTileSource ${wxdatasetManager.datasetName}: only 1 or 2 variables are supported but ${variables.length} were given`);
 		}
 
 		variables.forEach((v) => {
-			if (!wxdataset.checkVariableValid(v)) throw new Error(`WxTileSource ${wxdataset.datasetName}: variable ${v} is not valid`);
+			if (!wxdatasetManager.checkVariableValid(v)) throw new Error(`WxTileSource ${wxdatasetManager.datasetName}: variable ${v} is not valid`);
 		});
 
 		this.variables = variables;
-		this.wxdataset = wxdataset;
+		this.wxdatasetManager = wxdatasetManager;
 		this.ext = ext;
 		this.currentMeta = this._getCurrentMeta();
 		[this.tilesURIs, this.time] = this._createURLsAndTime(time);
 		[this.style, this.CLUT] = this._createCurrentStyleObject(WxGetColorStyles()[wxstyleName]);
+		WXLOG(`WxTileSource created ${wxdatasetManager.datasetName}, ${variables.join(', ')}, ${wxstyleName}`);
 	} // constructor
 
 	get nonanimatable(): boolean {
@@ -120,11 +123,11 @@ export class WxLayer {
 		this.loader.clearCache();
 	} // clearCache
 
-	getCurrentStyleObjectCopy(): ColorStyleStrict {
+	getCurrentStyleObjectCopy(): WxColorStyleStrict {
 		return Object.assign({}, this.style);
 	} // getCurrentStyleObjectCopy
 
-	updateCurrentStyleObject(style?: ColorStyleWeak): void {
+	updateCurrentStyleObject(style?: WxColorStyleWeak): void {
 		[this.style, this.CLUT] = this._createCurrentStyleObject(style);
 	}
 
@@ -144,26 +147,26 @@ export class WxLayer {
 		[this.tilesURIs, this.time] = this._createURLsAndTime(time_);
 	} // _setURLsAndTime
 
-	async loadTile(tile: XYZ, requestInit?: RInit): Promise<wxRasterData> {
+	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData> {
 		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
 	} // _loadTile
 
-	async preloadTime(time_: WxDate, tiles: XYZ[], requestInit?: RInit): Promise<void> {
+	async preloadTime(time_: WxDate, tiles: XYZ[], requestInit?: WxRequestInit): Promise<void> {
 		const [tilesURIs] = this._createURLsAndTime(time_);
 		await Promise.allSettled(tiles.map((tile) => this.loader.cacheLoad(tile, tilesURIs, requestInit))); // fill up cache
 	} // _preloadTime
 
-	async reloadTiles(tiles: XYZ[], requestInit?: RInit): Promise<void> {
+	async reloadTiles(tiles: XYZ[], requestInit?: WxRequestInit): Promise<void> {
 		const tilesCache = new Map();
 		await Promise.allSettled(tiles.map((tile) => this._loadCacheDrawTile(tile, tilesCache, requestInit))); // fill up cache
 		if (!requestInit?.signal?.aborted) this.tilesCache = tilesCache; // replace cache
 	} // _reloadTiles
 
-	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: Map<string, wxRasterData>, requestInit?: RInit): Promise<wxRasterData> {
+	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: Map<string, WxRasterData>, requestInit?: WxRequestInit): Promise<WxRasterData> {
 		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
 
-		let data: wxData | null = null;
+		let data: WxData | null = null;
 		try {
 			data = await this.loader.load(tile, requestInit);
 		} catch (e) {
@@ -177,23 +180,23 @@ export class WxLayer {
 		const ctxFill = create2DContext(256, 256);
 		const ctxText = ctxFill; //  check if some browsers need separate canvas for text
 		const ctxStreamLines = this.variables.length === 2 ? create2DContext(256, 256) : ctxFill;
-		const raster_data: wxRasterData = { ctxFill, ctxText, ctxStreamLines, data };
+		const raster_data: WxRasterData = { ctxFill, ctxText, ctxStreamLines, data };
 		this.painter.paint(raster_data);
 		tilesCache.set(HashXYZ(tile), raster_data);
 		return raster_data;
 	} // _loadCacheDrawTile
 
-	protected _createCurrentStyleObject(style_?: ColorStyleWeak): [ColorStyleStrict, RawCLUT] {
+	protected _createCurrentStyleObject(style_?: WxColorStyleWeak): [WxColorStyleStrict, RawCLUT] {
 		const style = Object.assign(this.getCurrentStyleObjectCopy(), style_); // deep copy, so could be (and is) changed
 		style.streamLineColor = refineColor(style.streamLineColor);
 		const CLUT = this._prepareCLUT(style); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
 		return [style, CLUT];
 	}
 
-	protected _getCurrentMeta(): VariableMeta {
+	protected _getCurrentMeta(): WxVariableMeta {
 		const metas = this.variables.map((v) => {
-			const meta = this.wxdataset.meta.variablesMeta[v];
-			if (!meta) throw new Error(`WxTileSource ${this.wxdataset.datasetName}: variable ${v} is not valid`);
+			const meta = this.wxdatasetManager.meta.variablesMeta[v];
+			if (!meta) throw new Error(`WxTileSource ${this.wxdatasetManager.datasetName}: variable ${v} is not valid`);
 			return meta;
 		});
 		let { min, max, units } = metas[0];
@@ -221,14 +224,14 @@ export class WxLayer {
 		};
 	} // _getPixelInfo
 
-	protected _prepareCLUT(style: ColorStyleStrict): RawCLUT {
+	protected _prepareCLUT(style: WxColorStyleStrict): RawCLUT {
 		const { min, max, units } = this.currentMeta;
 		return new RawCLUT(style, units, [min, max], this.variables.length === 2);
 	} // _prepareCLUTf
 
 	protected _createURLsAndTime(time_?: WxDate): [string[], string] {
-		const time = this.wxdataset.getValidTime(time_);
-		const tilesURIs = this.variables.map((variable) => this.wxdataset.createURI({ variable, time, ext: this.ext }));
+		const time = this.wxdatasetManager.getValidTime(time_);
+		const tilesURIs = this.variables.map((variable) => this.wxdatasetManager.createURI({ variable, time, ext: this.ext }));
 		return [tilesURIs, time];
 	} // _createURLsAndTime
 }

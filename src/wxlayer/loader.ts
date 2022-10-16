@@ -1,8 +1,18 @@
 import { TileType } from '../utils/qtree';
-import { blurData, cacheUriPromise, type DataIntegral, type DataPicture, loadDataIntegral, UriLoaderPromiseFunc, uriXYZ, type XYZ } from '../utils/wxtools';
-import { type BoundaryMeta } from '../wxAPI/wxAPI';
+import {
+	blurData,
+	cacheUriPromise,
+	type DataIntegral,
+	type DataPicture,
+	loadDataIntegral,
+	UriLoaderPromiseFunc,
+	uriXYZ,
+	type XYZ,
+	WXLOG,
+} from '../utils/wxtools';
+import { type WxBoundaryMeta } from '../wxAPI/wxAPI';
 import { applyMask, makeBox, splitCoords, subData, subDataDegree } from './loadertools';
-import { type WxLayer } from './wxlayer';
+import { WxRequestInit, type WxLayer } from './wxlayer';
 
 interface SLinePoint {
 	x: number;
@@ -11,8 +21,8 @@ interface SLinePoint {
 
 export type SLine = SLinePoint[];
 
-// export type wxData = DataPicture[] | null;
-export interface wxData {
+// export type WxData = DataPicture[] | null;
+export interface WxData {
 	data: DataPicture[];
 	slines: SLine[];
 }
@@ -25,7 +35,7 @@ export class Loader {
 		this.layer = layer;
 	}
 
-	async load(tile: XYZ, requestInit?: { signal?: AbortSignal }): Promise<wxData | null> {
+	async load(tile: XYZ, requestInit?: WxRequestInit): Promise<WxData | null> {
 		const preloaded = await this.cacheLoad(tile, this.layer.tilesURIs, requestInit);
 		if (!preloaded) return null;
 		const { rawdata, subCoords, tileType } = preloaded;
@@ -41,7 +51,7 @@ export class Loader {
 	async cacheLoad(
 		tile: XYZ,
 		uris: string[],
-		requestInit?: { signal?: AbortSignal }
+		requestInit?: WxRequestInit
 	): Promise<{ rawdata: DataIntegral[]; subCoords?: XYZ | undefined; tileType: TileType } | null> {
 		// TODO: mapbox can't work with boundaries across lon 180. Once it's fixed, we can remove this check
 		if (!this._checkInsideBoundaries(tile)) return null; // tile is cut by boundaries
@@ -49,9 +59,9 @@ export class Loader {
 		const tileType = this._checkTypeAndMask(tile);
 		if (!tileType) return null; // tile is cut by mask
 
-		const { upCoords, subCoords } = splitCoords(tile, this.layer.wxdataset.meta.maxZoom);
+		const { upCoords, subCoords } = splitCoords(tile, this.layer.wxdatasetManager.meta.maxZoom);
 		const URLs = uris.map((uri) => uriXYZ(uri, upCoords));
-		const requestInitCopy = Object.assign({}, this.layer.wxdataset.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
+		const requestInitCopy = Object.assign({}, this.layer.wxdatasetManager.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
 		const rawdata = await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
 		return { rawdata, subCoords, tileType };
 		// we don't need to process data, as it's for cache preloading only
@@ -73,10 +83,10 @@ export class Loader {
 
 			let maskImage: ImageData;
 			try {
-				maskImage = await this.layer.wxdataset.wxapi.loadMaskFunc(tile);
+				maskImage = await this.layer.wxdatasetManager.wxapi.loadMaskFunc(tile);
 			} catch (e) {
 				style.mask = undefined;
-				console.log("Can't load Mask. Masking is Turned OFF");
+				WXLOG("Can't load Mask. Masking is Turned OFF");
 				return;
 			}
 
@@ -106,7 +116,7 @@ export class Loader {
 		// Check by QTree
 		var tileType: TileType | undefined = TileType.Mixed;
 		if (mask === 'land' || mask === 'sea') {
-			tileType = this.layer.wxdataset.wxapi.qtree.check(coords); // check 'type' of a tile
+			tileType = this.layer.wxdatasetManager.wxapi.qtree.check(coords); // check 'type' of a tile
 			if (mask === tileType) {
 				return undefined; // cut by QTree
 			}
@@ -116,10 +126,10 @@ export class Loader {
 	}
 
 	protected _checkInsideBoundaries(coords: XYZ): boolean {
-		const { boundaries } = this.layer.wxdataset.meta;
+		const { boundaries } = this.layer.wxdatasetManager.meta;
 		if (boundaries?.boundaries180) {
 			const bbox = makeBox(coords);
-			const rectIntersect = (b: BoundaryMeta) => !(bbox.west > b.east || b.west > bbox.east || bbox.south > b.north || b.south > bbox.north);
+			const rectIntersect = (b: WxBoundaryMeta) => !(bbox.west > b.east || b.west > bbox.east || bbox.south > b.north || b.south > bbox.north);
 			if (!boundaries.boundaries180.some(rectIntersect)) {
 				return false; // cut by boundaries
 			}

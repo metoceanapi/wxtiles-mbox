@@ -1,7 +1,7 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl';
 
-import { WxAPI, WxTileSource, WxCreateLegend, type ColorStyleStrict, type WxTileInfo, type WxVars } from '../src/index';
+import { WxAPI, WxTileSource, WxCreateLegend, type WxColorStyleStrict, type WxTileInfo, type WxVars } from '../src/index';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
 class LegendControl {
@@ -29,7 +29,7 @@ class LegendControl {
 		this._map = undefined;
 	}
 
-	drawLegend(style: ColorStyleStrict) {
+	drawLegend(style: WxColorStyleStrict) {
 		const { _canvas } = this;
 		const { width, height } = _canvas;
 		const halfHeight = (16 + height) >> 2;
@@ -138,6 +138,7 @@ async function start() {
 
 	await map.once('load');
 
+	
 	const wxsource = new WxTileSource({
 		id: 'wxsource',
 		wxstyleName: 'base',
@@ -204,16 +205,16 @@ async function start() {
 		i = (i + 1) % u.length;
 	}); //*/
 
-	// DEMO: read lon lat data
+	/*/ DEMO: read lon lat data
 	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false }).setLngLat([0, 0]).setHTML('').addTo(map);
 	map.on('mousemove', (e) => {
 		popup.setHTML(`${e.lngLat}`);
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap(), map);
 		if (tileInfo) {
-			const { min, max } = wxsource.layer.currentMeta;
+			const { min, max } = wxsource.getMetadata();
 			let content = `lnglat=(${e.lngLat.lng.toFixed(2)}, ${e.lngLat.lat.toFixed(2)})<br>
 			dataset=${wxmanager.datasetName}<br>
-			variables=${wxsource.layer.variables}<br>
+			variables=${wxsource.getVariables()}<br>
 			style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
 			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>
 			min=${min.toFixed(2)} ${tileInfo.dataUnits}, max=${max.toFixed(2)} ${tileInfo.dataUnits}<br>

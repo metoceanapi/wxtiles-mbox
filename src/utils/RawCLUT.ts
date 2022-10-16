@@ -1,12 +1,18 @@
 import { HEXtoRGBA, RGBtoHEX, makeConverter, WxGetColorSchemes, mixColor, createLevels } from './wxtools';
-import { Converter, ColorStyleStrict } from './wxtools';
+import { Converter, WxColorStyleStrict } from './wxtools';
 // import type { Converter } from './wxtools';
 
 function clamp(val: number, min: number, max: number) {
 	return val > max ? max : val < min ? min : val;
 }
 
-export interface Tick {
+/**
+ * @param {number} data - the data value
+ * @param {string} dataString - compact string representation of the data value
+ * @param {string} color - the color of the data value in web format
+ * @param {number} pos - the position of the data value on the legend in [0, legendSize]
+ */
+export interface WxTick {
 	data: number;
 	dataString: string;
 	color: string;
@@ -18,8 +24,8 @@ export class RawCLUT {
 	colorsI: Uint32Array;
 	DataToStyle: Converter;
 	DataToKnots?: Converter;
-	ticks: Tick[];
-	constructor(style: ColorStyleStrict, dUnits: string, [dMin, dMax]: [number, number], vector: boolean) {
+	ticks: WxTick[];
+	constructor(style: WxColorStyleStrict, dUnits: string, [dMin, dMax]: [number, number], vector: boolean) {
 		const dDif = dMax - dMin;
 		this.levelIndex = new Uint32Array(65536);
 		this.colorsI = new Uint32Array(65536);
@@ -107,16 +113,32 @@ function numToString(n: number) {
 	return ns;
 }
 
+/**
+ * @inteface WxLegend
+ * @description Legend object
+ * @property {number} size - size of the legend in pixels
+ * @property {boolean} showBelowMin - show color for values below min
+ * @property {boolean} showAboveMax - show color for values above max
+ * @property {string} units - units of the legend
+ * @property {number[]} colors - array of colors
+ * @property {WxTick[]} ticks - array of ticks
+ */
 export interface WxLegend {
 	size: number;
 	showBelowMin: boolean;
 	showAboveMax: boolean;
 	units: string;
 	colors: Uint32Array;
-	ticks: Tick[];
+	ticks: WxTick[];
 }
 
-export function WxCreateLegend(size: number, style: ColorStyleStrict): WxLegend {
+/**
+ * @description Create a legend for a given color style
+ * @param {number} size - number of colors in the legend
+ * @param {WxColorStyleStrict} style - color style
+ * @returns {WxLegend} legend
+ */
+export function WxCreateLegend(size: number, style: WxColorStyleStrict): WxLegend {
 	const legend: WxLegend = {
 		size,
 		showBelowMin: style.showBelowMin,
@@ -135,7 +157,7 @@ export function WxCreateLegend(size: number, style: ColorStyleStrict): WxLegend 
 		// fill 'ticks'
 		for (const [data, color] of colorMap) {
 			const pos = ~~(((data - dMin) / dDif) * (size - 1));
-			const tick: Tick = { data, dataString: numToString(data), color, pos };
+			const tick: WxTick = { data, dataString: numToString(data), color, pos };
 			legend.ticks.push(tick);
 		}
 
@@ -175,7 +197,7 @@ export function WxCreateLegend(size: number, style: ColorStyleStrict): WxLegend 
 
 	for (const data of levels) {
 		const pos = ~~((data - dMin) * dMul);
-		const tick: Tick = { data, dataString: numToString(data), color: RGBtoHEX(legend.colors[pos]), pos };
+		const tick: WxTick = { data, dataString: numToString(data), color: RGBtoHEX(legend.colors[pos]), pos };
 		legend.ticks.push(tick);
 	}
 

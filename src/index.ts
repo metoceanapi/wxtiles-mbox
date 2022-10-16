@@ -1,12 +1,13 @@
-export { WxAPI, WxDataSetManager } from './wxAPI/wxAPI';
-export type { WxAPIOptions, VariableMeta, VariablesMetas, BoundaryMeta, AllBoundariesMeta, DatasetMeta } from './wxAPI/wxAPI';
+export { WxAPI } from './wxAPI/wxAPI';
+export type { WxAPIOptions, WxVariableMeta, WxVariablesMetas, WxBoundaryMeta, WxAllBoundariesMeta, WxDatasetMeta } from './wxAPI/wxAPI';
+
+export { WxDataSetManager } from './wxAPI/WxDataSetManager';
 
 export { WxTileSource } from './wxsource/wxsource';
 
-export { WxLayer } from './wxlayer/wxlayer';
-export type { WxDate, RInit, WxTileInfo, WxVars, LngLat, WxLayerAPI } from './wxlayer/wxlayer';
+export type { WxDate, WxRequestInit, WxTileInfo, WxVars, WxLngLat } from './wxlayer/wxlayer';
 
-export { WxCreateLegend, type WxLegend, type Tick } from '../src/utils/RawCLUT';
+export { WxCreateLegend, type WxLegend, type WxTick } from '../src/utils/RawCLUT';
 
-export { WxGetColorStyles, WxGetColorSchemes, RGBtoHEX, RGBAtoHEX, HEXtoRGBA, fetchJson, WxTilesLogging, WXLOG } from './utils/wxtools';
-export type { XYZ, ColorSchemes, ColorStyleWeak, ColorStyleStrict, WxTilesLibOptions } from './utils/wxtools';
+export { WxGetColorStyles, WxGetColorSchemes, WxTilesLogging, WXLOG } from './utils/wxtools';
+export type { XYZ, WxColorSchemes, WxColorStyleWeak, WxColorStyleStrict, WxTilesLibOptions } from './utils/wxtools';

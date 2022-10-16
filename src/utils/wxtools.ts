@@ -14,13 +14,13 @@ export interface Units {
 	[unit: string]: UnitTuple | undefined;
 }
 
-export interface ColorSchemes {
+export interface WxColorSchemes {
 	[name: string]: string[] | undefined;
 }
 
 export type colorMapTuple = [number, string];
 
-export interface ColorStyleWeak {
+export interface WxColorStyleWeak {
 	parent?: string;
 	name?: string;
 	fill?: 'none' | 'gradient' | 'solid';
@@ -48,14 +48,14 @@ export interface ColorStyleWeak {
 }
 
 export interface ColorStylesWeakMixed {
-	[name: string]: ColorStyleWeak | ColorStyleWeak[] | undefined;
+	[name: string]: WxColorStyleWeak | WxColorStyleWeak[] | undefined;
 }
 
 export interface ColorStylesIncomplete {
-	[name: string]: ColorStyleWeak | undefined;
+	[name: string]: WxColorStyleWeak | undefined;
 }
 
-export interface ColorStyleStrict extends ColorStyleWeak {
+export interface WxColorStyleStrict extends WxColorStyleWeak {
 	parent?: string;
 	name: string;
 	fill: 'none' | 'gradient' | 'solid';
@@ -83,18 +83,18 @@ export interface ColorStyleStrict extends ColorStyleWeak {
 }
 
 export interface ColorStylesStrict {
-	base: ColorStyleStrict;
-	[name: string]: ColorStyleStrict | undefined;
+	base: WxColorStyleStrict;
+	[name: string]: WxColorStyleStrict | undefined;
 }
 
 let _units: Units;
-let _colorSchemes: ColorSchemes;
+let _colorSchemes: WxColorSchemes;
 let _colorStylesUnrolled: ColorStylesStrict;
 
 export interface WxTilesLibOptions {
 	colorStyles?: ColorStylesWeakMixed;
 	units?: Units;
-	colorSchemes?: ColorSchemes;
+	colorSchemes?: WxColorSchemes;
 }
 
 /// some random usefull stuff
@@ -123,7 +123,7 @@ export function WxGetColorStyles(): ColorStylesStrict {
 	return _colorStylesUnrolled;
 }
 
-export function WxGetColorSchemes(): ColorSchemes {
+export function WxGetColorSchemes(): WxColorSchemes {
 	return _colorSchemes;
 }
 
@@ -177,7 +177,7 @@ function unrollStylesParent(stylesArrInc: ColorStylesWeakMixed): ColorStylesStri
 
 	const baseStyleCopy = Object.assign({}, __colorStyles_default_preset.base);
 	// recursive function to apply inheritance
-	const inherit = (stylesInc: ColorStylesIncomplete, name: string): ColorStyleStrict => {
+	const inherit = (stylesInc: ColorStylesIncomplete, name: string): WxColorStyleStrict => {
 		if (name === 'base') return baseStyleCopy; // nothing to inherit
 		const style = stylesInc[name]; // there are no arrays by this point
 		if (!style) return baseStyleCopy; // nothing to inherit
@@ -574,7 +574,7 @@ export function WxTilesLogging(on: boolean) {
 
 export function WXLOG(...str: any) {
 	if (wxlogging) {
-		console.trace(...str);
+		console.log(...str);
 	}
 }
 
