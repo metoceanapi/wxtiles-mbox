@@ -3,7 +3,9 @@ import mapboxgl from 'mapbox-gl';
 
 import { WxAPI, WxTileSource, WxCreateLegend, type WxColorStyleStrict, type WxTileInfo, type WxVars } from '../src/index';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
+// mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
+mapboxgl.accessToken = 'pk.eyJ1IjoibW91cm5lciIsImEiOiJWWnRiWG1VIn0.j6eccFHpE3Q04XPLI7JxbA';
+
 class LegendControl {
 	_map?: mapboxgl.Map;
 	_canvas: HTMLCanvasElement;
@@ -138,7 +140,6 @@ async function start() {
 
 	await map.once('load');
 
-	
 	const wxsource = new WxTileSource({
 		id: 'wxsource',
 		wxstyleName: 'base',
