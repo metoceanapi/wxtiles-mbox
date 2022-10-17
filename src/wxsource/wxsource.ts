@@ -176,6 +176,11 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @memberof WxTileSource
 	 */
 	startAnimation(): void {
+		if (this.layer.nonanimatable) {
+			this.animation = false;
+			return;
+		}
+
 		if (this.animation) return;
 		this.animation = true;
 		const animationStep = (seed: number) => {
