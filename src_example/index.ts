@@ -55,7 +55,7 @@ async function start() {
 		id: 'wxtiles',
 		type: 'raster',
 		source: 'wxsource',
-		paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.5 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
+		paint: { 'raster-fade-duration': 0, 'raster-opacity': 1 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
 	});
 
 	// addSkyAndTerrain(map);
@@ -67,6 +67,21 @@ async function start() {
 	legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
 	wxsource.startAnimation();
 	console.log('time', wxsource.getTime());
+
+	// DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
+	let busy = false;
+	const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
+	const colMap: [number, string][] = levels.map((level) => [level, '#' + Math.random().toString(16).slice(2, 8) + 'ff']);
+	map.on('mousemove', async (e) => {
+		if (busy) return;
+		busy = true;
+		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap(), map);
+		if (tileInfo) {
+			await wxsource.updateCurrentStyleObject({ colorMap: [...colMap, [tileInfo.inStyleUnits[0], '#ff000000']] }); // await always !!
+			legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
+		}
+		busy = false;
+	}); //*/
 
 	/*/ DEMO: abort
 	const abortController = new AbortController();
@@ -116,7 +131,7 @@ async function start() {
 		if (tileInfo) {
 			const { min, max } = wxsource.getMetadata();
 			let content = `lnglat=(${e.lngLat.lng.toFixed(2)}, ${e.lngLat.lat.toFixed(2)})<br>
-			dataset=${wxmanager.datasetName}<br>
+			dataset=${wxdatasetManager.datasetName}<br>
 			variables=${wxsource.getVariables()}<br>
 			style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
 			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>

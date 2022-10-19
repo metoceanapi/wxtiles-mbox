@@ -183,7 +183,7 @@ export class WxLayer {
 				return this._loadCacheDrawTile(tile, tilesCache, requestInit);
 			})
 		); // fill up cache
-		
+
 		if (!requestInit?.signal?.aborted) this.tilesCache = tilesCache; // replace cache
 	} // _reloadTiles
 
