@@ -43,7 +43,7 @@ export class Painter {
 		_drawStreamLinesStatic(data, ctxText, layer);
 	} // paint
 
-	imprintVectorAnimationLinesStep({ data, ctxFill, ctxStreamLines }: WxRasterData, seed: number) {
+	imprintVectorAnimationLinesStep({ data, ctxFill, ctxStreamLines }: WxRasterData, seed: number): void {
 		const { layer } = this;
 		ctxStreamLines.clearRect(0, 0, 256, 256);
 		ctxStreamLines.drawImage(ctxFill.canvas, 0, 0);
