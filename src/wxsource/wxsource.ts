@@ -38,7 +38,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	constructor({
 		time,
 		variables,
-		wxdataset,
+		wxdatasetManager,
 		ext = 'png',
 		wxstyleName = 'base',
 
@@ -50,7 +50,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	}: {
 		time?: WxDate;
 		variables: WxVars;
-		wxdataset: WxDataSetManager;
+		wxdatasetManager: WxDataSetManager;
 		ext?: 'png';
 		wxstyleName?: string;
 
@@ -60,14 +60,14 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 		bounds?: [number, number, number, number];
 		attribution?: string;
 	}) {
-		WXLOG('WxTileSource constructor', { time, variables, wxdataset, ext, wxstyleName, id });
+		WXLOG('WxTileSource constructor', { time, variables, wxdatasetManager, ext, wxstyleName, id });
 		this.id = id; // MAPBOX API
 		this.attribution = attribution; // MAPBOX API
 		this.maxzoom = maxzoom; // MAPBOX API
 		this.scheme = scheme; // MAPBOX API
-		this.bounds = bounds || wxdataset.getBoundaries(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
+		this.bounds = bounds || wxdatasetManager.getBoundaries(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
 
-		this.layer = new WxLayer({ time, variables, wxdatasetManager: wxdataset, ext, wxstyleName });
+		this.layer = new WxLayer({ time, variables, wxdatasetManager, ext, wxstyleName });
 	}
 
 	/**

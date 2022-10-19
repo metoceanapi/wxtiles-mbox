@@ -40,12 +40,12 @@ async function start() {
 	// const datasetName = 'obs-radar.rain.nzl.national';
 	// const variables = ['reflectivity'];
 
-	const wxmanager = await wxapi.createDatasetManager(datasetName);
+	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 
 	const wxsource = new WxTileSource({
 		id: 'wxsource',
 		wxstyleName: 'base',
-		wxdataset: wxmanager,
+		wxdatasetManager,
 		variables,
 		time: 0,
 	});
