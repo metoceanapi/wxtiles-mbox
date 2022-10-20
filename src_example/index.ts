@@ -14,7 +14,7 @@ async function start() {
 		// style: 'mapbox://styles/mapbox/satellite-v9',
 		// style: { version: 8, name: 'Empty', sources: {}, layers: [] },
 		center: [174.5, -40.75],
-		zoom: 6,
+		zoom: 3,
 		// projection: { name: 'globe' },
 	});
 
@@ -67,7 +67,7 @@ async function start() {
 	wxsource.startAnimation();
 	console.log('time', wxsource.getTime());
 
-	// DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
+	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	let busy = false;
 	await wxsource.updateCurrentStyleObject({ units: 'C', levels: undefined }); // await always !!
 	const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
@@ -123,7 +123,7 @@ async function start() {
 		i = (i + 1) % u.length;
 	}); //*/
 
-	// DEMO: read lon lat data
+	/*/ DEMO: read lon lat data
 	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false, offset: [50, -50] }).setLngLat([0, 0]).setHTML('').addTo(map);
 	map.on('mousemove', (e) => {
 		popup.setHTML(`${e.lngLat}`);
@@ -143,12 +143,12 @@ async function start() {
 		popup.setLngLat(e.lngLat);
 	}); //*/
 
-	/*/ DEMO: timesteps
-	const tlength = wxmanager.getTimes().length;
+	// DEMO: timesteps
+	const tlength = wxdatasetManager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {
 		await wxsource.setTime(t++ % tlength); // await always !!
-		setTimeout(nextTimeStep, 100);
+		setTimeout(nextTimeStep, 0);
 	};
 	setTimeout(nextTimeStep, 2000);
 	//*/

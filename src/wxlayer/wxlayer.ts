@@ -61,12 +61,6 @@ export interface WxLayerAPI {
 	updateCurrentStyleObject(style?: WxColorStyleWeak, reload?: boolean, requestInit?: WxRequestInit): Promise<void>;
 }
 
-export interface XYZCtx3 extends XYZ {
-	ctxFill?: CanvasRenderingContext2D;
-	ctxText?: CanvasRenderingContext2D;
-	ctxStreamLines?: CanvasRenderingContext2D;
-}
-
 export class WxLayer {
 	protected readonly ext: string; // tiles extension. png by default
 	readonly variables: WxVars; // variables of the dataset if vector then [eastward, northward]
@@ -164,30 +158,17 @@ export class WxLayer {
 
 	/**
 	 * @description Load all tiles, draw it on canvas, save to cache and return
-	 * @param tiles 
-	 * @param requestInit 
+	 * @param tiles
+	 * @param requestInit
 	 */
-	async reloadTiles(tiles: XYZCtx3[], requestInit?: WxRequestInit): Promise<void> {
+	async reloadTiles(tiles: XYZ[], requestInit?: WxRequestInit): Promise<void> {
 		const tilesCache = new Map<string, WxRasterData>();
-		await Promise.allSettled(
-			tiles.map((tile) => {
-				if (!tile.ctxFill) {
-					// try to reuse canvases
-					const tileData = this.tilesCache.get(HashXYZ(tile));
-					if (tileData) {
-						tile.ctxFill = tileData.ctxFill;
-						tile.ctxText = tileData.ctxText;
-						tile.ctxStreamLines = tileData.ctxStreamLines;
-					}
-				}
-				return this._loadCacheDrawTile(tile, tilesCache, requestInit);
-			})
-		); // fill up cache
+		await Promise.allSettled(tiles.map((tile) => this._loadCacheDrawTile(tile, tilesCache, requestInit))); // fill up cache
 
 		if (!requestInit?.signal?.aborted) this.tilesCache = tilesCache; // replace cache
 	} // _reloadTiles
 
-	protected async _loadCacheDrawTile(tile: XYZCtx3, tilesCache: Map<string, WxRasterData>, requestInit?: WxRequestInit): Promise<WxRasterData> {
+	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: Map<string, WxRasterData>, requestInit?: WxRequestInit): Promise<WxRasterData> {
 		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
 
@@ -202,9 +183,9 @@ export class WxLayer {
 			throw { status: 404 }; // happens when tile is cut by qTree or by Mask
 		}
 
-		const ctxFill = tile.ctxFill || create2DContext(256, 256);
-		const ctxText = tile.ctxText || ctxFill; //  check if some browsers need separate canvas for text
-		const ctxStreamLines = this.variables.length === 2 ? tile.ctxStreamLines || create2DContext(256, 256) : ctxFill;
+		const ctxFill = create2DContext(256, 256);
+		const ctxText = ctxFill; //  check if some browsers need separate canvas for text
+		const ctxStreamLines = this.variables.length === 2 ? create2DContext(256, 256) : ctxFill;
 		const raster_data: WxRasterData = { ctxFill, ctxText, ctxStreamLines, data };
 		this.painter.paint(raster_data);
 		tilesCache.set(HashXYZ(tile), raster_data);
