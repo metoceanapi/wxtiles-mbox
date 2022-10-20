@@ -1,4 +1,5 @@
 import { fetchJson } from '../utils/wxtools';
+import { WxDate } from '../wxlayer/wxlayer';
 import { WxDatasetMeta, WxAPI, WxVariableMeta, WxInstances } from './wxAPI';
 
 /**
@@ -27,12 +28,10 @@ export class WxDataSetManager {
 	/**
 	 * Get closets valid time to the given time.
 	 * @memberof WxDataSetManager
-	 * @argument {number} time - either a number of a step in dataset's time array or seconds since epoch
-	 * @argument {string} time - time convertable to a Date object
-	 * @argument {Date} time - Date object
+	 * @argument {WxDate} time - either a number of a step in dataset's time array or seconds since epoch or  a Date object
 	 * @returns {string} - closest valid time from the dataset's time array
 	 * */
-	getValidTime(time: string | number | Date = Date()): string {
+	getValidTime(time: WxDate = Date()): string {
 		const { times } = this.meta;
 		if (typeof time === 'number') {
 			if (time <= 0) return times[0]; // for negative numbers use first time
@@ -100,14 +99,13 @@ export class WxDataSetManager {
 	 * Createts dataset's current URI ready for fetching tiles.
 	 * @memberof WxDataSetManager
 	 * @argument {string} variable - variable of the dataset
-	 * @argument {string | number | Date} time - time of the dataset
+	 * @argument {WxDate} time - time of the dataset
 	 * @argument {string} ext - zoom level of the dataset
 	 * @returns {string} - dataset's current URI ready for fetching tiles
 	 * */
-	createURI({ variable, time, ext = 'png' }: { variable: string; time?: string | number | Date; ext?: string }): string {
+	createURI(variable: string, time?: WxDate, ext: string = 'png'): string {
 		if (!this.meta.variablesMeta?.[variable]) throw new Error(`in dataset ${this.datasetName} variable ${variable} not found`);
-		time = this.getValidTime(time);
-		return `${this.wxapi.dataServerURL + this.datasetName}/${this.instance}/${variable}/${time}/{z}/{x}/{y}.${ext}`;
+		return `${this.wxapi.dataServerURL + this.datasetName}/${this.instance}/${variable}/${this.getValidTime(time)}/{z}/{x}/{y}.${ext}`;
 	}
 
 	/**

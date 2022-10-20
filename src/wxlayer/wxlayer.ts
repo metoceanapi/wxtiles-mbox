@@ -237,7 +237,7 @@ export class WxLayer {
 
 	protected _createURLsAndTime(time_?: WxDate): [string[], string] {
 		const time = this.wxdatasetManager.getValidTime(time_);
-		const tilesURIs = this.variables.map((variable) => this.wxdatasetManager.createURI({ variable, time, ext: this.ext }));
+		const tilesURIs = this.variables.map((variable) => this.wxdatasetManager.createURI(variable, time, this.ext));
 		return [tilesURIs, time];
 	} // _createURLsAndTime
 }
