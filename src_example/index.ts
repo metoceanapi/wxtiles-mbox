@@ -31,8 +31,8 @@ async function start() {
 	const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit: { headers: myHeaders } });
 
 	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
-	const variables: WxVars = ['air.temperature.at-2m'];
-	// const variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
+	// const variables: WxVars = ['air.temperature.at-2m'];
+	const variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
 
 	// const datasetName = 'ww3-ecmwf.global';
 	// const variables = ['wave.direction.mean'];
@@ -63,13 +63,13 @@ async function start() {
 	// addPoints(map);
 
 	// await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: true }); // await always !!
-	await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: false, levels: undefined }); // await always !!
 	legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
 	wxsource.startAnimation();
 	console.log('time', wxsource.getTime());
 
 	// DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	let busy = false;
+	await wxsource.updateCurrentStyleObject({ units: 'C', levels: undefined }); // await always !!
 	const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
 	const colMap: [number, string][] = levels.map((level) => [level, '#' + Math.random().toString(16).slice(2, 8) + 'ff']);
 	map.on('mousemove', async (e) => {
@@ -123,8 +123,8 @@ async function start() {
 		i = (i + 1) % u.length;
 	}); //*/
 
-	/*/ DEMO: read lon lat data
-	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false }).setLngLat([0, 0]).setHTML('').addTo(map);
+	// DEMO: read lon lat data
+	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false, offset: [50, -50] }).setLngLat([0, 0]).setHTML('').addTo(map);
 	map.on('mousemove', (e) => {
 		popup.setHTML(`${e.lngLat}`);
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap(), map);

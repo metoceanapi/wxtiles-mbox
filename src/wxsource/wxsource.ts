@@ -34,6 +34,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	protected animation = false;
 	protected animationSeed = 0;
 	protected readonly layer: WxLayer;
+	protected redrawRequestID: number = 0;
 
 	constructor({
 		time,
@@ -93,7 +94,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @memberof WxTileSource
 	 */
 	clearCache(): void {
-		WXLOG('WxTileSource clearCache');
+		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} clearCache`);
 		this.layer.clearCache();
 	}
 
@@ -123,7 +124,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @returns {Promise<void>} A promise that resolves when the time is set.
 	 */
 	async setTime(time_?: WxDate, requestInit?: WxRequestInit): Promise<string> {
-		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} setTime`, { time: time_ });
+		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} setTime: ${time_}`);
 		const oldtime = this.layer.getTime();
 		this.layer.setURLsAndTime(time_);
 		await this._reloadVisible(requestInit);
@@ -139,6 +140,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @returns {Promise<void>} A promise that resolves when finished preload.
 	 */
 	async preloadTime(time_: WxDate, requestInit?: WxRequestInit): Promise<void> {
+		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} preloadTime: ${time_}`);
 		return this.layer.preloadTime(time_, this.coveringTiles(), requestInit);
 	}
 
@@ -167,8 +169,9 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @memberof WxTileSource
 	 */
 	stopAnimation(): void {
+		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} stopAnimation`);
 		this.animation = false;
-		this.update();
+		this._redrawTiles();
 	}
 
 	/**
@@ -178,9 +181,11 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	startAnimation(): void {
 		if (this.layer.nonanimatable) {
 			this.animation = false;
+			WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} startAnimation: nonanimatable`);
 			return;
 		}
 
+		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} startAnimation`);
 		if (this.animation) return;
 		this.animation = true;
 		const animationStep = (seed: number) => {
@@ -190,7 +195,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 			}
 
 			this.animationSeed = seed;
-			this.update();
+			this._redrawTiles();
 			requestAnimationFrame(animationStep);
 		};
 
@@ -205,6 +210,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @returns {Promise<void>} A promise that resolves when the style is set.
 	 */
 	async setStyleByName(wxstyleName: string, reload = true): Promise<void> {
+		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} setStyleByName: ${wxstyleName}`);
 		return this.updateCurrentStyleObject(WxGetColorStyles()[wxstyleName], reload);
 	}
 
@@ -217,13 +223,22 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @returns {Promise<void>} A promise that resolves when the style is set.
 	 */
 	async updateCurrentStyleObject(style?: WxColorStyleWeak, reload = true, requestInit?: WxRequestInit): Promise<void> {
+		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} updateCurrentStyleObject:`, style);
 		this.layer.updateCurrentStyleObject(style);
 		if (reload) return this._reloadVisible(requestInit);
 	}
 
 	protected async _reloadVisible(requestInit?: { signal?: AbortSignal }): Promise<void> {
 		await this.layer.reloadTiles(this.coveringTiles(), requestInit);
-		if (!requestInit?.signal?.aborted) this.update();
+		if (!requestInit?.signal?.aborted) this._redrawTiles();
+	}
+
+	protected _redrawTiles(): void {
+		if (this.redrawRequestID) return; // in case animation was queued
+		this.redrawRequestID = requestAnimationFrame(() => {
+			this.update();
+			this.redrawRequestID = 0;
+		});
 	}
 
 	/*MB API*/
