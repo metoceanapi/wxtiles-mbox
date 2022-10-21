@@ -67,7 +67,7 @@ async function start() {
 	wxsource.startAnimation();
 	console.log('time', wxsource.getTime());
 
-	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
+	// DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	let busy = false;
 	await wxsource.updateCurrentStyleObject({ units: 'C', levels: undefined }); // await always !!
 	const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
@@ -143,7 +143,7 @@ async function start() {
 		popup.setLngLat(e.lngLat);
 	}); //*/
 
-	// DEMO: timesteps
+	/*/ DEMO: timesteps
 	const tlength = wxdatasetManager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {

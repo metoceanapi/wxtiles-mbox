@@ -2,7 +2,7 @@ import mapboxgl from 'mapbox-gl';
 
 import { type WxDataSetManager } from '../wxAPI/WxDataSetManager';
 import { type WxColorStyleWeak, WxGetColorStyles, type XYZ, type WxColorStyleStrict, WXLOG } from '../utils/wxtools';
-import { type WxRequestInit, type WxDate, WxLayer, type WxVars, type WxTileInfo, type WxLayerAPI } from '../wxlayer/wxlayer';
+import { type WxRequestInit, type WxDate, WxLayer, type WxVars, type WxTileInfo, type WxLayerAPI, type WxLngLat } from '../wxlayer/wxlayer';
 import { WxVariableMeta } from '../wxAPI/wxAPI';
 
 /**
@@ -34,7 +34,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	protected animation = false;
 	protected animationSeed = 0;
 	protected readonly layer: WxLayer;
-	protected oldMaxZoom?: number = 0;
+	protected oldMaxZoom?: number; /* to restore coarse maximum zoom level to make tiles load faster during animation */
 	protected redrawRequested?: Promise<void>;
 
 	constructor({
@@ -97,7 +97,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @memberof WxTileSource
 	 */
 	clearCache(): void {
-		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} clearCache`);
+		WXLOG(`WxTileSource clearCache (${this.layer.wxdatasetManager.datasetName})`);
 		this.layer.clearCache();
 	}
 
@@ -117,7 +117,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @returns {string} The current time of the source.
 	 */
 	getTime(): string {
-		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} getTime `);
+		WXLOG(`WxTileSource getTime (${this.layer.wxdatasetManager.datasetName})`);
 		return this.layer.getTime();
 	}
 
@@ -129,12 +129,12 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @returns {Promise<void>} A promise that resolves when the time is set.
 	 */
 	async setTime(time?: WxDate, requestInit?: WxRequestInit): Promise<string> {
-		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} setTime: ${time}`);
-		const oldtime = this.layer.getTime();
+		WXLOG(`WxTileSource setTime (${this.layer.wxdatasetManager.datasetName}) `, { time });
+		const oldtime = this.getTime();
 		this.layer.setURLsAndTime(time);
 		await this._reloadVisible(requestInit);
 		if (requestInit?.signal?.aborted) this.layer.setURLsAndTime(oldtime); // restore old time and URLs
-		return this.layer.getTime();
+		return this.getTime();
 	}
 
 	/**
@@ -145,7 +145,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @returns {Promise<void>} A promise that resolves when finished preload.
 	 */
 	async preloadTime(time: WxDate, requestInit?: WxRequestInit): Promise<void> {
-		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} preloadTime: ${time}`);
+		WXLOG(`WxTileSource preloadTime (${this.layer.wxdatasetManager.datasetName}) `, { time });
 		return this.layer.preloadTime(time, this.coveringTiles(), requestInit);
 	}
 
@@ -156,7 +156,8 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @param {any} anymap - map instance.
 	 * @returns {WxTileInfo | undefined } Information about the current point on map. Undefined if NODATA
 	 */
-	getLayerInfoAtLatLon(lnglat: mapboxgl.LngLat, anymap: any): WxTileInfo | undefined {
+	getLayerInfoAtLatLon(lnglat: WxLngLat, anymap: any): WxTileInfo | undefined {
+		WXLOG(`WxTileSource getLayerInfoAtLatLon (${this.layer.wxdatasetManager.datasetName})`, lnglat);
 		const worldsize = anymap.transform.worldSize as number;
 		const zoom = Math.round(Math.log2(worldsize) - 8);
 		const tilesize = worldsize / (2 << (zoom - 1));
@@ -174,7 +175,16 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @memberof WxTileSource
 	 */
 	startAnimation(): void {
-		if (this.animation) return;
+		if (this.animation) {
+			WXLOG(`WxTileSource startAnimation (${this.layer.wxdatasetManager.datasetName}) already started`);
+			return;
+		}
+
+		if (this.layer.nonanimatable) {
+			WXLOG(`WxTileSource startAnimation (${this.layer.wxdatasetManager.datasetName}) nonanimatable`);
+			return;
+		}
+
 		WXLOG(`WxTileSource startAnimation (${this.layer.wxdatasetManager.datasetName})`);
 		this.animation = true;
 		const animationStep = async (seed: number) => {
@@ -227,7 +237,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @returns {Promise<void>} A promise that resolves when the style is set.
 	 */
 	async setStyleByName(wxstyleName: string, reload: boolean = true): Promise<void> {
-		WXLOG(`WxTileSource ${this.layer.wxdatasetManager.datasetName} setStyleByName: ${wxstyleName}`);
+		WXLOG(`WxTileSource setStyleByName (${this.layer.wxdatasetManager.datasetName})`);
 		return this.updateCurrentStyleObject(WxGetColorStyles()[wxstyleName], reload);
 	}
 
@@ -239,24 +249,28 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	 * @param {WxRequestInit | undefined} requestInit - Request options.
 	 * @returns {Promise<void>} A promise that resolves when the style is set.
 	 */
-	async updateCurrentStyleObject(style?: WxColorStyleWeak, reload = true, requestInit?: WxRequestInit): Promise<void> {
-		WXLOG(`WxTileSource updateCurrentStyleObject(${this.layer.wxdatasetManager.datasetName})`, { style });
+	async updateCurrentStyleObject(style?: WxColorStyleWeak, reload: boolean = true, requestInit?: WxRequestInit): Promise<void> {
+		WXLOG(`WxTileSource updateCurrentStyleObject (${this.layer.wxdatasetManager.datasetName})`, { style });
 		this.layer.updateCurrentStyleObject(style);
 		if (reload) return this._reloadVisible(requestInit);
 	}
 
-	protected async _reloadVisible(requestInit?: { signal?: AbortSignal }): Promise<void> {
+	protected async _reloadVisible(requestInit?: WxRequestInit): Promise<void> {
 		WXLOG(`WxTileSource _reloadVisible (${this.layer.wxdatasetManager.datasetName})`);
-		await this.layer.reloadTiles(this.coveringTiles(), requestInit);
-		
-		if (!requestInit?.signal?.aborted) this._redrawTiles();
+		await this.layer.reloadTiles(this.coveringTiles(), requestInit); // reload tiles with new time
+		if (requestInit?.signal?.aborted) {
+			WXLOG(`WxTileSource _reloadVisible (${this.layer.wxdatasetManager.datasetName}) aborted`);
+			return;
+		}
+
+		return this._redrawTiles();
 	}
 
 	protected _redrawTiles(): Promise<void> {
 		if (this.redrawRequested) return this.redrawRequested;
 		this.redrawRequested = new Promise((resolve) => {
 			requestAnimationFrame(() => {
-				WXLOG(`WxTilesLayer _redrawTiles (${this.layer.wxdatasetManager.datasetName})`);
+				WXLOG(`WxTileSource _redrawTiles (${this.layer.wxdatasetManager.datasetName})`);
 
 				this.update();
 
