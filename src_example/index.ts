@@ -1,29 +1,31 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl';
 
-import { WxAPI, WxTileSource, type WxTileInfo, type WxVars } from '../src/index';
-import { LegendControl } from './LegendControl';
-
-// mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
-mapboxgl.accessToken = 'pk.eyJ1IjoibW91cm5lciIsImEiOiJWWnRiWG1VIn0.j6eccFHpE3Q04XPLI7JxbA';
+import { WxTileSource, type WxVars, WxAPI, WxTilesLogging, type WxTileInfo, WxLegendControl, WxStyleEditorControl } from '../src/index';
 
 async function start() {
+	// mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
+	mapboxgl.accessToken = 'pk.eyJ1IjoibW91cm5lciIsImEiOiJWWnRiWG1VIn0.j6eccFHpE3Q04XPLI7JxbA';
 	const map = new mapboxgl.Map({
 		container: 'map',
-		style: 'mapbox://styles/mapbox/light-v10',
+		// style: 'mapbox://styles/mapbox/light-v10',
 		// style: 'mapbox://styles/mapbox/satellite-v9',
-		// style: { version: 8, name: 'Empty', sources: {}, layers: [] },
+		style: { version: 8, name: 'Empty', sources: {}, layers: [] },
 		center: [174.5, -40.75],
 		zoom: 3,
 		// projection: { name: 'globe' },
 	});
 
-	const legendControl = new LegendControl();
-	map.addControl(new mapboxgl.NavigationControl());
-	map.addControl(legendControl, 'top-left');
-	map.showTileBoundaries = true;
+	map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+	// map.showTileBoundaries = true;
 	await map.once('load');
 
+	// addSkyAndTerrain(map);
+	// addRaster(map, wxmanager.createURI({ variable: variables[0] }), wxmanager.getMaxZoom());
+	// addPoints(map);
+
+	//******* WxTiles stuff *******//
+	WxTilesLogging(false);
 	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
@@ -35,10 +37,10 @@ async function start() {
 	const variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
 
 	// const datasetName = 'ww3-ecmwf.global';
-	// const variables = ['wave.direction.mean'];
+	// const variables: WxVars = ['wave.direction.mean'];
 
 	// const datasetName = 'obs-radar.rain.nzl.national';
-	// const variables = ['reflectivity'];
+	// const variables: WxVars = ['reflectivity'];
 
 	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 
@@ -55,19 +57,26 @@ async function start() {
 		id: 'wxtiles',
 		type: 'raster',
 		source: 'wxsource',
-		paint: { 'raster-fade-duration': 0, 'raster-opacity': 1 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
+		paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.5 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
 	});
 
-	// addSkyAndTerrain(map);
-	// addRaster(map, wxmanager.createURI({ variable: variables[0] }), wxmanager.getMaxZoom());
-	// addPoints(map);
+	const legendControl = new WxLegendControl();
+	map.addControl(legendControl, 'top-right');
 
-	// await wxsource.updateCurrentStyleObject({ streamLineColor: 'inverted', streamLineStatic: true }); // await always !!
-	legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
-	wxsource.startAnimation();
+	const editor = new WxStyleEditorControl();
+	map.addControl(editor, 'top-left');
+
+	const styleChanged = (editor.onchange = async (style) => {
+		await wxsource.updateCurrentStyleObject(style);
+		const nstyle = wxsource.getCurrentStyleObjectCopy();
+		legendControl.drawLegend(nstyle);
+		editor.setStyle(nstyle);
+	});
+
+	await styleChanged({ streamLineColor: 'inverted', streamLineStatic: false }); // await always !!
 	console.log('time', wxsource.getTime());
 
-	// DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
+	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	let busy = false;
 	await wxsource.updateCurrentStyleObject({ units: 'C', levels: undefined }); // await always !!
 	const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels

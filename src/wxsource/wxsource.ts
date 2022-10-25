@@ -252,6 +252,7 @@ export class WxTileSource implements WxLayerAPI, mapboxgl.CustomSourceInterface<
 	async updateCurrentStyleObject(style?: WxColorStyleWeak, reload: boolean = true, requestInit?: WxRequestInit): Promise<void> {
 		WXLOG(`WxTileSource updateCurrentStyleObject (${this.layer.wxdatasetManager.datasetName})`, { style });
 		this.layer.updateCurrentStyleObject(style);
+		this.startAnimation();
 		if (reload) return this._reloadVisible(requestInit);
 	}
 

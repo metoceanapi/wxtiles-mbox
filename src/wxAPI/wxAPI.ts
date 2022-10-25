@@ -97,7 +97,8 @@ export class WxAPI {
 			fetchJson<WxDataSetsMetasJSON>(dataServerURL + 'datasetsmeta.json', requestInit),
 			qtreeURL !== 'none' ? this.qtree.load(qtreeURL, requestInit) : Promise.resolve(),
 		]).then(([datasetsMetas, _]): void => {
-			Object.assign(this.datasetsMetas, datasetsMetas);
+			datasetsMetas.allDatasetsList || (datasetsMetas.allDatasetsList = Object.keys(datasetsMetas));
+			(this as any).datasetsMetas = datasetsMetas; // ovbercome readonly once :/
 		});
 	}
 

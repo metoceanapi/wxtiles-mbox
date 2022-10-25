@@ -1,6 +1,14 @@
-import { WxCreateLegend, type WxColorStyleStrict } from '../src/index';
+import { WxCreateLegend, type WxColorStyleStrict } from '../index';
 
-export class LegendControl {
+// // Leaflet
+// const legendControl = new WxLegendControl();
+// 	map.addControl(new (L.Control.extend(legendControl.extender()))({ position: 'topright' }));
+
+// // MBox
+// const legendControl = new WxLegendControl();
+// map.addControl(legendControl, 'top-right');
+
+export class WxLegendControl {
 	private readonly _canvas: HTMLCanvasElement;
 	constructor() {
 		const canvas = document.createElement('canvas');
@@ -90,5 +98,10 @@ export class LegendControl {
 
 		ctx.strokeStyle = '#888';
 		ctx.strokeRect(1, 1, width - 3, height - 2); //for white background
+	}
+
+	// for Leaflet
+	extender() {
+		return { onAdd: () => this.onAdd(), onRemove: () => this.onRemove() };
 	}
 }
