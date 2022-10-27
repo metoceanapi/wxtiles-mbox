@@ -1,39 +1,30 @@
 const esbuild = require('esbuild');
 const express = require('express');
 
-let watchResponse;
-const disableHotReload = process.env.DISABLE_HOT_RELOAD === 'true';
+const PORT = process.env.PORT || 3000;
 
 esbuild
 	.build({
 		entryPoints: ['src_example/index.ts'],
 		bundle: true,
-		// plugins: [sassPlugin()],
+		plugins: [],
 		loader: {
-			'.ttf': 'base64',
+			'.png': 'base64',
 			'.woff': 'base64',
 			'.fs': 'text',
 			'.vs': 'text',
 		},
-		target: 'es2017',
-		bundle: true,
+		target: 'es2020',
 		format: 'iife',
 		outfile: 'public/wxtilembox/wxtilembox.js',
-		globalName: 'wxtilembox',
-
 		sourcemap: true,
-		// minify: false,
-		minifyWhitespace: false,
-		minifyIdentifiers: false,
-		minifySyntax: false,
-		// keepNames: true,
+		minify: false,
 		watch: {
 			onRebuild(error, result) {
 				if (error) {
 					console.error('watch build failed:', error);
 				} else {
 					console.log('rebuilded', new Date());
-					!disableHotReload && watchResponse && watchResponse.write('data: refresh\n\n');
 				}
 			},
 		},
@@ -42,17 +33,7 @@ esbuild
 		const app = express();
 		app.use(express.static('public'));
 
-		const PORT = 3003;
-
-		app.get('/watch', function (req, res) {
-			res.writeHead(200, {
-				'Content-Type': 'text/event-stream',
-				'Cache-Control': 'no-cache',
-				Connection: 'keep-alive',
-			});
-		});
-
-		const url = `http://0.0.0.0:${PORT}`;
+		const url = `http://localhost:${PORT}`;
 		app.listen(PORT, () => {
 			console.log(`Dev is running at ${url}`);
 		});

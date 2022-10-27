@@ -1,7 +1,9 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl';
 
-import { WxTileSource, type WxVars, WxAPI, WxTilesLogging, type WxTileInfo, WxLegendControl, WxStyleEditorControl } from '../src/index';
+import { WxTileSource, type WxVars, WxAPI, WxTilesLogging, type WxTileInfo } from '../src/index';
+import { WxLegendControl } from '../src/controls/WxLegendControl';
+import { WxStyleEditorControl } from '../src/controls/WxStyleEditorControl';
 
 async function start() {
 	// mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
@@ -44,13 +46,17 @@ async function start() {
 
 	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 
-	const wxsource = new WxTileSource({
-		id: 'wxsource',
-		wxstyleName: 'base',
-		wxdatasetManager,
-		variables,
-		time: 0,
-	});
+	const wxsource = new WxTileSource(
+		{
+			wxstyleName: 'base',
+			wxdatasetManager,
+			variables,
+			time: 0,
+		},
+		{
+			id: 'wxsource',
+		}
+	);
 
 	map.addSource(wxsource.id, wxsource);
 	map.addLayer({
@@ -76,15 +82,16 @@ async function start() {
 	await styleChanged({ streamLineColor: 'inverted', streamLineStatic: false }); // await always !!
 	console.log('time', wxsource.getTime());
 
-	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
+	/*/ DEMO (mapbox): more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	let busy = false;
 	await wxsource.updateCurrentStyleObject({ units: 'C', levels: undefined }); // await always !!
 	const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
 	const colMap: [number, string][] = levels.map((level) => [level, '#' + Math.random().toString(16).slice(2, 8) + 'ff']);
 	map.on('mousemove', async (e) => {
+		const pos = e.lngLat; // (mapbox)
 		if (busy) return;
 		busy = true;
-		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap(), map);
+		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(pos.wrap(), map);
 		if (tileInfo) {
 			await wxsource.updateCurrentStyleObject({ colorMap: [...colMap, [tileInfo.inStyleUnits[0], '#ff000000']] }); // await always !!
 			legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
@@ -132,28 +139,26 @@ async function start() {
 		i = (i + 1) % u.length;
 	}); //*/
 
-	/*/ DEMO: read lon lat data
-	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false, offset: [50, -50] }).setLngLat([0, 0]).setHTML('').addTo(map);
+	/*/ DEMO (mapbox): read lon lat data
+	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false, offset: [50, -50] }).addTo(map);
 	map.on('mousemove', (e) => {
-		popup.setHTML(`${e.lngLat}`);
-		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap(), map);
+		const pos = e.lngLat; // (mapbox)
+		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(pos.wrap(), map);
 		if (tileInfo) {
 			const { min, max } = wxsource.getMetadata();
-			let content = `lnglat=(${e.lngLat.lng.toFixed(2)}, ${e.lngLat.lat.toFixed(2)})<br>
-			dataset=${wxdatasetManager.datasetName}<br>
+			let content = `lnglat=(${pos.lng.toFixed(2)}, ${pos.lat.toFixed(2)})<br>
+			dataset=${wxsource.wxdatasetManager.datasetName}<br>
 			variables=${wxsource.getVariables()}<br>
 			style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
 			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>
 			min=${min.toFixed(2)} ${tileInfo.dataUnits}, max=${max.toFixed(2)} ${tileInfo.dataUnits}<br>
 			time=${wxsource.getTime()}`;
-			popup.setHTML(content);
+			popup.setLngLat(pos).setHTML(content); // (mapbox)
 		}
-
-		popup.setLngLat(e.lngLat);
 	}); //*/
 
 	/*/ DEMO: timesteps
-	const tlength = wxdatasetManager.getTimes().length;
+	const tlength = wxsource.wxdatasetManager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {
 		await wxsource.setTime(t++ % tlength); // await always !!

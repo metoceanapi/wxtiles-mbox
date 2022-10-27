@@ -39,26 +39,13 @@ export interface WxLngLat {
 	lat: number;
 }
 
-export interface WxLayerAPI {
-	// protected animation = false;
-	// protected animationSeed = 0;
-	// protected readonly layer: WxLayer;
 
-	clearCache(): void;
-
-	getTime(): string;
-	setTime(time_?: WxDate, requestInit?: WxRequestInit): Promise<string>;
-	preloadTime(time_: WxDate, requestInit?: WxRequestInit): Promise<void>;
-
-	getLayerInfoAtLatLon(lnglat: WxLngLat, anymap: any): WxTileInfo | undefined;
-
-	getCurrentStyleObjectCopy(): WxColorStyleStrict;
-
-	stopAnimation(): void;
-	startAnimation(): void;
-
-	setStyleByName(wxstyleName: string, reload: boolean): Promise<void>;
-	updateCurrentStyleObject(style?: WxColorStyleWeak, reload?: boolean, requestInit?: WxRequestInit): Promise<void>;
+export interface WxLayerOptions {
+	variables: WxVars;
+	wxdatasetManager: WxDataSetManager;
+	time?: WxDate;
+	ext?: 'png';
+	wxstyleName?: string;
 }
 
 export class WxLayer {
@@ -78,19 +65,7 @@ export class WxLayer {
 	readonly painter: Painter = new Painter(this);
 	protected readonly loader: Loader = new Loader(this);
 
-	constructor({
-		time,
-		variables,
-		wxdatasetManager,
-		ext = 'png',
-		wxstyleName = 'base',
-	}: {
-		time?: WxDate;
-		variables: WxVars;
-		wxdatasetManager: WxDataSetManager;
-		ext?: string;
-		wxstyleName?: string;
-	}) {
+	constructor({ time, variables, wxdatasetManager, ext = 'png', wxstyleName = 'base' }: WxLayerOptions) {
 		// check variables
 		if (!variables?.length || variables.length > 2) {
 			throw new Error(`WxTileSource ${wxdatasetManager.datasetName}: only 1 or 2 variables are supported but ${variables.length} were given`);
