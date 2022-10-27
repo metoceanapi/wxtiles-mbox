@@ -14,14 +14,14 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/metocean/wxtilembox.git"
+		"url": "git+https://github.com/metoceanapi/wxtiles-mbox.git"
 	},
 	"author": "Sergei Melman",
 	"license": "ISC",
 	"bugs": {
-		"url": "https://github.com/metocean/wxtilembox/issues"
+		"url": "https://github.com/metoceanapi/wxtiles-mbox/issues"
 	},
-	"homepage": "https://github.com/metocean/wxtilembox#readme",
+	"homepage": "https://github.com/metoceanapi/wxtiles-mbox#readme",
 	"devDependencies": {
 		"@types/mapbox-gl": "^2.7.6",
 		"changelogkeeper": "^1.2.0",
