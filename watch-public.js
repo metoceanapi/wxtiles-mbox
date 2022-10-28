@@ -17,8 +17,8 @@ esbuild
 		target: 'es2020',
 		format: 'iife',
 		outfile: 'public/wxtilembox/wxtilembox.js',
-		sourcemap: true,
-		minify: false,
+		sourcemap: false,
+		minify: true,
 		watch: {
 			onRebuild(error, result) {
 				if (error) {
