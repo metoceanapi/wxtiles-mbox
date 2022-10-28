@@ -107,6 +107,17 @@ export class WxAPI {
 	}
 
 	/**
+	 * Get all variables for the given dataset name.
+	 * @memberof WxAPI
+	 * @param {string} datasetName - dataset name
+	 * @returns {Promise<string[]>} - list of all available variables for the dataset
+	 */
+	async getDatasetVariables(datasetName: string): Promise<string[]> {
+		await this.initDone;
+		return (this.datasetsMetas[datasetName] as DatasetShortMeta)?.variables;
+	}
+
+	/**
 	 * Create WxDataSetManager object for the given dataset name.
 	 * @memberof WxAPI
 	 * @param {string} datasetName - dataset name

@@ -4,6 +4,9 @@ import mapboxgl from 'mapbox-gl';
 import { WxTileSource, type WxVars, WxAPI, WxTilesLogging, type WxTileInfo } from '../src/index';
 import { WxLegendControl } from '../src/controls/WxLegendControl';
 import { WxStyleEditorControl } from '../src/controls/WxStyleEditorControl';
+import { WxInfoControl } from '../src/controls/WxInfoControl';
+import { WxTimeControl } from '../src/controls/WxTimeControl ';
+import { WxAPIControl } from '../src/controls/WxAPIControl';
 
 async function start() {
 	// mapboxgl.accessToken = 'pk.eyJ1IjoiY3JpdGljYWxtYXNzIiwiYSI6ImNqaGRocXd5ZDBtY2EzNmxubTdqOTBqZmIifQ.Q7V0ONfxEhAdVNmOVlftPQ';
@@ -44,43 +47,58 @@ async function start() {
 	// const datasetName = 'obs-radar.rain.nzl.national';
 	// const variables: WxVars = ['reflectivity'];
 
-	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
+	const frameworkOptions = { id: 'wxsource', opacity: 0.5, attribution: 'WxTiles' };
 
-	const wxsource = new WxTileSource(
-		{
-			wxstyleName: 'base',
-			wxdatasetManager,
-			variables,
-			time: 0,
-		},
-		{
-			id: 'wxsource',
-		}
-	);
-
+	let wxsource = new WxTileSource({ wxdatasetManager: await wxapi.createDatasetManager(datasetName), variables }, frameworkOptions);
 	map.addSource(wxsource.id, wxsource);
 	map.addLayer({
 		id: 'wxtiles',
 		type: 'raster',
-		source: 'wxsource',
-		paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.5 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
+		source: wxsource.id,
+		paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.5 },
 	});
 
 	const legendControl = new WxLegendControl();
 	map.addControl(legendControl, 'top-right');
+	legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
+
+	const apiControl = new WxAPIControl(wxapi, datasetName, variables[0]);
+	map.addControl(apiControl, 'top-left');
+	apiControl.onchange = async (datasetName: string, variable: string): Promise<void> => {
+		const variables: WxVars = [variable];
+		(variable.includes('eastward') && variables.push(variable.replace('eastward', 'northward'))) || // add northward variable for wind and current
+			(variable.includes('northward') && variables.unshift(variable.replace('northward', 'eastward'))); // add eastward variable for wind and current
+		map.removeLayer('wxtiles');
+		map.removeSource(wxsource.id);
+		wxsource = new WxTileSource({ wxdatasetManager: await wxapi.createDatasetManager(datasetName), variables }, frameworkOptions);
+		map.addSource(wxsource.id, wxsource);
+		map.addLayer({
+			id: 'wxtiles',
+			type: 'raster',
+			source: wxsource.id,
+			paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.5 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
+		});
+
+		timeControl.updateSource(wxsource);
+		editor.onchange?.(wxsource.getCurrentStyleObjectCopy());
+	};
+
+	const timeControl = new WxTimeControl(10, wxsource);
+	map.addControl(timeControl, 'top-left');
 
 	const editor = new WxStyleEditorControl();
 	map.addControl(editor, 'top-left');
-
-	const styleChanged = (editor.onchange = async (style) => {
+	editor.onchange = async (style) => {
 		await wxsource.updateCurrentStyleObject(style);
 		const nstyle = wxsource.getCurrentStyleObjectCopy();
 		legendControl.drawLegend(nstyle);
 		editor.setStyle(nstyle);
-	});
+	};
+	editor.onchange(wxsource.getCurrentStyleObjectCopy());
 
-	await styleChanged({ streamLineColor: 'inverted', streamLineStatic: false }); // await always !!
-	console.log('time', wxsource.getTime());
+	const infoControl = new WxInfoControl();
+	map.addControl(infoControl, 'bottom-left');
+	map.on('mousemove', (e) => infoControl.update(wxsource, map, e.lngLat.wrap()));
 
 	/*/ DEMO (mapbox): more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	let busy = false;

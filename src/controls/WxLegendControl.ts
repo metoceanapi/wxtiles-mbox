@@ -9,24 +9,29 @@ import { WxCreateLegend, type WxColorStyleStrict } from '../index';
 // map.addControl(legendControl, 'top-right');
 
 export class WxLegendControl {
+	private readonly _div: HTMLDivElement;
 	private readonly _canvas: HTMLCanvasElement;
 	constructor() {
-		const canvas = document.createElement('canvas');
-		canvas.className = 'mapboxgl-ctrl';
-		canvas.width = 600;
-		canvas.height = 40;
-		canvas.style.borderStyle = 'solid';
-		canvas.style.borderColor = '#000';
-		canvas.style.backgroundColor = '#fff';
-		this._canvas = canvas;
+		const div = document.createElement('div');
+		div.className = 'mapboxgl-ctrl leaflet-control';
+		div.style.borderStyle = 'solid';
+		div.style.borderColor = '#000';
+		div.style.backgroundColor = '#aaaaaaaa';
+		div.style.padding = '5px';
+		this._div = div;
+
+		this._canvas = document.createElement('canvas');
+		this._canvas.width = 600;
+		this._canvas.height = 40;
+		div.appendChild(this._canvas);
 	}
 
 	onAdd(/* map */) {
-		return this._canvas;
+		return this._div;
 	}
 
 	onRemove() {
-		this._canvas.parentNode?.removeChild(this._canvas);
+		this._div.parentNode?.removeChild(this._div);
 	}
 
 	drawLegend(style: WxColorStyleStrict) {

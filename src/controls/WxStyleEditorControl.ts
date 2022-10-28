@@ -11,7 +11,7 @@ import { WxColorStyleWeak } from '../index';
 // map.addControl(editor, 'top-left');
 
 export class WxStyleEditorControl {
-	onchange?: (style: WxColorStyleWeak) => void;
+	onchange?: (style: WxColorStyleWeak) => Promise<void>;
 
 	editorTextAreaEl: HTMLTextAreaElement;
 	editorDivEl: HTMLDivElement;
@@ -72,6 +72,12 @@ export class WxStyleEditorControl {
 	constructor() {
 		this.parent = document.createElement('div');
 		this.parent.className = 'mapboxgl-ctrl leaflet-control'; // in case of MapBox or Leaflet
+
+		this.parent.style.borderStyle = 'solid';
+		this.parent.style.borderColor = '#000';
+		this.parent.style.backgroundColor = '#aaaaaaaa';
+		this.parent.style.padding = '5px';
+
 		this.parent.onmousemove = this.parent.ondblclick = this.parent.onclick = (e) => e.stopPropagation?.(); // in case of Leaflet
 
 		this.styleBase = WxGetColorStyles()['base'];
