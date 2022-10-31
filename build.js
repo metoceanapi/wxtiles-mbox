@@ -9,7 +9,7 @@ const sharedConfig = {
 		'.fs': 'text',
 		'.vs': 'text',
 	},
-	plugins: [externalGlobalPlugin({ leaflet: 'window.mapboxgl' })],
+	plugins: [externalGlobalPlugin({ mapboxgl: 'window.mapboxgl' })],
 	target: 'es6',
 	minify: true,
 };
