@@ -4,6 +4,7 @@
 	"description": "WxTile MapBox lib to render wxtiles datalayers",
 	"main": "dist/es/bundle.js",
 	"types": "dist/es/index.d.ts",
+	"private": false,
 	"scripts": {
 		"build": "rm -rf dist/ && node build.js && tsc",
 		"start": "PORT=3003 node watch-public.js",
