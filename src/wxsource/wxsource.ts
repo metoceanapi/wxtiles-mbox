@@ -6,6 +6,7 @@ import { type WxRequestInit, type WxDate, WxLayer, type WxVars, type WxTileInfo,
 import { WxVariableMeta } from '../wxAPI/wxAPI';
 import { WxImplementation, type WxLayerAPI } from '../wxlayer/WxImplementation';
 import { FrameworkOptions } from './wxsourcetypes';
+import { type WxRasterData } from '../wxlayer/painter';
 
 /**
  * @class WxTileSource
@@ -86,7 +87,12 @@ export class WxTileSource extends WxImplementation implements WxLayerAPI, mapbox
 
 	/*MB API*/
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<any> {
-		const raster_data = await this.layer.loadTile(tile, requestInit);
+		let raster_data: WxRasterData;
+		try {
+			raster_data = await this.layer.loadTile(tile, requestInit);
+		} catch (error) {
+			return new ImageData(1, 1);
+		}
 		if (!this.animation) return raster_data.ctxFill.canvas;
 
 		this.layer.painter.imprintVectorAnimationLinesStep(raster_data, this.animationSeed);
