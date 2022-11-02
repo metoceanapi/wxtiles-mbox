@@ -1,9 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 
-import { type WxDataSetManager } from '../wxAPI/WxDataSetManager';
-import { type WxColorStyleWeak, WxGetColorStyles, type XYZ, type WxColorStyleStrict, WXLOG } from '../utils/wxtools';
-import { type WxRequestInit, type WxDate, WxLayer, type WxVars, type WxTileInfo, type WxLngLat, WxLayerOptions } from '../wxlayer/wxlayer';
-import { WxVariableMeta } from '../wxAPI/wxAPI';
+import { type XYZ, WXLOG } from '../utils/wxtools';
+import { type WxRequestInit, type WxDate, type WxVars, type WxTileInfo, type WxLngLat, WxLayerOptions } from '../wxlayer/wxlayer';
 import { WxImplementation, type WxLayerAPI } from '../wxlayer/WxImplementation';
 import { FrameworkOptions } from './wxsourcetypes';
 import { type WxRasterData } from '../wxlayer/painter';
@@ -12,14 +10,8 @@ import { type WxRasterData } from '../wxlayer/painter';
  * @class WxTileSource
  * @description WxTileSource is a custom source for mapbox-gl-js.
  * It is used to load and display weather data from the WxTiles server.
- * @param {WxDate} time - Initial Time of the data to load.
- * @param {WxVars} vars - Initial variables to load.
- * @param {WxDataSetManager} datasetManager - WxDataSetManager instance.
- * @param {string} wxstyleName - Initial style of the source.
- * @param {string} id - MAPBOX's Id of the source.
- * @param {number | undefined} maxzoom - MAPBOX's Maximum zoom level of the source.
- * @param {[number, number, number, number] | undefined} bounds - MAPBOX's Bounds of the source.
- * @param {string | undefined} attribution - MAPBOX's Attribution of the source. *
+ * @param {WxLayerOptions} wxlayeroptions - The options for the WxTileSource.
+ * @param {FrameworkOptions} frameworkOptions - The options for the framework.
  */
 export class WxTileSource extends WxImplementation implements WxLayerAPI, mapboxgl.CustomSourceInterface<any> {
 	readonly id: string; // MAPBOX API

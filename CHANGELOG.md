@@ -9,9 +9,14 @@ Write your changes below this section. `npm version [major|minor|patch]` will au
 
 ## [Unreleased]
 
+### Fixed
+
+- dependency updates peerDep -> devDep
+- unused imports
+- WxTileSource params description
+
 ## [2.0.1] - 2022-10-31
 
 ### Fixed
 
 ### added
-
