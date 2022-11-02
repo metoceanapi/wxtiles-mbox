@@ -1,4 +1,4 @@
-import { type DataPicture, HEXtoRGBA, RGBtoHEX } from '../utils/wxtools';
+import { type DataPicture, HEXtoRGBA, RGBtoHEX, type DataPictures } from '../utils/wxtools';
 import { type WxData } from './loader';
 import { type WxLayer } from './wxlayer';
 
@@ -133,7 +133,7 @@ function _printIsolineText(info: IsoInfo[], ctx: CanvasRenderingContext2D, { CLU
 	} // if info.length
 } // _printIsolineText
 
-function _printVectorsStatic(data: DataPicture[], ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer): void {
+function _printVectorsStatic(data: DataPictures, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer): void {
 	if (!CLUT.DataToKnots || style.vectorColor === 'none' || style.vectorType === 'none') return;
 	if (data.length !== 3) throw new Error('data.length !== 3');
 	const [l, u, v] = data;

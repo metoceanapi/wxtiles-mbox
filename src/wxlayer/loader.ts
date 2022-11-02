@@ -3,7 +3,8 @@ import {
 	blurData,
 	cacheUriPromise,
 	type DataIntegral,
-	type DataPicture,
+	type DataIntegrals,
+	type DataPictures,
 	loadDataIntegral,
 	UriLoaderPromiseFunc,
 	uriXYZ,
@@ -12,7 +13,7 @@ import {
 } from '../utils/wxtools';
 import { type WxBoundaryMeta } from '../wxAPI/wxAPI';
 import { applyMask, makeBox, splitCoords, subData, subDataDegree } from './loadertools';
-import { WxRequestInit, type WxLayer } from './wxlayer';
+import { WxRequestInit, WxURIs, type WxLayer } from './wxlayer';
 
 interface SLinePoint {
 	x: number;
@@ -21,9 +22,8 @@ interface SLinePoint {
 
 export type SLine = SLinePoint[];
 
-// export type WxData = DataPicture[] | null;
 export interface WxData {
-	data: DataPicture[];
+	data: DataPictures;
 	slines: SLine[];
 }
 
@@ -42,7 +42,7 @@ export class Loader {
 		const { units } = this.layer.currentMeta;
 		const interpolator = units === 'degree' ? subDataDegree : subData;
 		const processor = (d: DataIntegral) => interpolator(blurData(d, this.layer.style.blurRadius), subCoords);
-		const data = rawdata.map(processor); // preprocess all loaded data
+		const data = <DataPictures>rawdata.map(processor); // preprocess all loaded data
 		this._vectorMagnitudesPrepare(data); // if vector data, prepare magnitudes
 		await this._applyMask(data, tile, tileType, !subCoords && rawdata.length === 1); // apply mask if needed
 		return { data, slines: this._createStreamLines(data) };
@@ -50,9 +50,9 @@ export class Loader {
 
 	async cacheLoad(
 		tile: XYZ,
-		uris: string[],
+		uris: WxURIs,
 		requestInit?: WxRequestInit
-	): Promise<{ rawdata: DataIntegral[]; subCoords?: XYZ | undefined; tileType: TileType } | null> {
+	): Promise<{ rawdata: DataIntegrals; subCoords?: XYZ | undefined; tileType: TileType } | null> {
 		// TODO: mapbox can't work with boundaries across lon 180. Once it's fixed, we can remove this check
 		if (!this._checkInsideBoundaries(tile)) return null; // tile is cut by boundaries
 
@@ -60,9 +60,9 @@ export class Loader {
 		if (!tileType) return null; // tile is cut by mask
 
 		const { upCoords, subCoords } = splitCoords(tile, this.layer.wxdatasetManager.meta.maxZoom);
-		const URLs = uris.map((uri) => uriXYZ(uri, upCoords));
+		const URLs = <WxURIs>uris.map((uri) => uriXYZ(uri, upCoords));
 		const requestInitCopy = Object.assign({}, this.layer.wxdatasetManager.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
-		const rawdata = await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
+		const rawdata = <DataIntegrals>await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
 		return { rawdata, subCoords, tileType };
 		// we don't need to process data, as it's for cache preloading only
 	}
@@ -71,7 +71,7 @@ export class Loader {
 		this.loadDataFunc = cacheUriPromise(loadDataIntegral);
 	}
 
-	protected async _applyMask(data: DataPicture[], tile: XYZ, tileType: TileType, needCopy: boolean): Promise<void> {
+	protected async _applyMask(data: DataPictures, tile: XYZ, tileType: TileType, needCopy: boolean): Promise<void> {
 		const { style } = this.layer;
 		if ((style.mask === 'land' || style.mask === 'sea') && tileType === TileType.Mixed) {
 			if (needCopy) {
@@ -94,7 +94,7 @@ export class Loader {
 		}
 	}
 
-	protected _vectorMagnitudesPrepare(data: DataPicture[]): void {
+	protected _vectorMagnitudesPrepare(data: DataPictures): void {
 		if (data.length === 1) return; // no need to process
 		data.unshift({ raw: new Uint16Array(258 * 258), dmin: 0, dmax: 0, dmul: 0 });
 		const [l, u, v] = data; // length, u, v components
@@ -138,7 +138,7 @@ export class Loader {
 		return true;
 	}
 
-	protected _createStreamLines(data: DataPicture[]): SLine[] {
+	protected _createStreamLines(data: DataPictures): SLine[] {
 		if (data.length !== 3) return [];
 		const { style } = this.layer;
 		if (style.streamLineColor === 'none') return [];

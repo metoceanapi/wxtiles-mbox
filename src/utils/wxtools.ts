@@ -280,10 +280,14 @@ export interface DataPicture {
 	dmul: number;
 }
 
+export type DataPictures = [DataPicture] | [DataPicture, DataPicture, DataPicture];
+
 export interface DataIntegral extends DataPicture {
 	integral: IntegralPare;
 	radius: number;
 }
+
+export type DataIntegrals = [DataIntegral] | [DataIntegral, DataIntegral];
 
 export function create2DContext(width: number, height: number, willReadFrequently = true): CanvasRenderingContext2D {
 	const context = Object.assign(document.createElement('canvas'), { width, height, imageSmoothingEnabled: false }).getContext('2d', {
