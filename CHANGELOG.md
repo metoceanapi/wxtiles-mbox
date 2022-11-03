@@ -9,6 +9,15 @@ Write your changes below this section. `npm version [major|minor|patch]` will au
 
 ## [Unreleased]
 
+### Added
+
+- onRemove callback - stops animation and clears caches
+
+### Fixed
+
+- New ver @types/mapbox-gl 2.7.7
+- watch-public.js -> minify: false, sourcemap: true
+
 ## [2.0.2] - 2022-11-02
 
 ### Fixed

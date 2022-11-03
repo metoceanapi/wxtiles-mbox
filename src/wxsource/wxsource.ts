@@ -90,4 +90,11 @@ export class WxTileSource extends WxImplementation implements WxLayerAPI, mapbox
 		this.layer.painter.imprintVectorAnimationLinesStep(raster_data, this.animationSeed);
 		return raster_data.ctxStreamLines.canvas; // to shut up TS errors
 	} // loadTile
+
+	/*MB API*/
+	onRemove(map: any): void {
+		WXLOG(`WxTileSource onRemove (${this.layer.wxdatasetManager.datasetName})`);
+		this.animation = false;
+		this.clearCache();
+	}
 }
