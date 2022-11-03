@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>MapBox customSource</title>
+		<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
+		<script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+			}
+			#map {
+				position: absolute;
+				top: 0;
+				bottom: 0;
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="map"></div>
+		<script>
+			mapboxgl.accessToken = 'pk.eyJ1IjoibW91cm5lciIsImEiOiJWWnRiWG1VIn0.j6eccFHpE3Q04XPLI7JxbA';
+
+			const map = new mapboxgl.Map({
+				container: 'map',
+				style: { version: 8, name: 'Empty', sources: {}, layers: [] },
+				// projection: { name: 'globe' },
+			});
+
+			map.addControl(new mapboxgl.NavigationControl());
+
+			map.showTileBoundaries = true;
+
+			const customSource = {
+				type: 'custom',
+				dataType: 'raster',
+				id: 'customSource',
+
+				async loadTile(tile, init) {
+					const im = createImageBitmap(await (await fetch(`https://tile.openstreetmap.org/${tile.z}/${tile.x}/${tile.y}.png`, init)).blob());
+					/*simulate data heavy preprocessing*/ await Promise.all([im, new Promise((resolve) => setTimeout(resolve, 2500))]);
+					return im;
+				},
+			};
+
+			map.on('load', async () => {
+				map.addSource(customSource.id, customSource);
+				map.addLayer({ id: 'rasterLayer', type: 'raster', source: customSource.id });
+				setTimeout(() => map.flyTo({ center: [0, 15], zoom: 4 }), 4000);
+			});
+		</script>
+	</body>
+</html>
