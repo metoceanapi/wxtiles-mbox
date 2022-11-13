@@ -7,6 +7,7 @@
 	"private": false,
 	"scripts": {
 		"build": "rm -rf dist/ && node build.js && tsc",
+		"buildForDocs": "node build-for-docs.js",
 		"start": "PORT=3003 node watch-public.js",
 		"preversion": "npm run build",
 		"version": "changelogkeeper && git add CHANGELOG.md",
