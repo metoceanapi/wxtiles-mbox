@@ -11,8 +11,9 @@ import { WxCreateLegend, WxTileInfo, WxTileSource, type WxColorStyleStrict } fro
 export class WxTimeControl {
 	private readonly _div: HTMLDivElement;
 	private readonly button: HTMLButtonElement;
-	private readonly label: HTMLLabelElement;
-	constructor(private readonly delay: number, private wxsource?: WxTileSource) {
+	private readonly times: HTMLSelectElement;
+	onchange: (time: string) => void = () => {};
+	constructor(private readonly delay: number, private wxsource: WxTileSource) {
 		const div = document.createElement('div');
 		div.className = 'mapboxgl-ctrl leaflet-control';
 		div.style.borderStyle = 'solid';
@@ -25,9 +26,14 @@ export class WxTimeControl {
 		div.innerText = 'Time animation';
 		this.button = document.createElement('button');
 		div.appendChild(this.button);
-		this.label = document.createElement('label');
-		div.appendChild(this.label);
-		this.label.innerHTML = this.wxsource?.getTime() || '';
+		this.times = document.createElement('select');
+		div.appendChild(this.times);
+		this.times.onchange = async () => {
+			this.times.value = (await this.wxsource?.setTime(this.times.value)) || '';
+			this.onchange(this.times.value);
+		};
+
+		this.updateSource(this.wxsource);
 
 		this.button.innerHTML = 'Start';
 		let t = 0;
@@ -39,7 +45,8 @@ export class WxTimeControl {
 				abortController = new AbortController();
 				const nextTimeStep = async () => {
 					await this.wxsource?.setTime(t++ % this.wxsource.wxdatasetManager.getTimes().length, abortController); // await always !!
-					this.label.innerHTML = this.wxsource?.getTime() || '';
+					this.times.value = this.wxsource?.getTime() || '';
+					this.onchange(this.times.value);
 					this.button.innerHTML === 'Stop' && setTimeout(nextTimeStep, this.delay);
 				};
 				nextTimeStep();
@@ -53,7 +60,18 @@ export class WxTimeControl {
 	updateSource(wxsource: WxTileSource) {
 		this.button.innerHTML = 'Start';
 		this.wxsource = wxsource;
-		this.label.innerHTML = this.wxsource.getTime();
+		this.times.options.length = 0;
+		const times = this.wxsource?.wxdatasetManager.getTimes() || [];
+		// fill this.times with values from times
+		for (let i = 0; i < times.length; i++) {
+			const option = document.createElement('option');
+			option.value = times[i];
+			option.text = times[i];
+			this.times.appendChild(option);
+		}
+
+		this.times.value = this.wxsource.getTime();
+		this.onchange(this.times.value);
 	}
 
 	onAdd(/* map */) {

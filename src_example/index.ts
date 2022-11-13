@@ -25,37 +25,41 @@ async function start() {
 	await map.once('load');
 
 	// addSkyAndTerrain(map);
-	// addRaster(map, wxmanager.createURI({ variable: variables[0] }), wxmanager.getMaxZoom());
+	addRaster(map, 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 10);
 	// addPoints(map);
 
 	//******* WxTiles stuff *******//
 	WxTilesLogging(false);
+	// const dataServerURL = 'http://localhost:9191/data/';
 	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
 	const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit: { headers: myHeaders } });
 
-	const datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
-	// const variables: WxVars = ['air.temperature.at-2m'];
-	const variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
+	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	// let variables: WxVars = ['air.temperature.at-2m'];
+	let variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
 
-	// const datasetName = 'ww3-ecmwf.global';
-	// const variables: WxVars = ['wave.direction.mean'];
+	// let datasetName = 'ww3-ecmwf.global';
+	// let variables: WxVars = ['wave.direction.mean'];
 
-	// const datasetName = 'obs-radar.rain.nzl.national';
-	// const variables: WxVars = ['reflectivity'];
+	// let datasetName = 'obs-radar.rain.nzl.national';
+	// let variables: WxVars = ['reflectivity'];
+
+	// get datasetName from URL
+	let time = '';
+	const urlParams = window.location.toString().split('#')[1];
+	if (urlParams) {
+		const params = urlParams.split('/');
+		if (params.length > 0) datasetName = params[0];
+		if (params.length > 1) variables = params[1].split(',') as WxVars;
+		if (params.length > 2) time = params[2];
+	}
 
 	const frameworkOptions = { id: 'wxsource', opacity: 0.5, attribution: 'WxTiles' };
 
-	let wxsource = new WxTileSource({ wxdatasetManager: await wxapi.createDatasetManager(datasetName), variables }, frameworkOptions);
-	map.addSource(wxsource.id, wxsource);
-	map.addLayer({
-		id: 'wxtiles',
-		type: 'raster',
-		source: wxsource.id,
-		paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.5 },
-	});
+	let wxsource = new WxTileSource({ wxdatasetManager: await wxapi.createDatasetManager(datasetName), variables, time }, frameworkOptions);
 
 	const legendControl = new WxLegendControl();
 	map.addControl(legendControl, 'top-right');
@@ -67,33 +71,52 @@ async function start() {
 		const variables: WxVars = [variable];
 		(variable.includes('eastward') && variables.push(variable.replace('eastward', 'northward'))) || // add northward variable for wind and current
 			(variable.includes('northward') && variables.unshift(variable.replace('northward', 'eastward'))); // add eastward variable for wind and current
-		map.removeLayer('wxtiles');
-		map.removeSource(wxsource.id);
-		wxsource = new WxTileSource({ wxdatasetManager: await wxapi.createDatasetManager(datasetName), variables }, frameworkOptions);
-		map.addSource(wxsource.id, wxsource);
-		map.addLayer({
-			id: 'wxtiles',
-			type: 'raster',
-			source: wxsource.id,
-			paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.5 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
-		});
+		map.getLayer('wxtiles') && map.removeLayer('wxtiles');
+		map.getSource(wxsource.id) && map.removeSource(wxsource.id);
+		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
+		if (wxdatasetManager.meta.variablesMeta[variables[0]]?.units === 'RGB') {
+			map.addSource(wxsource.id, {
+				type: 'raster',
+				tiles: [wxdatasetManager.createURI(variables[0], 0)],
+				tileSize: 256,
+				maxzoom: wxdatasetManager.meta.maxZoom,
+			});
+		} else {
+			wxsource = new WxTileSource({ wxdatasetManager, variables, time }, frameworkOptions);
+			map.addSource(wxsource.id, wxsource);
+		}
+		map.addLayer(
+			{
+				id: 'wxtiles',
+				type: 'raster',
+				source: wxsource.id,
+				paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.6 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
+			},
+			'raster-layer'
+		);
 
+		customStyleEditorControl.onchange?.(wxsource.getCurrentStyleObjectCopy());
+		timeControl.onchange = (time_: string) => {
+			time = time_;
+			location.href = `#${datasetName}/${variables.join(',')}/${time}`;
+		};
 		timeControl.updateSource(wxsource);
-		editor.onchange?.(wxsource.getCurrentStyleObjectCopy());
 	};
+
+	apiControl.onchange(datasetName, variables[0]); // initial load
 
 	const timeControl = new WxTimeControl(10, wxsource);
 	map.addControl(timeControl, 'top-left');
 
-	const editor = new WxStyleEditorControl();
-	map.addControl(editor, 'top-left');
-	editor.onchange = async (style) => {
+	const customStyleEditorControl = new WxStyleEditorControl();
+	map.addControl(customStyleEditorControl, 'top-left');
+	customStyleEditorControl.onchange = async (style) => {
 		await wxsource.updateCurrentStyleObject(style);
 		const nstyle = wxsource.getCurrentStyleObjectCopy();
 		legendControl.drawLegend(nstyle);
-		editor.setStyle(nstyle);
+		customStyleEditorControl.setStyle(nstyle);
 	};
-	editor.onchange(wxsource.getCurrentStyleObjectCopy());
+	customStyleEditorControl.onchange(wxsource.getCurrentStyleObjectCopy());
 
 	const infoControl = new WxInfoControl();
 	map.addControl(infoControl, 'bottom-left');
