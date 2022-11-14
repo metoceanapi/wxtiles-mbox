@@ -30,8 +30,8 @@ async function start() {
 
 	//******* WxTiles stuff *******//
 	WxTilesLogging(false);
-	const dataServerURL = 'http://localhost:9191/data/';
-	// const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	// const dataServerURL = 'http://localhost:9191/data/';
+	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
