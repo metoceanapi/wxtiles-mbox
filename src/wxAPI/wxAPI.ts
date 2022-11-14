@@ -22,6 +22,8 @@ export interface WxVariableMeta {
 	units: string;
 	min: number;
 	max: number;
+	standard_name?: string;
+	vector?: [string, string];
 }
 
 export interface WxVariablesMetas {
