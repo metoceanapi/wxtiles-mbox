@@ -39,6 +39,9 @@ export class WxInfoControl {
 			const { min, max } = wxsource.getMetadata();
 			this._div.innerHTML = `lnglat=(${pos.lng.toFixed(2)}, ${pos.lat.toFixed(2)})<br>
 			dataset=${wxsource.wxdatasetManager.datasetName}<br>
+			sourceID=${wxsource.wxdatasetManager.meta.sourceID}<br>
+			baseAtmosphericModel=${wxsource.wxdatasetManager.meta.baseAtmosphericModel}<br>
+			model=${wxsource.wxdatasetManager.meta.model}<br>
 			variables=${wxsource.getVariables()}<br>
 			style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
 			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>

@@ -53,6 +53,9 @@ export interface WxDatasetMeta {
 	maxZoom: number;
 	times: string[];
 	boundaries?: WxAllBoundariesMeta;
+	sourceID?: string;
+	baseAtmosphericModel?: string;
+	model?: string;
 }
 
 export interface WxAPIOptions extends WxTilesLibOptions {
