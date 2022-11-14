@@ -28,7 +28,12 @@ export class WxInfoControl {
 		this._div.parentNode?.removeChild(this._div);
 	}
 
-	update(wxsource: WxTileSource, map: any, pos: { lng: number; lat: number }) {
+	update(wxsource: WxTileSource | undefined, map: any, pos: { lng: number; lat: number }) {
+		if (!wxsource) {
+			this._div.innerHTML = '';
+			return;
+		}
+
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(pos, map);
 		if (tileInfo) {
 			const { min, max } = wxsource.getMetadata();

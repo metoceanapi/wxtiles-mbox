@@ -13,7 +13,7 @@ export class WxTimeControl {
 	private readonly button: HTMLButtonElement;
 	private readonly times: HTMLSelectElement;
 	onchange: (time: string) => void = () => {};
-	constructor(private readonly delay: number, private wxsource: WxTileSource) {
+	constructor(private readonly delay: number, private wxsource?: WxTileSource) {
 		const div = document.createElement('div');
 		div.className = 'mapboxgl-ctrl leaflet-control';
 		div.style.borderStyle = 'solid';
@@ -33,7 +33,7 @@ export class WxTimeControl {
 			this.onchange(this.times.value);
 		};
 
-		this.updateSource(this.wxsource);
+		this.wxsource && this.updateSource(this.wxsource);
 
 		this.button.innerHTML = 'Start';
 		let t = 0;
@@ -57,11 +57,8 @@ export class WxTimeControl {
 		};
 	}
 
-	updateSource(wxsource: WxTileSource) {
-		this.button.innerHTML = 'Start';
-		this.wxsource = wxsource;
+	setTimes(times: string[]) {
 		this.times.options.length = 0;
-		const times = this.wxsource?.wxdatasetManager.getTimes() || [];
 		// fill this.times with values from times
 		for (let i = 0; i < times.length; i++) {
 			const option = document.createElement('option');
@@ -70,8 +67,16 @@ export class WxTimeControl {
 			this.times.appendChild(option);
 		}
 
-		this.times.value = this.wxsource.getTime();
 		this.onchange(this.times.value);
+	}
+
+	updateSource(wxsource: WxTileSource) {
+		this.button.innerHTML = 'Start';
+		this.wxsource = wxsource;
+		this.times.options.length = 0;
+		const times = this.wxsource?.wxdatasetManager.getTimes() || [];
+		this.setTimes(times);
+		this.times.value = this.wxsource.getTime();
 	}
 
 	onAdd(/* map */) {

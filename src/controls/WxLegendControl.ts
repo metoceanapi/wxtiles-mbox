@@ -105,6 +105,13 @@ export class WxLegendControl {
 		ctx.strokeRect(1, 1, width - 3, height - 2); //for white background
 	}
 
+	clear() {
+		const { _canvas } = this;
+		const { width, height } = _canvas;
+		const ctx = _canvas.getContext('2d')!;
+		ctx.clearRect(0, 0, width, height);
+	}
+
 	// for Leaflet
 	extender() {
 		return { onAdd: () => this.onAdd(), onRemove: () => this.onRemove() };

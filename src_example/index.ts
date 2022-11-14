@@ -55,68 +55,91 @@ async function start() {
 		if (params.length > 0) datasetName = params[0];
 		if (params.length > 1) variables = params[1].split(',') as WxVars;
 		if (params.length > 2) time = params[2];
+		// then get zoom, lng, lat, bearing, pitch from URL
+		if (params.length > 7) {
+			const zoom = parseFloat(params[3]);
+			const lng = parseFloat(params[4]);
+			const lat = parseFloat(params[5]);
+			const bearing = parseFloat(params[6]);
+			const pitch = parseFloat(params[7]);
+			map.jumpTo({ zoom, center: [lng, lat], bearing, pitch });
+		}
 	}
+
+	const setURL = (time_: string) => {
+		time = time_;
+		const center = map.getCenter();
+		location.href = `#${datasetName}/${variables.join(',')}/${time}/${map.getZoom()}/${center.lng}/${center.lat}/${map.getBearing()}/${map.getPitch()}`;
+	};
+
+	map.on("zoom", () => setURL(time));
+	map.on("drag", () => setURL(time));
+	map.on("rotate", () => setURL(time));
+	map.on("pitch", () => setURL(time));
+
 
 	const frameworkOptions = { id: 'wxsource', opacity: 0.5, attribution: 'WxTiles' };
 
-	let wxsource = new WxTileSource({ wxdatasetManager: await wxapi.createDatasetManager(datasetName), variables, time }, frameworkOptions);
+	let wxsource: WxTileSource | undefined;
 
 	const legendControl = new WxLegendControl();
 	map.addControl(legendControl, 'top-right');
-	legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
 
 	const apiControl = new WxAPIControl(wxapi, datasetName, variables[0]);
 	map.addControl(apiControl, 'top-left');
 	apiControl.onchange = async (datasetName: string, variable: string): Promise<void> => {
-		const variables: WxVars = [variable];
-		(variable.includes('eastward') && variables.push(variable.replace('eastward', 'northward'))) || // add northward variable for wind and current
-			(variable.includes('northward') && variables.unshift(variable.replace('northward', 'eastward'))); // add eastward variable for wind and current
+		// remove existing source and layer
 		map.getLayer('wxtiles') && map.removeLayer('wxtiles');
-		map.getSource(wxsource.id) && map.removeSource(wxsource.id);
+		map.getSource(frameworkOptions.id) && map.removeSource(frameworkOptions.id);
+		wxsource = undefined;
+
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
-		if (wxdatasetManager.meta.variablesMeta[variables[0]]?.units === 'RGB') {
-			map.addSource(wxsource.id, {
+		const meta = wxdatasetManager.meta.variablesMeta[variable];
+		const variables = meta?.vector || [variable]; // check if variable is vector and use vector components if so
+
+		if (wxdatasetManager.meta.variablesMeta[variable]?.units === 'RGB') {
+			map.addSource(frameworkOptions.id, {
 				type: 'raster',
 				tiles: [wxdatasetManager.createURI(variables[0], 0)],
 				tileSize: 256,
 				maxzoom: wxdatasetManager.meta.maxZoom,
 			});
+			timeControl.setTimes(wxdatasetManager.meta.times);
+			legendControl.clear();
 		} else {
 			wxsource = new WxTileSource({ wxdatasetManager, variables, time }, frameworkOptions);
 			map.addSource(wxsource.id, wxsource);
+			legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
+			customStyleEditorControl.onchange?.(wxsource.getCurrentStyleObjectCopy());
+			timeControl.updateSource(wxsource);
 		}
+
 		map.addLayer(
 			{
 				id: 'wxtiles',
 				type: 'raster',
-				source: wxsource.id,
+				source: frameworkOptions.id,
 				paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.6 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
 			},
 			'raster-layer'
 		);
-
-		customStyleEditorControl.onchange?.(wxsource.getCurrentStyleObjectCopy());
-		timeControl.onchange = (time_: string) => {
-			time = time_;
-			location.href = `#${datasetName}/${variables.join(',')}/${time}`;
-		};
-		timeControl.updateSource(wxsource);
 	};
 
 	apiControl.onchange(datasetName, variables[0]); // initial load
 
-	const timeControl = new WxTimeControl(10, wxsource);
+	const timeControl = new WxTimeControl(10);
 	map.addControl(timeControl, 'top-left');
+	timeControl.onchange = setURL;
 
 	const customStyleEditorControl = new WxStyleEditorControl();
 	map.addControl(customStyleEditorControl, 'top-left');
 	customStyleEditorControl.onchange = async (style) => {
+		if (!wxsource) return;
 		await wxsource.updateCurrentStyleObject(style);
 		const nstyle = wxsource.getCurrentStyleObjectCopy();
 		legendControl.drawLegend(nstyle);
 		customStyleEditorControl.setStyle(nstyle);
 	};
-	customStyleEditorControl.onchange(wxsource.getCurrentStyleObjectCopy());
 
 	const infoControl = new WxInfoControl();
 	map.addControl(infoControl, 'bottom-left');
