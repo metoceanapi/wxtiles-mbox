@@ -180,7 +180,7 @@ export class WxLayer {
 			if (!meta) throw new Error(`WxTileSource ${this.wxdatasetManager.datasetName}: variable ${v} is not valid`);
 			return meta;
 		});
-		let { min, max, units } = metas[0];
+		let { min, max, units, vector } = metas[0];
 		if (this.variables.length > 1) {
 			// for the verctor field we need to get the min and max of the vectors' length
 			// but convert and calculate ALL vector length just for that is too much
@@ -192,7 +192,7 @@ export class WxLayer {
 			// tese values arn't real! but they are good enough for the estimation
 		}
 
-		return { min, max, units };
+		return { min, max, units, vector };
 	} // _getCurrentMeta
 
 	// x, y - pixel on tile
