@@ -72,11 +72,10 @@ async function start() {
 		location.href = `#${datasetName}/${variables.join(',')}/${time}/${map.getZoom()}/${center.lng}/${center.lat}/${map.getBearing()}/${map.getPitch()}`;
 	};
 
-	map.on("zoom", () => setURL(time));
-	map.on("drag", () => setURL(time));
-	map.on("rotate", () => setURL(time));
-	map.on("pitch", () => setURL(time));
-
+	map.on('zoom', () => setURL(time));
+	map.on('drag', () => setURL(time));
+	map.on('rotate', () => setURL(time));
+	map.on('pitch', () => setURL(time));
 
 	const frameworkOptions = { id: 'wxsource', opacity: 0.5, attribution: 'WxTiles' };
 
@@ -87,15 +86,16 @@ async function start() {
 
 	const apiControl = new WxAPIControl(wxapi, datasetName, variables[0]);
 	map.addControl(apiControl, 'top-left');
-	apiControl.onchange = async (datasetName: string, variable: string): Promise<void> => {
+	apiControl.onchange = async (datasetName_: string, variable: string): Promise<void> => {
 		// remove existing source and layer
 		map.getLayer('wxtiles') && map.removeLayer('wxtiles');
 		map.getSource(frameworkOptions.id) && map.removeSource(frameworkOptions.id);
 		wxsource = undefined;
 
+		datasetName = datasetName_;
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 		const meta = wxdatasetManager.meta.variablesMeta[variable];
-		const variables = meta?.vector || [variable]; // check if variable is vector and use vector components if so
+		variables = meta?.vector || [variable]; // check if variable is vector and use vector components if so
 
 		if (wxdatasetManager.meta.variablesMeta[variable]?.units === 'RGB') {
 			map.addSource(frameworkOptions.id, {
