@@ -9,6 +9,8 @@ Write your changes below this section. `npm version [major|minor|patch]` will au
 
 ## [Unreleased]
 
+## [2.0.3] - 2022-11-14
+
 ### Added
 
 - onRemove callback - stops animation and clears caches
