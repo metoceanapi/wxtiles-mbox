@@ -30,19 +30,19 @@ async function start() {
 
 	//******* WxTiles stuff *******//
 	WxTilesLogging(false);
-	// const dataServerURL = 'http://localhost:9191/data/';
-	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	const dataServerURL = 'http://localhost:9191/data/';
+	// const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
 	const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit: { headers: myHeaders } });
 
-	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	// let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// let variables: WxVars = ['air.temperature.at-2m'];
-	let variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
+	// let variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
 
-	// let datasetName = 'ww3-ecmwf.global';
-	// let variables: WxVars = ['wave.direction.mean'];
+	let datasetName = 'ww3-ecmwf.global';
+	let variables: WxVars = ['wave.direction.mean'];
 
 	// let datasetName = 'obs-radar.rain.nzl.national';
 	// let variables: WxVars = ['reflectivity'];
