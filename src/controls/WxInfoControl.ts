@@ -9,7 +9,7 @@ import { WxTileInfo, WxTileSource } from '../index';
 // map.addControl(infoControl, 'top-right');
 
 export class WxInfoControl {
-	private readonly _div: HTMLDivElement;
+	private readonly div: HTMLDivElement;
 	constructor() {
 		const div = document.createElement('div');
 		div.className = 'mapboxgl-ctrl leaflet-control';
@@ -17,44 +17,40 @@ export class WxInfoControl {
 		div.style.borderColor = '#000';
 		div.style.backgroundColor = '#aaaaaaaa';
 		div.style.padding = '5px';
-		this._div = div;
+		this.div = div;
 	}
 
 	onAdd(/* map */) {
-		return this._div;
+		return this.div;
 	}
 
 	onRemove() {
-		this._div.parentNode?.removeChild(this._div);
+		this.div.parentNode?.removeChild(this.div);
 	}
 
 	update(wxsource: WxTileSource | undefined, map: any, pos: { lng: number; lat: number }) {
 		if (!wxsource) {
-			this._div.innerHTML = '';
+			this.div.innerHTML = '';
 			return;
 		}
 
+		const { min, max, units } = wxsource.getMetadata();
+		const { meta, datasetName } = wxsource.wxdatasetManager;
+		const { sourceID, baseAtmosphericModel, model } = meta;
+		this.div.innerHTML = `lnglat=(${pos.lng.toFixed(2)}, ${pos.lat.toFixed(2)})<br>`;
+		this.div.innerHTML += (sourceID && `sourceID=${sourceID}<br>`) || '';
+		this.div.innerHTML += (baseAtmosphericModel && `baseAtmosphericModel=${baseAtmosphericModel}<br>`) || '';
+		this.div.innerHTML += (model && `model=${model}<br>`) || '';
+		this.div.innerHTML += `dataset=${datasetName}<br>
+		variables=${wxsource.getVariables()}<br>
+		time=${wxsource.getTime()}<br>
+		min=${min.toFixed(2)} ${units}, max=${max.toFixed(2)} ${units}<br>`;
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(pos, map);
 		if (tileInfo) {
-			const { min, max } = wxsource.getMetadata();
-			this._div.innerHTML = `lnglat=(${pos.lng.toFixed(2)}, ${pos.lat.toFixed(2)})<br>
-			dataset=${wxsource.wxdatasetManager.datasetName}<br>
-			sourceID=${wxsource.wxdatasetManager.meta.sourceID}<br>
-			baseAtmosphericModel=${wxsource.wxdatasetManager.meta.baseAtmosphericModel}<br>
-			model=${wxsource.wxdatasetManager.meta.model}<br>
-			variables=${wxsource.getVariables()}<br>
-			style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
-			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>
-			min=${min.toFixed(2)} ${tileInfo.dataUnits}, max=${max.toFixed(2)} ${tileInfo.dataUnits}<br>
-			time=${wxsource.getTime()}`;
+			this.div.innerHTML += `style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
+			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>`;
 		} else {
-			this._div.innerHTML = `lnglat=(${pos.lng.toFixed(2)}, ${pos.lat.toFixed(2)})<br>
-			dataset=${wxsource.wxdatasetManager.datasetName}<br>
-			variables=${wxsource.getVariables()}<br>
-			style=outside<br>
-			source=outside<br>
-			min=outside, max=outside<br>
-			time=${wxsource.getTime()}`;
+			this.div.innerHTML += `style=outside<br>source=outside<br>`;
 		}
 	}
 	// for Leaflet
