@@ -10,10 +10,11 @@ import { WxAPIControl } from '../src/controls/WxAPIControl';
 
 start();
 
-const OPACITY = 0.5;
+const OPACITY = 1;
 
 // this is universal function for Leaflet and Mapbox.
 // Functions below are just framework specific wrappers for this universal function
+// start() is the fully interchangable function for Leaflet and Mapbox
 async function start() {
 	const map = await initFrameWork();
 	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
@@ -179,6 +180,7 @@ async function start() {
 
 	/*/ DEMO : read lon lat data
 	map.on('mousemove', (e) => {
+		if (!wxsource) return;
 		const pos = position(e); //
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(pos.wrap(), map);
 		if (tileInfo) {
