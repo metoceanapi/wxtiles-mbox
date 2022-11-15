@@ -104,32 +104,32 @@ async function start() {
 			timeControl.setTimes(wxdatasetManager.meta.times);
 			legendControl.clear();
 		} else {
-			wxsource = new WxTileSource({ wxdatasetManager, variables, time }, frameworkOptions);
-			addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
+			wxsource = new WxTileSource({ wxdatasetManager: await wxapi.createDatasetManager(datasetName), variables }, frameworkOptions);
+			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
+			await customStyleEditorControl.onchange?.(wxsource.getCurrentStyleObjectCopy());
 			legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
-			customStyleEditorControl.onchange?.(wxsource.getCurrentStyleObjectCopy());
 			timeControl.updateSource(wxsource);
 		}
 	};
 
-	apiControl.onchange(datasetName, variables[0]); // initial load
+	await apiControl.onchange(datasetName, variables[0]); // initial load
 
-	/*/ DEMO (mapbox): more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
-	let busy = false;
-	await wxsource.updateCurrentStyleObject({ units: 'C', levels: undefined }); // await always !!
-	const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
-	const colMap: [number, string][] = levels.map((level) => [level, '#' + Math.random().toString(16).slice(2, 8) + 'ff']);
-	map.on('mousemove', async (e) => {
-		const pos = e.lngLat; // (mapbox)
-		if (busy) return;
-		busy = true;
-		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(pos.wrap(), map);
-		if (tileInfo) {
-			await wxsource.updateCurrentStyleObject({ colorMap: [...colMap, [tileInfo.inStyleUnits[0], '#ff000000']] }); // await always !!
-			legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
-		}
-		busy = false;
-	}); //*/
+	// DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position6
+	if (wxsource) {
+		let busy = false;
+		await wxsource.updateCurrentStyleObject({ levels: undefined }); // await always !!
+		const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
+		const colMap: [number, string][] = levels.map((level) => [level, '#' + Math.random().toString(16).slice(2, 8) + 'ff']);
+		map.on('mousemove', async (e) => {
+			if (!wxsource || busy) return;
+			busy = true;
+			const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(position(e), map);
+			if (tileInfo) {
+				await customStyleEditorControl.onchange?.({ colorMap: [...colMap, [tileInfo.inStyleUnits[0], '#ff000000']] }); // await always !!
+			}
+			busy = false;
+		});
+	} //*/
 
 	/*/ DEMO: abort
 	const abortController = new AbortController();
@@ -171,10 +171,9 @@ async function start() {
 		i = (i + 1) % u.length;
 	}); //*/
 
-	/*/ DEMO (mapbox): read lon lat data
-	let popup: mapboxgl.Popup = new mapboxgl.Popup({ closeOnClick: false, offset: [50, -50] }).addTo(map);
+	/*/ DEMO (leaflet): read lon lat data
 	map.on('mousemove', (e) => {
-		const pos = e.lngLat; // (mapbox)
+		const pos = position(e); //
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(pos.wrap(), map);
 		if (tileInfo) {
 			const { min, max } = wxsource.getMetadata();
@@ -185,7 +184,10 @@ async function start() {
 			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>
 			min=${min.toFixed(2)} ${tileInfo.dataUnits}, max=${max.toFixed(2)} ${tileInfo.dataUnits}<br>
 			time=${wxsource.getTime()}`;
-			popup.setLngLat(pos).setHTML(content); // (mapbox)
+			L.popup() // (leaflet)
+				.setLatLng(pos)
+				.setContent(content + `${pos}`)
+				.openOn(map);
 		}
 	}); //*/
 
@@ -327,7 +329,7 @@ function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: string, max
 	);
 }
 
-function addLayer(map: mapboxgl.Map, idS: string, idL: string, source?: any) {
+async function addLayer(map: mapboxgl.Map, idS: string, idL: string, source?: any) {
 	map.addSource(idS, source);
 	map.addLayer(
 		{
