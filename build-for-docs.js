@@ -16,7 +16,7 @@ esbuild
 		},
 		target: 'es2020',
 		format: 'iife',
-		outfile: 'docs/wxtilembox/wxtilembox.js',
+		outfile: 'docs/script/script.js',
 		sourcemap: false,
 		minify: true,
 	})
