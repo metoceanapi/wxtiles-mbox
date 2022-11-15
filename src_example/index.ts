@@ -114,7 +114,7 @@ async function start() {
 
 	await apiControl.onchange(datasetName, variables[0]); // initial load
 
-	// DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position6
+	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position6
 	if (wxsource) {
 		let busy = false;
 		await wxsource.updateCurrentStyleObject({ levels: undefined }); // await always !!
@@ -132,17 +132,20 @@ async function start() {
 	} //*/
 
 	/*/ DEMO: abort
-	const abortController = new AbortController();
-	console.log('setTime(5)');
-	const prom = wxsource.setTime(5, abortController);
-	abortController.abort(); // aborts the request
-	await prom; // await always !! even if aborted
-	console.log('aborted');
-	await wxsource.setTime(5); // no abort
-	console.log('setTime(5) done'); //*/
+	if (wxsource) {
+		const abortController = new AbortController();
+		console.log('setTime(5)');
+		const prom = wxsource.setTime(5, abortController);
+		abortController.abort(); // aborts the request
+		await prom; // await always !! even if aborted
+		console.log('aborted');
+		await wxsource.setTime(5); // no abort
+		console.log('setTime(5) done'); 
+	}//*/
 
 	/*/ DEMO: preload a timestep
 	map.once('click', async () => {
+		if (!wxsource) return;
 		console.log('no preload time=5');
 		const t = Date.now();
 		await wxsource.setTime(5); // await always !! or abort
@@ -151,10 +154,12 @@ async function start() {
 		await wxsource.preloadTime(20); // await always !! even if aborted
 		console.log('preloaded timesteps 10, 20');
 		map.once('click', async () => {
+			if (!wxsource) return;
 			const t = Date.now();
 			await wxsource.setTime(10); // await always !! or abort
 			console.log(Date.now() - t, ' step 10');
 			map.once('click', async () => {
+				if (!wxsource) return;
 				const t = Date.now();
 				await wxsource.setTime(20); // await always !! or abort
 				console.log(Date.now() - t, ' step 20');
@@ -165,37 +170,27 @@ async function start() {
 	/*/ DEMO: change style's units
 	let i = 0;
 	map.on('click', async () => {
+		if (!wxsource) return;
 		const u = ['knots', 'm/s', 'km/h', 'miles/h'];
 		await wxsource.updateCurrentStyleObject({ units: u[i], levels: undefined }); // levels: undefined - to recalculate levels
 		legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
 		i = (i + 1) % u.length;
 	}); //*/
 
-	/*/ DEMO (leaflet): read lon lat data
+	/*/ DEMO : read lon lat data
 	map.on('mousemove', (e) => {
 		const pos = position(e); //
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(pos.wrap(), map);
 		if (tileInfo) {
-			const { min, max } = wxsource.getMetadata();
-			let content = `lnglat=(${pos.lng.toFixed(2)}, ${pos.lat.toFixed(2)})<br>
-			dataset=${wxsource.wxdatasetManager.datasetName}<br>
-			variables=${wxsource.getVariables()}<br>
-			style=${tileInfo.inStyleUnits.map((d) => d.toFixed(2))} ${tileInfo.styleUnits}<br>
-			source=${tileInfo.data.map((d) => d.toFixed(2))} ${tileInfo.dataUnits}<br>
-			min=${min.toFixed(2)} ${tileInfo.dataUnits}, max=${max.toFixed(2)} ${tileInfo.dataUnits}<br>
-			time=${wxsource.getTime()}`;
-			L.popup() // (leaflet)
-				.setLatLng(pos)
-				.setContent(content + `${pos}`)
-				.openOn(map);
+			console.log(tileInfo);
 		}
 	}); //*/
 
 	/*/ DEMO: timesteps
-	const tlength = wxsource.wxdatasetManager.getTimes().length;
 	let t = 0;
 	const nextTimeStep = async () => {
-		await wxsource.setTime(t++ % tlength); // await always !!
+		if (!wxsource) return;
+		await wxsource.setTime(t++ % wxsource.wxdatasetManager.getTimes().length); // await always !!
 		setTimeout(nextTimeStep, 0);
 	};
 	setTimeout(nextTimeStep, 2000);
@@ -205,6 +200,7 @@ async function start() {
 	let b = 0;
 	let db = 1;
 	const nextAnim = async () => {
+		if (!wxsource) return;
 		await wxsource.updateCurrentStyleObject({ blurRadius: b }); // await always !!
 
 		b += db;
