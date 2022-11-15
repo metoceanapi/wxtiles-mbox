@@ -1,5 +1,5 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
-import mapboxgl from 'mapbox-gl';
+import mapboxgl, { IControl } from 'mapbox-gl';
 
 import { WxTileSource, type WxVars, WxAPI, WxTilesLogging, type WxTileInfo } from '../src/index';
 import { WxLegendControl } from '../src/controls/WxLegendControl';
@@ -8,27 +8,15 @@ import { WxInfoControl } from '../src/controls/WxInfoControl';
 import { WxTimeControl } from '../src/controls/WxTimeControl ';
 import { WxAPIControl } from '../src/controls/WxAPIControl';
 
+start();
+
+const OPACITY = 0.5;
+
+// this is universal function for Leaflet and Mapbox.
+// Functions below are just framework specific wrappers for this universal function
 async function start() {
-	mapboxgl.accessToken = 'pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A';
-	const map = new mapboxgl.Map({
-		container: 'map',
-		// style: 'mapbox://styles/mapbox/light-v10',
-		// style: 'mapbox://styles/mapbox/satellite-v9',
-		style: { version: 8, name: 'Empty', sources: {}, layers: [] },
-		center: [174.5, -40.75],
-		zoom: 3,
-		// projection: { name: 'globe' },
-	});
-
-	map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-	// map.showTileBoundaries = true;
-	await map.once('load');
-
-	// addSkyAndTerrain(map);
-	addRaster(map, 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 10);
-	// addPoints(map);
-
-	//******* WxTiles stuff *******//
+	const map = await initFrameWork();
+	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	WxTilesLogging(false);
 	const dataServerURL = 'http://localhost:9191/data/';
 	// const dataServerURL = 'https://tiles.metoceanapi.com/data/';
@@ -49,90 +37,46 @@ async function start() {
 
 	// get datasetName from URL
 	let time = '';
+	let zoom = 0;
+	let lat = 0;
+	let lng = 0;
+	let bearing = 0;
+	let pitch = 0;
 	const urlParams = window.location.toString().split('#')[1];
 	if (urlParams) {
 		const params = urlParams.split('/');
 		if (params.length > 0) datasetName = params[0];
 		if (params.length > 1) variables = params[1].split(',') as WxVars;
 		if (params.length > 2) time = params[2];
-		// then get zoom, lng, lat, bearing, pitch from URL
-		if (params.length > 7) {
-			const zoom = parseFloat(params[3]);
-			const lng = parseFloat(params[4]);
-			const lat = parseFloat(params[5]);
-			const bearing = parseFloat(params[6]);
-			const pitch = parseFloat(params[7]);
-			map.jumpTo({ zoom, center: [lng, lat], bearing, pitch });
-		}
+		if (params.length > 3) zoom = parseFloat(params[3]);
+		if (params.length > 4) lng = parseFloat(params[4]);
+		if (params.length > 5) lat = parseFloat(params[5]);
+		if (params.length > 6) bearing = parseFloat(params[6]);
+		if (params.length > 7) pitch = parseFloat(params[7]);
+		flyTo(map, zoom, lng, lat, bearing, pitch);
 	}
 
-	const setURL = (time_: string) => {
-		time = time_;
-		const center = map.getCenter();
-		location.href = `#${datasetName}/${variables.join(',')}/${time}/${map.getZoom()}/${center.lng}/${center.lat}/${map.getBearing()}/${map.getPitch()}`;
-	};
+	map.on('zoom', () => setURL(map, time, datasetName, variables));
+	map.on('drag', () => setURL(map, time, datasetName, variables));
+	map.on('rotate', () => setURL(map, time, datasetName, variables));
+	map.on('pitch', () => setURL(map, time, datasetName, variables));
 
-	map.on('zoom', () => setURL(time));
-	map.on('drag', () => setURL(time));
-	map.on('rotate', () => setURL(time));
-	map.on('pitch', () => setURL(time));
-
-	const frameworkOptions = { id: 'wxsource', opacity: 0.5, attribution: 'WxTiles' };
+	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: 'WxTiles' };
 
 	let wxsource: WxTileSource | undefined;
 
 	const legendControl = new WxLegendControl();
-	map.addControl(legendControl, 'top-right');
+	addControl(map, legendControl, 'top-right');
 
 	const apiControl = new WxAPIControl(wxapi, datasetName, variables[0]);
-	map.addControl(apiControl, 'top-left');
-	apiControl.onchange = async (datasetName_: string, variable: string): Promise<void> => {
-		// remove existing source and layer
-		map.getLayer('wxtiles') && map.removeLayer('wxtiles');
-		map.getSource(frameworkOptions.id) && map.removeSource(frameworkOptions.id);
-		wxsource = undefined;
-
-		datasetName = datasetName_;
-		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
-		const meta = wxdatasetManager.meta.variablesMeta[variable];
-		variables = meta?.vector || [variable]; // check if variable is vector and use vector components if so
-
-		if (wxdatasetManager.meta.variablesMeta[variable]?.units === 'RGB') {
-			map.addSource(frameworkOptions.id, {
-				type: 'raster',
-				tiles: [wxdatasetManager.createURI(variables[0], 0)],
-				tileSize: 256,
-				maxzoom: wxdatasetManager.meta.maxZoom,
-			});
-			timeControl.setTimes(wxdatasetManager.meta.times);
-			legendControl.clear();
-		} else {
-			wxsource = new WxTileSource({ wxdatasetManager, variables, time }, frameworkOptions);
-			map.addSource(wxsource.id, wxsource);
-			legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
-			customStyleEditorControl.onchange?.(wxsource.getCurrentStyleObjectCopy());
-			timeControl.updateSource(wxsource);
-		}
-
-		map.addLayer(
-			{
-				id: 'wxtiles',
-				type: 'raster',
-				source: frameworkOptions.id,
-				paint: { 'raster-fade-duration': 0, 'raster-opacity': 0.6 }, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
-			},
-			'raster-layer'
-		);
-	};
-
-	apiControl.onchange(datasetName, variables[0]); // initial load
+	addControl(map, apiControl, 'top-left');
 
 	const timeControl = new WxTimeControl(10);
-	map.addControl(timeControl, 'top-left');
-	timeControl.onchange = setURL;
+	addControl(map, timeControl, 'top-left');
+	timeControl.onchange = (time_) => setURL(map, (time = time_), datasetName, variables);
 
 	const customStyleEditorControl = new WxStyleEditorControl();
-	map.addControl(customStyleEditorControl, 'top-left');
+	addControl(map, customStyleEditorControl, 'top-left');
 	customStyleEditorControl.onchange = async (style) => {
 		if (!wxsource) return;
 		await wxsource.updateCurrentStyleObject(style);
@@ -142,8 +86,33 @@ async function start() {
 	};
 
 	const infoControl = new WxInfoControl();
-	map.addControl(infoControl, 'bottom-left');
-	map.on('mousemove', (e) => infoControl.update(wxsource, map, e.lngLat.wrap()));
+	addControl(map, infoControl, 'bottom-left');
+	map.on('mousemove', (e) => infoControl.update(wxsource, map, position(e)));
+
+	apiControl.onchange = async (datasetName_: string, variable: string): Promise<void> => {
+		// remove existing source and layer
+		removeLayer(map, frameworkOptions.id, wxsource);
+		//
+		wxsource = undefined;
+		datasetName = datasetName_;
+		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
+		const meta = wxdatasetManager.meta.variablesMeta[variable];
+		variables = meta?.vector || [variable]; // check if variable is vector and use vector components if so
+		//
+		if (wxdatasetManager.meta.variablesMeta[variable]?.units === 'RGB') {
+			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variables[0], 0), wxdatasetManager.meta.maxZoom);
+			timeControl.setTimes(wxdatasetManager.meta.times);
+			legendControl.clear();
+		} else {
+			wxsource = new WxTileSource({ wxdatasetManager, variables, time }, frameworkOptions);
+			addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
+			legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
+			customStyleEditorControl.onchange?.(wxsource.getCurrentStyleObjectCopy());
+			timeControl.updateSource(wxsource);
+		}
+	};
+
+	apiControl.onchange(datasetName, variables[0]); // initial load
 
 	/*/ DEMO (mapbox): more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	let busy = false;
@@ -243,7 +212,42 @@ async function start() {
 	setTimeout(nextAnim, 2000); //*/
 }
 
-start();
+function flyTo(map: mapboxgl.Map, zoom: number, lng: number, lat: number, bearing: number, pitch: number) {
+	map.flyTo({ zoom, center: [lng, lat], bearing, pitch });
+}
+
+function setURL(map: mapboxgl.Map, time: string, datasetName: string, variables: string[]) {
+	const center = map.getCenter();
+	location.href = `#${datasetName}/${variables.join(',')}/${time}/${map.getZoom().toFixed(2)}/${center.lng.toFixed(2)}/${center.lat.toFixed(2)}/${map
+		.getBearing()
+		.toFixed(2)}/${map.getPitch().toFixed(2)}`;
+}
+
+async function initFrameWork() {
+	mapboxgl.accessToken = 'pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A';
+	const map = new mapboxgl.Map({
+		container: 'map',
+		// style: 'mapbox://styles/mapbox/light-v10',
+		// style: 'mapbox://styles/mapbox/satellite-v9',
+		style: { version: 8, name: 'Empty', sources: {}, layers: [] },
+		center: [174.5, -40.75],
+		zoom: 3,
+		// projection: { name: 'globe' },
+	});
+
+	map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+	// map.showTileBoundaries = true;
+	await map.once('load');
+
+	// addSkyAndTerrain(map);
+	// addPoints(map);
+
+	return map;
+}
+
+function position(e: mapboxgl.MapMouseEvent): mapboxgl.LngLat {
+	return e.lngLat.wrap(); // (mapbox)
+}
 
 function addPoints(map: mapboxgl.Map) {
 	map.addSource('point', {
@@ -297,20 +301,44 @@ function addSkyAndTerrain(map: mapboxgl.Map) {
 	});
 }
 
-function addRaster(map: mapboxgl.Map, URL: string, maxZoom: number = 2) {
-	map.addSource('raster-source', {
+function addControl(map: mapboxgl.Map, control: IControl, position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left') {
+	map.addControl(control, position);
+}
+
+function removeLayer(map: mapboxgl.Map, layerId: string, source?: any) {
+	map.getLayer('wxtiles') && map.removeLayer('wxtiles');
+	map.getSource(layerId) && map.removeSource(layerId);
+}
+
+function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: string, maxZoom: number) {
+	map.addSource(idS, {
 		type: 'raster',
 		tiles: [URL],
 		tileSize: 256,
 		maxzoom: maxZoom,
 	});
-	map.addLayer({
-		id: 'raster-layer',
-		type: 'raster',
-		source: 'raster-source',
-		paint: {
-			// 'raster-opacity': 1,
-			// 'raster-fade-duration': 1000,
+	map.addLayer(
+		{
+			id: idL,
+			type: 'raster',
+			source: idS,
 		},
-	});
+		idL !== 'baseL' ? 'baseL' : undefined
+	);
+}
+
+function addLayer(map: mapboxgl.Map, idS: string, idL: string, source?: any) {
+	map.addSource(idS, source);
+	map.addLayer(
+		{
+			id: idL,
+			type: 'raster',
+			source: idS,
+			paint: {
+				'raster-fade-duration': 0, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
+				'raster-opacity': OPACITY,
+			},
+		},
+		'baseL'
+	);
 }
