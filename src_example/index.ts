@@ -105,7 +105,7 @@ async function start() {
 			timeControl.setTimes(wxdatasetManager.meta.times);
 			legendControl.clear();
 		} else {
-			wxsource = new WxTileSource({ wxdatasetManager: await wxapi.createDatasetManager(datasetName), variables }, frameworkOptions);
+			wxsource = new WxTileSource({ wxdatasetManager, variables }, frameworkOptions);
 			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
 			await customStyleEditorControl.onchange?.(wxsource.getCurrentStyleObjectCopy());
 			legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
