@@ -19,8 +19,8 @@ async function start() {
 	const map = await initFrameWork();
 	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	WxTilesLogging(false);
-	// const dataServerURL = 'http://localhost:9191/data/';
-	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	const dataServerURL = 'http://localhost:9191/data/';
+	// const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
@@ -30,11 +30,11 @@ async function start() {
 	// let variables: WxVars = ['air.temperature.at-2m'];
 	// let variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
 
-	let datasetName = 'ww3-ecmwf.global';
-	let variables: WxVars = ['wave.direction.mean'];
+	// let datasetName = 'ww3-ecmwf.global';
+	// let variables: WxVars = ['wave.direction.mean'];
 
-	// let datasetName = 'obs-radar.rain.nzl.national';
-	// let variables: WxVars = ['reflectivity'];
+	let datasetName = 'obs-radar.rain.nzl.national';
+	let variables: WxVars = ['reflectivity'];
 
 	// get datasetName from URL
 	let time = '';
@@ -97,12 +97,12 @@ async function start() {
 		wxsource = undefined;
 		datasetName = datasetName_;
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
-		const meta = wxdatasetManager.meta.variablesMeta[variable];
+		const meta = wxdatasetManager.getVariableMeta(variable);
 		variables = meta?.vector || [variable]; // check if variable is vector and use vector components if so
 		//
-		if (wxdatasetManager.meta.variablesMeta[variable]?.units === 'RGB') {
-			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variables[0], 0), wxdatasetManager.meta.maxZoom);
-			timeControl.setTimes(wxdatasetManager.meta.times);
+		if (meta?.units === 'RGB') {
+			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variables[0], 0), wxdatasetManager.getMaxZoom());
+			timeControl.setTimes(wxdatasetManager.getTimes());
 			legendControl.clear();
 		} else {
 			wxsource = new WxTileSource({ wxdatasetManager, variables }, frameworkOptions);

@@ -1,6 +1,6 @@
 import { fetchJson } from '../utils/wxtools';
 import { WxDate } from '../wxlayer/wxlayer';
-import { WxDatasetMeta, WxAPI, WxVariableMeta, WxInstances } from './wxAPI';
+import { WxDatasetMeta, WxAPI, WxVariableMeta, WxInstances, WxAllBoundariesMeta } from './wxAPI';
 
 /**
  * @class WxDataSetManager
@@ -13,13 +13,27 @@ import { WxDatasetMeta, WxAPI, WxVariableMeta, WxInstances } from './wxAPI';
 
 export class WxDataSetManager {
 	readonly datasetName: string;
+	readonly instanced?: string[];
 	readonly instance: string;
 	readonly meta: WxDatasetMeta;
 	readonly wxapi: WxAPI;
 
-	constructor({ datasetName, instance, meta, wxapi }: { datasetName: string; instance: string; meta: WxDatasetMeta; wxapi: WxAPI }) {
+	constructor({
+		datasetName,
+		instance,
+		instanced,
+		meta,
+		wxapi,
+	}: {
+		datasetName: string;
+		instance: string;
+		instanced?: string[];
+		meta: WxDatasetMeta;
+		wxapi: WxAPI;
+	}) {
 		if (!wxapi.datasetsMetas.allDatasetsList.includes(datasetName)) throw new Error(`Dataset ${datasetName} not found`);
 		this.datasetName = datasetName;
+		this.instanced = instanced;
 		this.instance = instance;
 		this.meta = meta;
 		this.wxapi = wxapi;
@@ -32,7 +46,7 @@ export class WxDataSetManager {
 	 * @returns {string} - closest valid time from the dataset's time array
 	 * */
 	getValidTime(time: WxDate = Date()): string {
-		const { times } = this.meta;
+		const times = this.getTimes();
 		if (typeof time === 'number') {
 			if (time <= 0) return times[0]; // for negative numbers use first time
 			if (time < times.length) return times[time]; // for numbers in range use time from array
@@ -40,7 +54,14 @@ export class WxDataSetManager {
 
 		const ms = new Date(time).getTime(); // otherwise convert time as milliseconds
 		const found = times.find((t) => new Date(t).getTime() >= ms);
-		return found || times[times.length - 1];
+		if (isNaN(ms) || !found) {
+			// try regular serch on strings
+			const index = times.indexOf(time as string);
+			if (index === -1) return times[times.length - 1]; // if not found use first time
+			return times[index];
+		}
+
+		return found;
 	}
 
 	/**
@@ -49,7 +70,7 @@ export class WxDataSetManager {
 	 * @returns {string[]} - copy of dataset's times
 	 * */
 	getTimes(): string[] {
-		return [...this.meta.times];
+		return this.instanced || this.meta.times;
 	}
 
 	/**
@@ -58,7 +79,7 @@ export class WxDataSetManager {
 	 * @returns {string[]} - copy of dataset's variables
 	 * */
 	getVariables(): string[] {
-		return [...this.meta.variables];
+		return this.meta.variables;
 	}
 
 	/**
@@ -88,11 +109,20 @@ export class WxDataSetManager {
 	 * @memberof WxDataSetManager
 	 * @returns {[west, north, east, south]} - dataset's boundaries
 	 * */
-	getBoundaries(): [number, number, number, number] | undefined {
+	getBoundaries180(): [number, number, number, number] | undefined {
 		const b180a = this.meta.boundaries?.boundaries180;
 		if (!(b180a?.length === 1)) return; // TODO can't make lon = [170 to 190] as mapBox uses -180 to 180, so need to check for that in loader
 		const b180 = b180a[0]; // else let mapbox manage boundaries
 		return [b180.west, b180.south, b180.east, b180.north];
+	}
+
+	/**
+	 * Get dataset's boundaries.
+	 * @memberof WxDataSetManager
+	 * @returns {[west, north, east, south]} - dataset's boundaries
+	 * */
+	getBoundaries(): WxAllBoundariesMeta | undefined {
+		return this.meta.boundaries;
 	}
 
 	/**
@@ -104,8 +134,10 @@ export class WxDataSetManager {
 	 * @returns {string} - dataset's current URI ready for fetching tiles
 	 * */
 	createURI(variable: string, time?: WxDate, ext: string = 'png'): string {
-		if (!this.meta.variablesMeta?.[variable]) throw new Error(`in dataset ${this.datasetName} variable ${variable} not found`);
-		return `${this.wxapi.dataServerURL + this.datasetName}/${this.instance}/${variable}/${this.getValidTime(time)}/{z}/{x}/{y}.${ext}`;
+		if (!this.checkVariableValid(variable)) throw new Error(`in dataset ${this.datasetName} variable ${variable} not found`);
+		const validTime = this.getValidTime(time);
+		const instance = this.instanced ? validTime : this.instance;
+		return `${this.wxapi.dataServerURL + this.datasetName}/${instance}/${variable}/${validTime}/{z}/{x}/{y}.${ext}`;
 	}
 
 	/**
@@ -115,7 +147,7 @@ export class WxDataSetManager {
 	 * @returns {boolean} - true if variable is available in the dataset
 	 * */
 	checkVariableValid(variable: string): boolean {
-		return this.meta.variablesMeta?.[variable] !== undefined;
+		return this.getVariableMeta(variable) !== undefined;
 	}
 
 	/**
@@ -129,10 +161,15 @@ export class WxDataSetManager {
 	}
 
 	protected async getDatasetInstance(): Promise<string> {
+		const instances = await this.getDatasetInstances();
+		return instances[instances.length - 1];
+	}
+
+	protected async getDatasetInstances(): Promise<string[]> {
 		try {
 			const instances = await fetchJson<WxInstances>(this.wxapi.dataServerURL + this.datasetName + '/instances.json', this.wxapi.requestInit);
 			if (instances.length === 0) throw new Error(`No instances found for dataset ${this.datasetName}`);
-			return instances[instances.length - 1];
+			return instances;
 		} catch (e) {
 			throw new Error(`getting dataset instances failure  message: ${e.message} datasetName: ${this.datasetName}`);
 		}
