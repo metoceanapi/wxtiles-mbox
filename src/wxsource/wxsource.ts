@@ -30,7 +30,7 @@ export class WxTileSource extends WxImplementation implements WxLayerAPI, mapbox
 		WXLOG('WxTileSource constructor: ', wxlayeroptions);
 		this.id = id; // MAPBOX API
 		this.maxzoom = maxzoom; // MAPBOX API
-		this.bounds = bounds || wxlayeroptions.wxdatasetManager.getBoundaries(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
+		this.bounds = bounds || wxlayeroptions.wxdatasetManager.getBoundaries180(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
 		this.attribution = attribution; // MAPBOX API
 	} // constructor
 

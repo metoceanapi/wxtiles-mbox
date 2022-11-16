@@ -59,7 +59,7 @@ export class Loader {
 		const tileType = this._checkTypeAndMask(tile);
 		if (!tileType) return null; // tile is cut by mask
 
-		const { upCoords, subCoords } = splitCoords(tile, this.layer.wxdatasetManager.meta.maxZoom);
+		const { upCoords, subCoords } = splitCoords(tile, this.layer.wxdatasetManager.getMaxZoom());
 		const URLs = <WxURIs>uris.map((uri) => uriXYZ(uri, upCoords));
 		const requestInitCopy = Object.assign({}, this.layer.wxdatasetManager.wxapi.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
 		const rawdata = <DataIntegrals>await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
@@ -126,7 +126,7 @@ export class Loader {
 	}
 
 	protected _checkInsideBoundaries(coords: XYZ): boolean {
-		const { boundaries } = this.layer.wxdatasetManager.meta;
+		const boundaries = this.layer.wxdatasetManager.getBoundaries();
 		if (boundaries?.boundaries180) {
 			const bbox = makeBox(coords);
 			const rectIntersect = (b: WxBoundaryMeta) => !(bbox.west > b.east || b.west > bbox.east || bbox.south > b.north || b.south > bbox.north);
