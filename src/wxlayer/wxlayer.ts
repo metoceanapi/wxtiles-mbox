@@ -176,7 +176,7 @@ export class WxLayer {
 
 	protected _getCurrentMeta(): WxVariableMeta {
 		const metas = this.variables.map((v) => {
-			const meta = this.wxdatasetManager.meta.variablesMeta[v];
+			const meta = this.wxdatasetManager.getVariableMeta(v);
 			if (!meta) throw new Error(`WxTileSource ${this.wxdatasetManager.datasetName}: variable ${v} is not valid`);
 			return meta;
 		});

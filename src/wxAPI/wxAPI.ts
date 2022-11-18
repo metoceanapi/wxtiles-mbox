@@ -9,6 +9,7 @@ import { WxDataSetManager } from './WxDataSetManager';
 
 export type WxInstances = Array<string>;
 interface DatasetShortMeta {
+	instanced?: string[]; // TODO: implement
 	instance: string;
 	variables: string[];
 }
@@ -107,8 +108,19 @@ export class WxAPI {
 		});
 	}
 
+	protected getDatasetShortMeta(datasetName: 'allDatasetsList' | string): DatasetShortMeta | undefined {
+		if (datasetName === 'allDatasetsList') return;
+		return this.datasetsMetas[datasetName] as DatasetShortMeta;
+	}
+
+	/**
+	 * Get all variables for the given dataset name.
+	 * @memberof WxAPI
+	 * @param {string} datasetName - dataset name
+	 * @returns {Promise<string[]>} - list of all available variables for the dataset
+	 */
 	protected getDatasetInatance(datasetName: string): string | undefined {
-		return (this.datasetsMetas[datasetName] as DatasetShortMeta)?.instance;
+		return this.getDatasetShortMeta(datasetName)?.instance;
 	}
 
 	/**
@@ -130,10 +142,12 @@ export class WxAPI {
 	 */
 	async createDatasetManager(datasetName: string): Promise<WxDataSetManager> {
 		await this.initDone;
-		const instance = this.getDatasetInatance(datasetName);
+		const shortMeta = this.getDatasetShortMeta(datasetName);
+		const instance = shortMeta?.instance;
 		if (!instance) throw new Error('Dataset/instance not found:' + datasetName);
+		const instanced = shortMeta.instanced;
 		const meta = await fetchJson<WxDatasetMeta>(this.dataServerURL + datasetName + '/' + instance + '/meta.json', this.requestInit);
-		return new WxDataSetManager({ datasetName, instance, meta, wxapi: this });
+		return new WxDataSetManager({ datasetName, instanced, instance, meta, wxapi: this });
 	}
 
 	/**
