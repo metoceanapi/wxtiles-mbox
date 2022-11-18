@@ -9,6 +9,7 @@ import { WxTimeControl } from '../src/controls/WxTimeControl ';
 import { WxAPIControl } from '../src/controls/WxAPIControl';
 
 start();
+// simpleDemo();
 
 const OPACITY = 1;
 
@@ -19,8 +20,8 @@ async function start() {
 	const map = await initFrameWork();
 	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	WxTilesLogging(false);
-	const dataServerURL = 'http://localhost:9191/data/';
-	// const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	// const dataServerURL = 'http://localhost:9191/data/';
+	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
@@ -37,25 +38,17 @@ async function start() {
 	let variables: WxVars = ['reflectivity'];
 
 	// get datasetName from URL
-	let time = '';
-	let zoom = 0;
-	let lat = 0;
-	let lng = 0;
-	let bearing = 0;
-	let pitch = 0;
 	const urlParams = window.location.toString().split('#')[1];
-	if (urlParams) {
-		const params = urlParams.split('/');
-		if (params.length > 0) datasetName = params[0];
-		if (params.length > 1) variables = params[1].split(',') as WxVars;
-		if (params.length > 2) time = params[2];
-		if (params.length > 3) zoom = parseFloat(params[3]);
-		if (params.length > 4) lng = parseFloat(params[4]);
-		if (params.length > 5) lat = parseFloat(params[5]);
-		if (params.length > 6) bearing = parseFloat(params[6]);
-		if (params.length > 7) pitch = parseFloat(params[7]);
-		flyTo(map, zoom, lng, lat, bearing, pitch);
-	}
+	const params = urlParams?.split('/');
+	datasetName = params?.[0] || datasetName;
+	if (params?.[1]) variables = params[1].split(',') as WxVars;
+	let time = params?.[2] || '';
+	const zoom = (params && parseFloat(params[3])) || 0;
+	const lng = (params && parseFloat(params[4])) || 0;
+	const lat = (params && parseFloat(params[5])) || 0;
+	const bearing = (params && parseFloat(params[6])) || 0;
+	const pitch = (params && parseFloat(params[3])) || 0;
+	flyTo(map, zoom, lng, lat, bearing, pitch);
 
 	map.on('zoom', () => setURL(map, time, datasetName, variables));
 	map.on('drag', () => setURL(map, time, datasetName, variables));
@@ -98,8 +91,7 @@ async function start() {
 		datasetName = datasetName_;
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 		const meta = wxdatasetManager.getVariableMeta(variable);
-		variables = meta?.vector || [variable]; // check if variable is vector and use vector components if so
-		//
+		variables = wxdatasetManager.checkCombineVariableIfVector(variable); // check if variable is vector and use vector components if so
 		if (meta?.units === 'RGB') {
 			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variables[0], 0), wxdatasetManager.getMaxZoom());
 			timeControl.setTimes(wxdatasetManager.getTimes());
@@ -341,4 +333,43 @@ async function addLayer(map: mapboxgl.Map, idS: string, idL: string, source?: an
 		},
 		'baseL'
 	);
+}
+
+async function simpleDemo() {
+	const map = await initFrameWork();
+
+	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	// const headers = new Headers();
+	// headers.append('x-api-key', '--proper-key-value--'); // If needed in the future
+	const requestInit: RequestInit = {
+		/* headers */
+	}; // add more options if needed such as headers, mode, credentials, etc
+
+	// Get the API ready - should be ONE per application
+	WxTilesLogging(true); // If needed
+	const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit });
+
+	const datasetName = 'gfs.global';
+	const variable = 'air.temperature.at-2m'; // Scalar example
+	// const variable = 'wind.speed.eastward.at-10m'; // Vector example
+
+	// Create a dataset manager (may be used for many layers from this dataset)
+	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
+
+	// Usefull to automatically get the vector component variables from the dataset manager if given variable is northward or eastward
+	// if not a vector component, then just return the variable itself
+	const variables = wxdatasetManager.checkCombineVariableIfVector(variable);
+
+	// create a layer
+	const mboxSourceOptions = { id: 'wxsource', attribution: 'WxTiles' };
+	const wxsource = new WxTileSource({ wxdatasetManager, variables }, mboxSourceOptions);
+
+	// add the layer to the map
+	map.addSource(wxsource.id, wxsource);
+	map.addLayer({
+		id: 'wxlayer',
+		type: 'raster',
+		source: wxsource.id,
+		paint: { 'raster-fade-duration': 0 },
+	});
 }
