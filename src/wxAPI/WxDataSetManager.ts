@@ -1,6 +1,6 @@
 import { fetchJson } from '../utils/wxtools';
-import { WxDate } from '../wxlayer/wxlayer';
-import { WxDatasetMeta, WxAPI, WxVariableMeta, WxInstances, WxAllBoundariesMeta } from './wxAPI';
+import type { WxDate, WxVars } from '../wxlayer/wxlayer';
+import type { WxDatasetMeta, WxAPI, WxVariableMeta, WxInstances, WxAllBoundariesMeta } from './wxAPI';
 
 /**
  * @class WxDataSetManager
@@ -148,6 +148,12 @@ export class WxDataSetManager {
 	 * */
 	checkVariableValid(variable: string): boolean {
 		return this.getVariableMeta(variable) !== undefined;
+	}
+
+	checkCombineVariableIfVector(variable: string): WxVars {
+		const meta = this.getVariableMeta(variable);
+		if (!meta) throw new Error(`in dataset ${this.datasetName} variable ${variable} not found`);
+		return meta.vector || [variable]; // check if variable is vector and use vector components if so
 	}
 
 	/**
