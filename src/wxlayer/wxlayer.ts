@@ -169,7 +169,7 @@ export class WxLayer {
 
 	protected _createCurrentStyleObject(style_?: WxColorStyleWeak): [WxColorStyleStrict, RawCLUT] {
 		const style = Object.assign(this.getCurrentStyleObjectCopy(), style_); // deep copy, so could be (and is) changed
-		style.streamLineColor = refineColor(style.streamLineColor);
+		style.streamLineColor = refineColor(style.streamLineColor) as typeof style.streamLineColor;
 		const CLUT = this._prepareCLUT(style); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
 		return [style, CLUT];
 	}

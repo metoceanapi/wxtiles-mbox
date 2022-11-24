@@ -15,7 +15,7 @@ export const __colorStyles_default_preset: ColorStylesStrict = {
 		streamLineStatic: false,
 		showBelowMin: true,
 		showAboveMax: true,
-		colorScheme: 'rainbow',
+		colorScheme: 'divergingbluered',
 		colors: undefined,
 		colorMap: undefined,
 		levels: undefined,

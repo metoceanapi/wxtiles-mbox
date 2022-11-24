@@ -180,7 +180,7 @@ export function applyMask1(data: DataPicture, mask: ImageData, maskType: 'land' 
 
 export function applyMask(data: DataPicture, mask: ImageData, maskType: 'land' | 'sea'): DataPicture {
 	const sea = maskType === 'sea';
-	for (let i = 3, y = 0; y < 256; y++) for (let x = 0, j = (y + 1) * 258 + 1; x < 256; x++, j++, i += 4) sea === !mask.data[i] && (data.raw[j] = 0);
+	for (let i = 0, y = 0; y < 256; y++) for (let x = 0, j = (y + 1) * 258 + 1; x < 256; x++, j++, i += 4) sea === !mask.data[i] && (data.raw[j] = 0);
 
 	//// equal to
 	// for (let y = 0; y < 256; y++) {

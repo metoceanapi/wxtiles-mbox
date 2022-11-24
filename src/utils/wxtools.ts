@@ -20,32 +20,33 @@ export interface WxColorSchemes {
 
 export type colorMapTuple = [number, string];
 
-export interface WxColorStyleWeak {
-	parent?: string;
-	name?: string;
-	fill?: 'none' | 'gradient' | 'solid';
-	isolineColor?: 'none' | 'inverted' | 'fill' | string;
-	isolineText?: boolean;
-	vectorType?: 'none' | 'arrows' | 'barbs';
-	vectorColor?: 'none' | 'inverted' | 'fill' | string;
-	vectorFactor?: number;
-	streamLineColor?: 'none' | 'inverted' | 'fill' | string;
-	streamLineSpeedFactor?: number;
-	streamLineGridStep?: number;
-	streamLineSteps?: number;
-	streamLineStatic?: boolean;
-	showBelowMin?: boolean;
-	showAboveMax?: boolean;
-	colorScheme?: string;
-	colors?: string[];
-	colorMap?: colorMapTuple[];
-	levels?: number[];
-	blurRadius?: number;
-	addDegrees?: number;
-	units?: string;
-	extraUnits?: Units; //{ [name: string]: [string, number, ?number] };
-	mask?: 'land' | 'sea' | 'none';
-}
+export interface WxColorStyleWeak extends Partial<WxColorStyleStrict> {}
+// export interface WxColorStyleWeak {
+// 	parent?: string;
+// 	name?: string;
+// 	fill?: 'none' | 'gradient' | 'solid';
+// 	isolineColor?: 'none' | 'inverted' | 'fill' | string;
+// 	isolineText?: boolean;
+// 	vectorType?: 'none' | 'arrows' | 'barbs';
+// 	vectorColor?: 'none' | 'inverted' | 'fill' | string;
+// 	vectorFactor?: number;
+// 	streamLineColor?: 'none' | 'inverted' | 'fill' | string;
+// 	streamLineSpeedFactor?: number;
+// 	streamLineGridStep?: number;
+// 	streamLineSteps?: number;
+// 	streamLineStatic?: boolean;
+// 	showBelowMin?: boolean;
+// 	showAboveMax?: boolean;
+// 	colorScheme?: string;
+// 	colors?: string[];
+// 	colorMap?: colorMapTuple[];
+// 	levels?: number[];
+// 	blurRadius?: number;
+// 	addDegrees?: number;
+// 	units?: string;
+// 	extraUnits?: Units; //{ [name: string]: [string, number, ?number] };
+// 	mask?: 'land' | 'sea' | 'none';
+// }
 
 export interface ColorStylesWeakMixed {
 	[name: string]: WxColorStyleWeak | WxColorStyleWeak[] | undefined;
@@ -55,16 +56,16 @@ export interface ColorStylesIncomplete {
 	[name: string]: WxColorStyleWeak | undefined;
 }
 
-export interface WxColorStyleStrict extends WxColorStyleWeak {
+export interface WxColorStyleStrict {
 	parent?: string;
 	name: string;
 	fill: 'none' | 'gradient' | 'solid';
-	isolineColor: 'none' | 'inverted' | 'fill' | string;
+	isolineColor: 'none' | 'inverted' | 'fill' | `#${string}`;
 	isolineText: boolean;
 	vectorType: 'none' | 'arrows' | 'barbs';
-	vectorColor: 'none' | 'inverted' | 'fill' | string;
+	vectorColor: 'none' | 'inverted' | 'fill' | `#${string}`;
 	vectorFactor: number;
-	streamLineColor: 'none' | 'inverted' | 'fill' | string;
+	streamLineColor: 'none' | 'inverted' | 'fill' | `#${string}`;
 	streamLineSpeedFactor: number;
 	streamLineGridStep?: number;
 	streamLineSteps?: number;

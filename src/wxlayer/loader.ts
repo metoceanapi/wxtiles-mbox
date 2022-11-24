@@ -85,7 +85,7 @@ export class Loader {
 			try {
 				maskImage = await this.layer.wxdatasetManager.wxapi.loadMaskFunc(tile);
 			} catch (e) {
-				style.mask = undefined;
+				// style.mask = undefined;
 				WXLOG("Can't load Mask. Masking is Turned OFF");
 				return;
 			}
