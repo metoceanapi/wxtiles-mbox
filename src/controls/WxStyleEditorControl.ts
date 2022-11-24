@@ -245,12 +245,12 @@ export class WxStyleEditorControl {
 			parent: this.parentInput.value, // string;
 			name: this.nameInput.value || undefined, //string;
 			fill: (this.fillSelect.value as any) || undefined, //string;
-			isolineColor: colorFromSelectInput(this.isolineColorSelect, this.isolineColorInput), //string;
+			isolineColor: colorFromSelectInput(this.isolineColorSelect, this.isolineColorInput) as any, //string;
 			isolineText: this.isolineTextInput.checked, //boolean;
 			vectorType: (this.vectorTypeSelect.value as any) || undefined, //string;
-			vectorColor: colorFromSelectInput(this.vectorColorSelect, this.vectorColorInput), //string;
+			vectorColor: colorFromSelectInput(this.vectorColorSelect, this.vectorColorInput) as any, //string;
 			vectorFactor: +this.vectorFactorInput.value, //number;
-			streamLineColor: colorFromSelectInput(this.streamLineColorSelect, this.streamLineColorInput), //string;
+			streamLineColor: colorFromSelectInput(this.streamLineColorSelect, this.streamLineColorInput) as any, //string;
 			streamLineSpeedFactor: +this.streamLineSpeedFactorInput.value, //number;
 			streamLineStatic: this.streamLineStaticInput.checked, //boolean;
 			showBelowMin: this.showBelowMinInput.checked, //boolean;
