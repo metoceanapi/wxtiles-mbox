@@ -108,8 +108,7 @@ function interpolatorSquare(a: number, b: number, c: number, d: number, dxt: num
 	}
 }
 
-function subDataPicture(interpolator: InterpolatorSquare, inputData: DataPicture, subCoords?: XYZ): DataPicture {
-	if (!subCoords) return inputData;
+function subDataPicture(interpolator: InterpolatorSquare, inputData: DataPicture, subCoords: XYZ): DataPicture {
 	const s = 0.9999999 / Math.pow(2, subCoords.z); // a subsize of a tile // 0.99999 - a dirty trick to never cross the bottom and rigth edges of the original tile.
 	const sx = subCoords.x * 256 * s; // upper left point of a subtile
 	const sy = subCoords.y * 256 * s;
@@ -137,11 +136,49 @@ function subDataPicture(interpolator: InterpolatorSquare, inputData: DataPicture
 	return subData;
 }
 
+export function subMask(inputData: ImageData, subCoords?: XYZ): ImageData {
+	if (!subCoords) return inputData;
+
+	const s = 1 / Math.pow(2, subCoords.z); // a subsize of a tile // 0.99999 - a dirty trick to never cross the bottom and rigth edges of the original tile.
+	const sx = subCoords.x * 256 * s; // upper left point of a subtile
+	const sy = subCoords.y * 256 * s;
+	const { data: inData } = inputData;
+	const subData: ImageData = new ImageData(256, 256);
+	const { data: outData } = subData;
+	for (let y = 0, i = 0; y < 256; y++) {
+		// i = 0, as we use Red channel only
+		const dy = sy + y * s; // `y` projection of the subtile onto the original tile
+		let dyi = Math.floor(dy); // don't use `~~` because of negatives on left and upper borders
+		if (dyi === 255) dyi = 254; // dirty trick to never cross the bottom and rigth edges of the original tile.
+		const dyt = dy - dyi; // [0, 1] - `y` interpolation coeff
+		for (let x = 0; x < 256; x++, i++) {
+			const dx = sx + x * s;
+			let dxi = Math.floor(dx); // don't use ~~ because of negatives
+			if (dxi === 255) dxi = 254; // dirty trick to never cross the bottom and rigth edges of the original tile.
+			const dxt = dx - dxi;
+			const di = (dxi + dyi * 256) * 4 + 0; // data index - Red used as a mask
+
+			// interpolation inside a rectangular
+			const a = inData[di]; // upper left corner
+			const b = inData[di + 4]; // upper right
+			const c = inData[di + 4 * 256]; // lower left
+			const d = inData[di + 4 * 256 + 4]; // lower right
+			// oconst r = interpolatorSquare(a, b, c, d, dxt, dyt, 0, 0) >> 7 ? 255 : 0;
+			const r = dxt + dyt < 1 ? dxt * (b - a) + dyt * (c - a) + a : dxt * (d - c) + dyt * (d - b) + b + c - d;
+			outData[i * 4] = r > 127 ? 255 : 0;
+		} // for x
+	} // for y
+
+	return subData;
+}
+
 export function subData(inputData: DataPicture, subCoords?: XYZ): DataPicture {
+	if (!subCoords) return inputData;
 	return subDataPicture(interpolatorSquare, inputData, subCoords);
 }
 
 export function subDataDegree(inputData: DataPicture, subCoords?: XYZ): DataPicture {
+	if (!subCoords) return inputData;
 	return subDataPicture(interpolatorSquareDegree, inputData, subCoords);
 }
 
@@ -185,7 +222,7 @@ export function applyMask(data: DataPicture, mask: ImageData, maskType: 'land' |
 	//// equal to
 	// for (let y = 0; y < 256; y++) {
 	// 	for (let x = 0; x < 256; x++) {
-	// 		const land = !mask.data[(y*256+x)*4+3];
+	// 		const land = !mask.data[(y*256+x)*4+0];
 	// 		if (sea === land) {
 	// 			data.raw[(y + 1) * 258 + (x + 1)] = 0; // zeroing data if mask doesn't match the maskType
 	// 		}

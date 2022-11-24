@@ -12,7 +12,7 @@ import {
 	WXLOG,
 } from '../utils/wxtools';
 import { type WxBoundaryMeta } from '../wxAPI/wxAPI';
-import { applyMask, makeBox, splitCoords, subData, subDataDegree } from './loadertools';
+import { applyMask, makeBox, splitCoords, subData, subDataDegree, subMask } from './loadertools';
 import { WxRequestInit, WxURIs, type WxLayer } from './wxlayer';
 
 interface SLinePoint {
@@ -83,7 +83,9 @@ export class Loader {
 
 			let maskImage: ImageData;
 			try {
-				maskImage = await this.layer.wxdatasetManager.wxapi.loadMaskFunc(tile);
+				const { upCoords, subCoords } = splitCoords(tile, this.layer.wxdatasetManager.wxapi.maskDepth);
+				maskImage = await this.layer.wxdatasetManager.wxapi.loadMaskFunc(upCoords);
+				maskImage = subMask(maskImage, subCoords); // preprocess all loaded data
 			} catch (e) {
 				// style.mask = undefined;
 				WXLOG("Can't load Mask. Masking is Turned OFF");

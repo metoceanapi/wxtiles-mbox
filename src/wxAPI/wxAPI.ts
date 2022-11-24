@@ -62,6 +62,7 @@ export interface WxDatasetMeta {
 export interface WxAPIOptions extends WxTilesLibOptions {
 	dataServerURL: string;
 	maskURL?: 'none' | 'auto' | string;
+	maskDepth?: number;
 	qtreeURL?: 'none' | 'auto' | string;
 	requestInit?: RequestInit;
 }
@@ -80,24 +81,27 @@ export interface WxAPIOptions extends WxTilesLibOptions {
 export class WxAPI {
 	readonly dataServerURL: string;
 	readonly maskURL?: string;
+	readonly maskDepth: number;
 	readonly requestInit?: RequestInit;
 	readonly datasetsMetas: WxDataSetsMetasJSON = { allDatasetsList: [] };
 	readonly initDone: Promise<void>;
 	readonly qtree: QTree = new QTree();
 	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData> = () => Promise.reject(new Error('maskURL not defined'));
 
-	constructor({ dataServerURL, maskURL = 'auto', qtreeURL = 'auto', requestInit, colorStyles, units, colorSchemes }: WxAPIOptions) {
+	constructor({ dataServerURL, maskURL = 'auto', maskDepth = 9, qtreeURL = 'auto', requestInit, colorStyles, units, colorSchemes }: WxAPIOptions) {
 		WxTilesLibSetup({ colorStyles, units, colorSchemes });
 
 		this.dataServerURL = dataServerURL;
 		this.requestInit = requestInit;
-		qtreeURL = qtreeURL === 'auto' ? dataServerURL + 'seamask.qtree' : qtreeURL;
+		qtreeURL = qtreeURL === 'auto' ? dataServerURL + 'masks/9+1.seamask.qtree' : qtreeURL;
 
 		if (maskURL !== 'none') {
 			const maskloader = cacheUriPromise(loadImageData);
-			this.maskURL = maskURL = maskURL === 'auto' ? dataServerURL + 'mask/' : maskURL;
+			this.maskURL = maskURL = maskURL === 'auto' ? dataServerURL + 'masks/{z}/{x}/{y}.png' : maskURL;
 			this.loadMaskFunc = (coord: XYZ) => maskloader(uriXYZ(maskURL, coord), requestInit);
 		}
+
+		this.maskDepth = maskDepth;
 
 		this.initDone = Promise.all([
 			fetchJson<WxDataSetsMetasJSON>(dataServerURL + 'datasetsmeta.json', requestInit),
