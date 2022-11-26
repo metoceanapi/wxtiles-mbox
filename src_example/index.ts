@@ -29,7 +29,7 @@ async function start() {
 		dataServerURL,
 		maskURL: dataServerURL + 'masks/{z}/{x}/{y}.png',
 		maskChannel: 'R',
-		maskDepth: 2, // currently only max 9 is supported
+		maskDepth: 9, // currently only max 9 is supported
 		qtreeURL: dataServerURL + 'masks/9+1.seamask.qtree',
 		requestInit: { headers: myHeaders },
 	});

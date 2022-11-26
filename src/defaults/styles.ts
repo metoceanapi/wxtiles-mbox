@@ -23,7 +23,7 @@ export const __colorStyles_default_preset: WxColorStylesStrict = {
 		addDegrees: 0,
 		units: '',
 		extraUnits: undefined,
-		mask: 'sea',
+		mask: 'none',
 	},
 	custom: {
 		parent: undefined,
