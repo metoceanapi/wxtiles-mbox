@@ -1,68 +1,122 @@
 import { RawCLUT } from '../utils/RawCLUT';
-import {
-	type WxColorStyleStrict,
-	WxGetColorStyles,
-	refineColor,
-	type XYZ,
-	HashXYZ,
-	RGBtoHEX,
-	type DataPictures,
-	create2DContext,
-	type WxColorStyleWeak,
-	WXLOG,
-} from '../utils/wxtools';
+import { WxGetColorStyles, refineColor, HashXYZ, RGBtoHEX, create2DContext, WXLOG } from '../utils/wxtools';
+import type { WxColorStyleStrict, XYZ, DataPictures, WxColorStyleWeak } from '../utils/wxtools';
 import { type WxVariableMeta } from '../wxAPI/wxAPI';
 import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
 import { Loader, type WxData } from './loader';
 import { Painter, type WxRasterData } from './painter';
 
+/** Type used to set a time step for the layer. */
 export type WxDate = string | number | Date;
+
+/** Used to make an abortable call to the layer update */
 export interface WxRequestInit {
 	signal?: AbortSignal;
 }
 
+/** Information about the current point on map returned by the  {@link WxLayer} method. */
 export interface WxTileInfo {
+	/** values of all variables in datasets's units */
 	data: number[];
+
+	/** RAW values of all variables in internal representation */
 	raw: number[];
+
+	/** **uint32** colors defined by curent values {@link WxTileInfo.data} and the style */
 	rgba: number[];
+
+	/** web colors defined by curent values {@link WxTileInfo.data} and the style */
 	hexColor: string[];
+
+	/** values of all variables in Style's units */
 	inStyleUnits: number[];
+
+	/** The current point on map. */
 	tilePoint: { x: number; y: number };
+
+	/** WxUnits defined style */
 	styleUnits: string;
+
+	/** WxUnits defined dataset */
 	dataUnits: string;
 }
 
+/** Array of variable names to be used in {@link WxLayer} */
 export type WxVars = [string] | [string, string];
+
+/** @internal Array of URIs to request tiles */
 export type WxURIs = [string] | [string, string];
 
+/** Lon/Lat coordinates */
 export interface WxLngLat {
+	/** Longitude */
 	lng: number;
+
+	/** Latitude */
 	lat: number;
 }
 
+/**
+ * Options to construct {@link WxTileSource} object
+ * @example
+ * ```ts
+ * const variables = wxdatasetManager.checkCombineVariableIfVector('air.temperature.at-2m');
+ * const options: WxLayerOptions = { variables, wxdatasetManager, time: Date.now() };
+ * ```
+ * */
 export interface WxLayerOptions {
+	/** Variables of the layer */
 	variables: WxVars;
+
+	/** Dataset Manager */
 	wxdatasetManager: WxDataSetManager;
+
+	/** initial time step */
 	time?: WxDate;
+
+	/** extension of data tiles at the backend */
 	ext?: 'png';
+
+	/** initial style name */
 	wxstyleName?: string;
 }
 
+/**
+ * @internal
+ * Used in {@link WxLayerBaseImplementation} to manipulate the the layer's style, data and time
+ * */
 export class WxLayer {
-	protected readonly ext: string; // tiles extension. png by default
+	/** @internal PNG only!*/
+	protected readonly ext: 'png'; // tiles extension. png by default
+
+	/** @internal Variables to be displayed by the layer */
 	readonly variables: WxVars; // variables of the dataset if vector then [eastward, northward]
+
+	/** @internal Data manager created this layer */
 	readonly wxdatasetManager: WxDataSetManager;
+
+	/** @internal Current Meta data for the layer*/
 	readonly currentMeta: WxVariableMeta;
 
+	/** @internal Current time*/
 	protected time: string;
+
+	/** @internal current URIs to fetch tiles */
 	tilesURIs: WxURIs;
 
+	/** @internal current Style Object	*/
 	style: WxColorStyleStrict;
+
+	/** @internal Current "Color lookup table" object */
 	CLUT: RawCLUT;
 
+	/** @internal cahced URI->data */
 	protected tilesCache: Map<string, WxRasterData> = new Map();
 
+	/** @internal Painter object to render tiles */
 	readonly painter: Painter = new Painter(this);
+
+	/** @internal Loader object to load and preprocess tiles */
 	protected readonly loader: Loader = new Loader(this);
 
 	constructor({ time, variables, wxdatasetManager, ext = 'png', wxstyleName = 'base' }: WxLayerOptions) {
@@ -84,28 +138,39 @@ export class WxLayer {
 		WXLOG(`WxTileSource created ${wxdatasetManager.datasetName}, ${variables.join(', ')}, ${wxstyleName}`);
 	} // constructor
 
+	/** Check if the layer is vector and may be animated according to style */
 	get nonanimatable(): boolean {
 		return this.variables.length < 2 || this.style.streamLineStatic || this.style.streamLineColor === 'none';
 	} // animatable
 
+	/**
+	 * @internal
+	 * Get the current time step of the layer
+	 * @returns {string} time step in the dataset meta's format */
 	getTime(): string {
 		return this.time;
 	} // getTime
 
-	// Beter to use when loading is not in progress // I beleive you don't need it, but it is here just in case
+	/**
+	 * @internal
+	 * Clear the cache of tiles
+	 * Not to use when loading is in progress. */
 	clearCache(): void {
 		this.tilesCache.clear();
 		this.loader.clearCache();
 	} // clearCache
 
+	/** @internal */
 	getCurrentStyleObjectCopy(): WxColorStyleStrict {
 		return Object.assign({}, this.style);
 	} // getCurrentStyleObjectCopy
 
+	/** @internal */
 	updateCurrentStyleObject(style?: WxColorStyleWeak): void {
 		[this.style, this.CLUT] = this._createCurrentStyleObject(style);
 	}
 
+	/** @internal Used by {@link WxTileSource.getLayerInfoAtLatLon} */
 	getTileData(tileCoord: XYZ, tilePixel: { x: number; y: number }): WxTileInfo | undefined {
 		const tile = this.tilesCache.get(HashXYZ(tileCoord));
 		if (!tile) return; // no tile
@@ -118,24 +183,30 @@ export class WxLayer {
 		return { data, raw, rgba, hexColor, inStyleUnits, tilePoint: tilePixel, styleUnits: this.style.units, dataUnits: this.currentMeta.units };
 	} // _getTileData
 
+	/** @internal reassign URIs and a time step with a new given time step */
 	setURLsAndTime(time_?: WxDate): void {
 		[this.tilesURIs, this.time] = this._createURLsAndTime(time_);
 	} // _setURLsAndTime
 
+	/** @internal load, cache, draw the tile. Abortable */
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData> {
 		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
 	} // _loadTile
 
+	/** @internal cache given time step for faster access when needed. Resolved when done.
+	 * @param time_ time step to cache
+	 * @param requestInit request options
+	 * @returns {Promise<void>} */
 	async preloadTime(time_: WxDate, tiles: XYZ[], requestInit?: WxRequestInit): Promise<void> {
 		const [tilesURIs] = this._createURLsAndTime(time_);
 		await Promise.allSettled(tiles.map((tile) => this.loader.cacheLoad(tile, tilesURIs, requestInit))); // fill up cache
 	} // _preloadTime
 
 	/**
-	 * @description Load all tiles, draw it on canvas, save to cache and return
+	 * @description Load all tiles, draw it on canvas, save to cache and return. Resolved when done.
 	 * @param tiles
 	 * @param requestInit
-	 */
+	 * @returns {Promise<viod>} */
 	async reloadTiles(tiles: XYZ[], requestInit?: WxRequestInit): Promise<void> {
 		const tilesCache = new Map<string, WxRasterData>();
 		await Promise.allSettled(tiles.map((tile) => this._loadCacheDrawTile(tile, tilesCache, requestInit))); // fill up cache
@@ -143,6 +214,7 @@ export class WxLayer {
 		if (!requestInit?.signal?.aborted) this.tilesCache = tilesCache; // replace cache
 	} // _reloadTiles
 
+	/** @ignore */
 	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: Map<string, WxRasterData>, requestInit?: WxRequestInit): Promise<WxRasterData> {
 		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
@@ -167,6 +239,7 @@ export class WxLayer {
 		return raster_data;
 	} // _loadCacheDrawTile
 
+	/** @ignore */
 	protected _createCurrentStyleObject(style_?: WxColorStyleWeak): [WxColorStyleStrict, RawCLUT] {
 		const style = Object.assign(this.getCurrentStyleObjectCopy(), style_); // deep copy, so could be (and is) changed
 		style.streamLineColor = refineColor(style.streamLineColor) as typeof style.streamLineColor;
@@ -174,6 +247,7 @@ export class WxLayer {
 		return [style, CLUT];
 	}
 
+	/** @ignore creates/calculates meta data for vector layers */
 	protected _getCurrentMeta(): WxVariableMeta {
 		const metas = this.variables.map((v) => {
 			const meta = this.wxdatasetManager.getVariableMeta(v);
@@ -195,7 +269,7 @@ export class WxLayer {
 		return { min, max, units, vector };
 	} // _getCurrentMeta
 
-	// x, y - pixel on tile
+	/** @ignore  x, y - pixel on tile, data - data tile  */
 	protected _getPixelInfo({ x, y }: { x: number; y: number }, data: DataPictures): { raw: number[]; data: number[] } | undefined {
 		const index = (y + 1) * 258 + (x + 1);
 		if (!data?.[0]?.raw?.[index]) return; // check if data is loaded and the pixel is not empty
@@ -205,11 +279,13 @@ export class WxLayer {
 		};
 	} // _getPixelInfo
 
+	/** @ignore Create a new CLUT for the given style */
 	protected _prepareCLUT(style: WxColorStyleStrict): RawCLUT {
 		const { min, max, units } = this.currentMeta;
 		return new RawCLUT(style, units, [min, max], this.variables.length === 2);
 	} // _prepareCLUTf
 
+	/** @ignore calculate valid timestep and URIs */
 	protected _createURLsAndTime(time_?: WxDate): [WxURIs, string] {
 		const time = this.wxdatasetManager.getValidTime(time_);
 		const tilesURIs = <WxURIs>this.variables.map((variable) => this.wxdatasetManager.createURI(variable, time, this.ext));

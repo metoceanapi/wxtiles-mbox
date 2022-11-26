@@ -28,7 +28,8 @@ async function start() {
 	const wxapi = new WxAPI({
 		dataServerURL,
 		maskURL: dataServerURL + 'masks/{z}/{x}/{y}.png',
-		maskDepth: 9, // currently only max 9 is supported
+		maskChannel: 'R',
+		maskDepth: 2, // currently only max 9 is supported
 		qtreeURL: dataServerURL + 'masks/9+1.seamask.qtree',
 		requestInit: { headers: myHeaders },
 	});
@@ -113,7 +114,7 @@ async function start() {
 
 	await apiControl.onchange(datasetName, variables[0]); // initial load
 
-	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position6
+	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	if (wxsource) {
 		let busy = false;
 		await wxsource.updateCurrentStyleObject({ levels: undefined }); // await always !!

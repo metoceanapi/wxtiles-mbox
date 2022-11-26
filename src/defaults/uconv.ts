@@ -1,6 +1,6 @@
-import { Units } from '../utils/wxtools';
+import { WxUnits } from '../utils/wxtools';
 
-export const __units_default_preset: Units = {
+export const __units_default_preset: WxUnits = {
 	comment1: ["'degC': ['K', 1, 273.15] -> degC = K * 1 + 273.15", 0],
 	comment2: ["'hPa': ['Pa', 1000]' -> hPa = Pa * 1000 + 0 (0 - could be ommited)", 0],
 	K: ['K', 1],

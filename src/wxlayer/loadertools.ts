@@ -136,6 +136,12 @@ function subDataPicture(interpolator: InterpolatorSquare, inputData: DataPicture
 	return subData;
 }
 
+/**
+ * Get sub-tile of a mask via baricemrtric interpolation
+ * @param {ImageData} inputData - input data
+ * @param {XYZ | undefined} subCoords - subtile coordinates
+ * @returns {ImageData} subtile data
+ * */
 export function subMask(inputData: ImageData, subCoords?: XYZ): ImageData {
 	if (!subCoords) return inputData;
 
@@ -163,7 +169,7 @@ export function subMask(inputData: ImageData, subCoords?: XYZ): ImageData {
 			const b = inData[di + 4]; // upper right
 			const c = inData[di + 4 * 256]; // lower left
 			const d = inData[di + 4 * 256 + 4]; // lower right
-			// oconst r = interpolatorSquare(a, b, c, d, dxt, dyt, 0, 0) >> 7 ? 255 : 0;
+			// const r = interpolatorSquare(a, b, c, d, dxt, dyt, 0, 0);
 			const r = dxt + dyt < 1 ? dxt * (b - a) + dyt * (c - a) + a : dxt * (d - c) + dyt * (d - b) + b + c - d;
 			outData[i * 4] = r > 127 ? 255 : 0;
 		} // for x
@@ -172,66 +178,60 @@ export function subMask(inputData: ImageData, subCoords?: XYZ): ImageData {
 	return subData;
 }
 
+/**
+ * Get sub-tile of a regular data via baricemrtric interpolation
+ * @param {DataPicture} inputData - input data
+ * @param {XYZ | undefined} subCoords - subtile coordinates
+ * @returns {DataPicture} subtile data
+ * */
 export function subData(inputData: DataPicture, subCoords?: XYZ): DataPicture {
 	if (!subCoords) return inputData;
 	return subDataPicture(interpolatorSquare, inputData, subCoords);
 }
 
+/**
+ * Get sub-tile of a degree data tile via bilinear degree interpolation, so middle of 350..10 degree is 0 degree.
+ * @param {DataPicture} inputData - input data
+ * @param {XYZ | undefined} subCoords - subtile coordinates
+ * @returns {DataPicture} subtile data
+ * */
 export function subDataDegree(inputData: DataPicture, subCoords?: XYZ): DataPicture {
 	if (!subCoords) return inputData;
 	return subDataPicture(interpolatorSquareDegree, inputData, subCoords);
 }
 
-export function applyMask2(data: DataPicture, mask: ImageData, maskType: 'land' | 'sea'): DataPicture {
-	const t = maskType === 'land' ? 1 : 0;
-	for (let maskIndex = 3, y = 0; y < 256; y++) {
-		for (let x = 0; x < 256; x++, maskIndex += 4) {
-			const m = mask.data[maskIndex] ? 1 : 0; // 0 - land
-			if (t ^ m) {
-				data.raw[(y + 1) * 258 + (x + 1)] = 0;
-			}
-		}
-	}
-
-	return data;
-}
-
-// if mask.data[] === 0(land) or 255(sea) strictly wthout any intermediate values
-export function applyMask1(data: DataPicture, mask: ImageData, maskType: 'land' | 'sea'): DataPicture {
-	if (maskType === 'sea') {
-		for (let maskIndex = 3, y = 0; y < 256; y++) {
-			for (let x = 0; x < 256; x++, maskIndex += 4) {
-				data.raw[(y + 1) * 258 + (x + 1)] &= mask.data[maskIndex]; // zeroing data if mask is zero (land)
-			}
-		}
-	} else {
-		for (let maskIndex = 3, y = 0; y < 256; y++) {
-			for (let x = 0; x < 256; x++, maskIndex += 4) {
-				data.raw[(y + 1) * 258 + (x + 1)] &= ~mask.data[maskIndex]; // zeroing data if mask is 255 (sea)
-			}
-		}
-	}
-
-	return data;
-}
-
-export function applyMask(data: DataPicture, mask: ImageData, maskType: 'land' | 'sea'): DataPicture {
+/**
+ *  Upply sea/land mask to a data tile
+ * 0 - for the masks from Sarah (current), 3 - for the masks from Mapbox
+ * @param {DataPicture} dataIn - data tile
+ * @param {ImageData} mask - sea/land mask
+ * @param {number} mc - mask channel of the mask picture to use (0 - Red, 1 - Green, 2 - Blue, 3 - Alpha)
+ * @param {'sea' | 'land'} maskType - sea or land masking to apply
+ * @returns {DataPicture} - masked data tile
+ *  */
+export function applyMask(dataIn: DataPicture, { data }: ImageData, mc: number, maskType: 'land' | 'sea'): DataPicture {
 	const sea = maskType === 'sea';
-	for (let i = 0, y = 0; y < 256; y++) for (let x = 0, j = (y + 1) * 258 + 1; x < 256; x++, j++, i += 4) sea === !mask.data[i] && (data.raw[j] = 0);
+	const { raw } = dataIn;
+	for (let i = mc, j = 259, y = 0; y < 256; j += 2, y++) for (let x = 0; x < 256; x++, j++, i += 4) sea === !data[i] && (raw[j] = 0);
 
 	//// equal to
 	// for (let y = 0; y < 256; y++) {
 	// 	for (let x = 0; x < 256; x++) {
-	// 		const land = !mask.data[(y*256+x)*4+0];
+	// 		const land = !mask.data[(y*256+x)*4+mc];
 	// 		if (sea === land) {
 	// 			data.raw[(y + 1) * 258 + (x + 1)] = 0; // zeroing data if mask doesn't match the maskType
 	// 		}
 	// 	}
 	// }
 
-	return data;
+	return dataIn;
 }
 
+/**
+ * Create a bounding box for a tile
+ * @param coords - tile coordinates
+ * @returns {WxBoundaryMeta} [minLon, minLat, maxLon, maxLat]
+ *  */
 export function makeBox(coords: XYZ): WxBoundaryMeta {
 	const [px, py] = coordToPixel(coords.x, coords.y);
 	const [west, north] = PixelsToLonLat(px, py, coords.z);
@@ -239,6 +239,13 @@ export function makeBox(coords: XYZ): WxBoundaryMeta {
 	return { west, north, east, south };
 }
 
+/**
+ *  Splits tile coordinates into a tile coords at maximum zoom and a subtile coords.
+ * If the tile is below maximum zoom, the subtile coords are undefined.
+ * @param coords - tile coordinates
+ * @param maxZoom - maximum zoom
+ * @returns [tile coords, subtile coords (or undefined)]
+ * */
 export function splitCoords(coords: XYZ, maxZoom: number): { upCoords: XYZ; subCoords?: XYZ } {
 	const zDif = coords.z - maxZoom;
 	if (zDif <= 0) {

@@ -1,30 +1,45 @@
 import { HEXtoRGBA, RGBtoHEX, makeConverter, WxGetColorSchemes, mixColor, createLevels } from './wxtools';
 import { Converter, WxColorStyleStrict } from './wxtools';
-// import type { Converter } from './wxtools';
 
+/** classic clamp */
 function clamp(val: number, min: number, max: number) {
 	return val > max ? max : val < min ? min : val;
 }
 
-/**
- * @param {number} data - the data value
- * @param {string} dataString - compact string representation of the data value
- * @param {string} color - the color of the data value in web format
- * @param {number} pos - the position of the data value on the legend in [0, legendSize]
- */
+/** data values of the legend */
 export interface WxTick {
+	/** the data value */
 	data: number;
+	/** compact string representation of the data value */
 	dataString: string;
+	/** the color of the data value in web format */
 	color: string;
+	/** the position of the data value on the legend in [0, legendSize] */
 	pos: number;
 }
 
+/**
+ * Class contains information about the color style and the legend
+ * Based on the idea of CLUT (Color Look Up Table) to fill tiles with colors from the style
+ */
 export class RawCLUT {
+	/** convert data value to level index */
 	levelIndex: Uint32Array;
+	/** convert data value to color index */
 	colorsI: Uint32Array;
+	/** convert data value to style value */
 	DataToStyle: Converter;
+	/** convert data value to knots. Useful for styles for vector data to get the direction of the vector */
 	DataToKnots?: Converter;
+	/** data values of the legend */
 	ticks: WxTick[];
+
+	/**
+	 * @param style the color style
+	 * @param dUnits the units of the data
+	 * @param minmax the array of minimum and maximum data values
+	 * @param vector if true, the style is for vector data
+	 * */
 	constructor(style: WxColorStyleStrict, dUnits: string, [dMin, dMax]: [number, number], vector: boolean) {
 		const dDif = dMax - dMin;
 		this.levelIndex = new Uint32Array(65536);
@@ -106,6 +121,7 @@ export class RawCLUT {
 	} // constructor
 } // class CLUT
 
+/** Build compact string representation of a number */
 function numToString(n: number) {
 	if (n !== 0 && -0.1 < n && n < 0.1) return n.toExponential(2);
 	const ns = n.toString();
@@ -113,31 +129,27 @@ function numToString(n: number) {
 	return ns;
 }
 
-/**
- * @inteface WxLegend
- * @description Legend object
- * @property {number} size - size of the legend in pixels
- * @property {boolean} showBelowMin - show color for values below min
- * @property {boolean} showAboveMax - show color for values above max
- * @property {string} units - units of the legend
- * @property {number[]} colors - array of colors
- * @property {WxTick[]} ticks - array of ticks
- */
+/** Legend - data structure that contains information for rendering legends */
 export interface WxLegend {
+	/** size of the legend in pixels */
 	size: number;
+	/** show color for values below min */
 	showBelowMin: boolean;
+	/** show color for values above max */
 	showAboveMax: boolean;
+	/** units of the legend */
 	units: string;
+	/** array of colors */
 	colors: Uint32Array;
+	/** array of ticks */
 	ticks: WxTick[];
 }
 
-/**
- * @description Create a legend for a given color style
- * @param {number} size - number of colors in the legend
- * @param {WxColorStyleStrict} style - color style
- * @returns {WxLegend} legend
- */
+/** Create a legend for a given color style
+ * @param size - number of colors in the legend
+ * @param style - color style
+ * @returns legend
+ * */
 export function WxCreateLegend(size: number, style: WxColorStyleStrict): WxLegend {
 	const legend: WxLegend = {
 		size,
