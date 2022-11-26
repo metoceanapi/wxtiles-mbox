@@ -5,6 +5,7 @@
 		"allowSyntheticDefaultImports": true,
 		"moduleResolution": "node",
 		"declaration": true,
+		"declarationMap": true,
 		"noImplicitThis": true,
 		"emitDeclarationOnly": true,
 		"noImplicitReturns": true,

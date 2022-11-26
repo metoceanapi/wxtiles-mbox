@@ -1,6 +1,6 @@
-import { ColorStylesStrict } from '../utils/wxtools';
+import { WxColorStylesStrict } from '../utils/wxtools';
 
-export const __colorStyles_default_preset: ColorStylesStrict = {
+export const __colorStyles_default_preset: WxColorStylesStrict = {
 	base: {
 		parent: undefined,
 		name: 'base',
@@ -23,7 +23,7 @@ export const __colorStyles_default_preset: ColorStylesStrict = {
 		addDegrees: 0,
 		units: '',
 		extraUnits: undefined,
-		mask: 'none',
+		mask: 'sea',
 	},
 	custom: {
 		parent: undefined,

@@ -28,7 +28,7 @@ async function start() {
 	const wxapi = new WxAPI({
 		dataServerURL,
 		maskURL: dataServerURL + 'masks/{z}/{x}/{y}.png',
-		maskDepth: 9, // currently only max 9 is supported
+		maskDepth: 2, // currently only max 9 is supported
 		qtreeURL: dataServerURL + 'masks/9+1.seamask.qtree',
 		requestInit: { headers: myHeaders },
 	});

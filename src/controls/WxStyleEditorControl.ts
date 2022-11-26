@@ -60,7 +60,7 @@ export class WxStyleEditorControl {
 
 	unitsInput: HTMLInputElement; // string
 
-	extraUnitsInput: HTMLInputElement; // Units as { [name: string]: [string, number, ?number] };
+	extraUnitsInput: HTMLInputElement; // WxUnits as { [name: string]: [string, number, ?number] };
 
 	maskSelect: HTMLSelectElement; // string
 
@@ -262,7 +262,7 @@ export class WxStyleEditorControl {
 			blurRadius: +this.blurRadiusInput.value, //number;
 			addDegrees: +this.addDegreesInput.value, //number;
 			units: this.unitsInput.value || undefined, //string;
-			extraUnits: objFromValue('extraUnitsInput'), // Units; //{ [name: string]: [string, number, ?number] };
+			extraUnits: objFromValue('extraUnitsInput'), // WxUnits; //{ [name: string]: [string, number, ?number] };
 			mask: (this.maskSelect.value as any) || undefined, // string;
 		};
 
@@ -297,7 +297,7 @@ export class WxStyleEditorControl {
 		this.blurRadiusInput.value = style.blurRadius?.toString() || ''; //number;
 		this.addDegreesInput.value = style.addDegrees?.toString() || ''; //number;
 		this.unitsInput.value = style.units || ''; //string;
-		this.extraUnitsInput.value = style.extraUnits ? JSON.stringify(style.extraUnits) : ''; // Units; //{ [name: string]: [string, number, ?number] };
+		this.extraUnitsInput.value = style.extraUnits ? JSON.stringify(style.extraUnits) : ''; // WxUnits; //{ [name: string]: [string, number, ?number] };
 		this.maskSelect.value = style.mask || ''; // string;
 	}
 

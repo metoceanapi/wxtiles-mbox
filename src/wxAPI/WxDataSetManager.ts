@@ -3,21 +3,31 @@ import type { WxDate, WxVars } from '../wxlayer/wxlayer';
 import type { WxDatasetMeta, WxAPI, WxVariableMeta, WxInstances, WxAllBoundariesMeta } from './wxAPI';
 
 /**
- * @class WxDataSetManager
- * @description Class for managing WX datasets.
- * @param {string} dataSetsName - Name of the dataset.
- * @param {string} instance - current instance (instance or data time creataion in NC-file) of the dataset.
- * @param {WxDatasetMeta} meta - metadata.
- * @param {WxAPI} wxapi - Wx API control object.
- * */
-
+ * Class for managing WX datasets.
+ * @class WxDataSetManager */
 export class WxDataSetManager {
+	/**
+	 * dataset's name */
 	readonly datasetName: string;
+
+	/**
+	 * if not empty, returns dataset's instances to be used as time steps in the dataset */
 	readonly instanced?: string[];
+
+	/**
+	 * Get dataset's current instance. */
 	readonly instance: string;
+
+	/**
+	 * dataset's meta */
 	readonly meta: WxDatasetMeta;
+
+	/**
+	 * a reference to the wxAPI object */
 	readonly wxapi: WxAPI;
 
+	/**
+	 * Do not use this method directly, use {@link WxAPI.createDatasetManager} instead. */
 	constructor({
 		datasetName,
 		instance,
@@ -41,10 +51,8 @@ export class WxDataSetManager {
 
 	/**
 	 * Get closets valid time to the given time.
-	 * @memberof WxDataSetManager
 	 * @argument {WxDate} time - either a number of a step in dataset's time array or seconds since epoch or  a Date object
-	 * @returns {string} - closest valid time from the dataset's time array
-	 * */
+	 * @returns {string} - closest valid time from the dataset's time array */
 	getValidTime(time: WxDate = Date()): string {
 		const times = this.getTimes();
 		if (typeof time === 'number') {
@@ -66,49 +74,36 @@ export class WxDataSetManager {
 
 	/**
 	 * Get dataset's times.
-	 * @memberof WxDataSetManager
-	 * @returns {string[]} - copy of dataset's times
-	 * */
+	 * @returns {string[]} - copy of dataset's time steps*/
 	getTimes(): string[] {
 		return this.instanced || this.meta.times;
 	}
 
 	/**
 	 * Get dataset's variables.
-	 * @memberof WxDataSetManager
-	 * @returns {string[]} - copy of dataset's variables
-	 * */
+	 * @returns {string[]} - all dataset's variables */
 	getVariables(): string[] {
 		return this.meta.variables;
 	}
 
 	/**
 	 * Get dataset's variable meta.
-	 * @memberof WxDataSetManager
 	 * @argument {string} variable - variable name
-	 * @returns {units, min, max} - some of dataset's variable meta
-	 * unit - unit of the variable
-	 * min - minimum value of the variable
-	 * max - maximum value of the variable
-	 * */
+	 * @returns {WxVariableMeta} - some of dataset's variable meta */
 	getVariableMeta(variable: string): WxVariableMeta | undefined {
 		return this.meta.variablesMeta[variable];
 	}
 
 	/**
 	 * Get dataset's native maximum zoom level.
-	 * @memberof WxDataSetManager
-	 * @returns {number} - maximum zoom level of the dataset
-	 * */
+	 * @returns {number} - maximum zoom level of the dataset */
 	getMaxZoom(): number {
 		return this.meta.maxZoom;
 	}
 
 	/**
 	 * Get dataset's boundaries.
-	 * @memberof WxDataSetManager
-	 * @returns {[west, north, east, south]} - dataset's boundaries
-	 * */
+	 * @returns {[west, north, east, south] | undefined} - dataset's boundaries */
 	getBoundaries180(): [number, number, number, number] | undefined {
 		const b180a = this.meta.boundaries?.boundaries180;
 		if (!(b180a?.length === 1)) return; // TODO can't make lon = [170 to 190] as mapBox uses -180 to 180, so need to check for that in loader
@@ -118,22 +113,18 @@ export class WxDataSetManager {
 
 	/**
 	 * Get dataset's boundaries.
-	 * @memberof WxDataSetManager
-	 * @returns {[west, north, east, south]} - dataset's boundaries
-	 * */
+	 * @returns {WxAllBoundariesMeta | undefined} - dataset's boundaries */
 	getBoundaries(): WxAllBoundariesMeta | undefined {
 		return this.meta.boundaries;
 	}
 
 	/**
 	 * Createts dataset's current URI ready for fetching tiles.
-	 * @memberof WxDataSetManager
 	 * @argument {string} variable - variable of the dataset
-	 * @argument {WxDate} time - time of the dataset
-	 * @argument {string} ext - zoom level of the dataset
-	 * @returns {string} - dataset's current URI ready for fetching tiles
-	 * */
-	createURI(variable: string, time?: WxDate, ext: string = 'png'): string {
+	 * @argument {WxDate} time - time step of the dataset
+	 * @argument {'png'} ext - must be PNG
+	 * @returns {string} - dataset's current URI ready for fetching tiles */
+	createURI(variable: string, time?: WxDate, ext: 'png' = 'png'): string {
 		if (!this.checkVariableValid(variable)) throw new Error(`in dataset ${this.datasetName} variable ${variable} not found`);
 		const validTime = this.getValidTime(time);
 		const instance = this.instanced ? validTime : this.instance;
@@ -142,14 +133,16 @@ export class WxDataSetManager {
 
 	/**
 	 * Check if given variable is available in the dataset.
-	 * @memberof WxDataSetManager
 	 * @argument {string} variable - variable name
-	 * @returns {boolean} - true if variable is available in the dataset
-	 * */
+	 * @returns {boolean} - true if variable is available in the dataset */
 	checkVariableValid(variable: string): boolean {
 		return this.getVariableMeta(variable) !== undefined;
 	}
 
+	/**
+	 * Checks if variable is a vector component.
+	 * @argument {string} variable - variable name
+	 * @returns {WxVars} - [variable] or [variable.eastward, variable.northward] */
 	checkCombineVariableIfVector(variable: string): WxVars {
 		const meta = this.getVariableMeta(variable);
 		if (!meta) throw new Error(`in dataset ${this.datasetName} variable ${variable} not found`);
@@ -158,19 +151,23 @@ export class WxDataSetManager {
 
 	/**
 	 * Check if dataset's instance updated (fresh data is arrived) since datasset object was created
-	 * @memberof WxDataSetManager
-	 * @returns {boolean} - true if dataset's instance updated since datasset object was created
-	 * */
+	 * @returns {boolean} - true if dataset's instance updated since datasset object was created */
 	async checkDatasetOutdated(): Promise<boolean> {
 		await this.wxapi.initDone;
 		return (await this.getDatasetInstance()) === this.instance;
 	}
 
+	/**
+	 * Get dataset's instance.
+	 * @returns {Promise<string>} - dataset's instance */
 	protected async getDatasetInstance(): Promise<string> {
 		const instances = await this.getDatasetInstances();
 		return instances[instances.length - 1];
 	}
 
+	/**
+	 * Get dataset's instances.
+	 * @returns {Promise<string[]>} - dataset's all instances */
 	protected async getDatasetInstances(): Promise<string[]> {
 		try {
 			const instances = await fetchJson<WxInstances>(this.wxapi.dataServerURL + this.datasetName + '/instances.json', this.wxapi.requestInit);

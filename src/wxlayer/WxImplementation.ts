@@ -111,10 +111,9 @@ export class WxImplementation extends FrameworkParentClass implements WxImplemen
 	}
 
 	/**
-	 * @description Cache tiles for faster rendering for {setTime}. If the time is not available, the closest time will be used.
-	 * @memberof WxTileSource
-	 * @param  {WxDate} time - Time to preload.
-	 * @param {WxRequestInit | undefined} requestInit - Request options.
+	 * Cache tiles for faster rendering for {@link setTime}. If the time is not available, the closest time will be used.
+	 * @param time - Time to preload.
+	 * @param requestInit - Request options.
 	 * @returns {Promise<void>} A promise that resolves when finished preload.
 	 */
 	async preloadTime(time: WxDate, requestInit?: WxRequestInit): Promise<void> {

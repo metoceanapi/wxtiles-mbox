@@ -7,30 +7,59 @@ import { fetchJson, loadImageData, cacheUriPromise, uriXYZ, XYZ, WxTilesLibOptio
 import { QTree } from '../utils/qtree';
 import { WxDataSetManager } from './WxDataSetManager';
 
+/**
+ * type array of strings - available instances of a dataset */
 export type WxInstances = Array<string>;
-interface DatasetShortMeta {
-	instanced?: string[]; // TODO: implement
+
+/**
+ * Short description of a dataset */
+export interface WxDatasetShortMeta {
+	/** represents instances as timesteps for some datasets like NZ Radar */
+	instanced?: string[];
+	/** last instance of a dataset */
 	instance: string;
+	/** list of variables in a dataset */
 	variables: string[];
 }
 
+/**
+ * Short description of all available datasets */
 export interface WxDataSetsMetasJSON {
+	/**
+	 * a list of datasets */
 	allDatasetsList: string[];
-	[name: string]: DatasetShortMeta | string[] | undefined;
+
+	/**
+	 * a list of datasets with short description */
+	[name: string]: WxDatasetShortMeta | string[] | undefined;
 }
 
+/**
+ * Meta data of a variable */
 export interface WxVariableMeta {
+	/** units used for the variable */
 	units: string;
+
+	/** min value */
 	min: number;
+
+	/** max value */
 	max: number;
+
+	/** standard name */
 	standard_name?: string;
+
+	/** if the variable is a part of vector data, this contains a proper pare */
 	vector?: [string, string];
 }
 
+/**
+ * interface of an object with variable names as keys and variable meta data as values */
 export interface WxVariablesMetas {
 	[name: string]: WxVariableMeta | undefined;
 }
 
+/** boundaries of a dataset */
 export interface WxBoundaryMeta {
 	west: number;
 	north: number;
@@ -39,55 +68,102 @@ export interface WxBoundaryMeta {
 }
 
 /**
- * @interface WxAllBoundariesMeta
- * @description All possible versions of boundaries for the dataset. blocks of [-180,180] if original boundaries cross 180, blocks of [0,360], and original from the NC files.
- */
+ * All possible versions of boundaries for the dataset wrapped (0 -> 360) or (180 -> -180)
+ * as well as the original boundaries from the dataset */
 export interface WxAllBoundariesMeta {
 	boundariesnorm: WxBoundaryMeta;
 	boundaries180: WxBoundaryMeta[];
 	boundaries360: WxBoundaryMeta[];
 }
 
+/**
+ * Meta data of a dataset */
 export interface WxDatasetMeta {
+	/**
+	 * a list of variables in a dataset */
 	variables: string[];
+
+	/**
+	 * metadata of variables */
 	variablesMeta: WxVariablesMetas;
+
+	/**
+	 * max zoom level */
 	maxZoom: number;
+
+	/**
+	 * array of available timesteps */
 	times: string[];
+
+	/**
+	 * boundaries of a dataset */
 	boundaries?: WxAllBoundariesMeta;
+
+	/**
+	 * source of the dataset */
 	sourceID?: string;
+
+	/**
+	 * base atmospheric model */
 	baseAtmosphericModel?: string;
+
+	/**
+	 * model used for the dataset*/
 	model?: string;
 }
 
+/** Options to construct {@link WxAPI} object */
 export interface WxAPIOptions extends WxTilesLibOptions {
+	/**  base URL of the server*/
 	dataServerURL: string;
+
+	/** full masks tiles URL, Example: `https://server.com/masks/{z}/{x}/{y}.png`
+	 * @default 'auto' - will be set to `dataServerURL + 'masks/{z}/{x}/{y}.png'`
+	 * 'none' - will disable masks */
 	maskURL?: 'none' | 'auto' | string;
+
+	/** maximum zoom level for mask tiles on the server
+	 * @default 9 */
 	maskDepth?: number;
+
+	/** URL to qtree file.
+	 * {@link QTree} is a hierarchical structure, that allows to quickly find tile's belonging to the sea/land.
+	 * @default 'auto' - will be set to `dataServerURL + 'masks/9+1.seamask.qtree'`
+	 * 'none' - will disable the use of {@link QTree} */
 	qtreeURL?: 'none' | 'auto' | string;
+
+	/** parameters to be passed to every fetch() aks _headers, credentials, cors, etc._
+	 * for interaction with backend data server */
 	requestInit?: RequestInit;
 }
 
-/**
- * WxAPI is a wrapper for WxTilesLib.
- * @class WxAPI
- * @argument {string} dataServerURL - URL of the data server
- * @argument {string} maskURL - URL of the mask server
- * @argument {string} qtreeURL - URL of the qtree data file
- * @argument {RequestInit} requestInit - request init object for fetching data
- * @argument {ColorStylesWeakMixed | undefined} colorStyles - color styles for the rendering
- * @argument {Units | undefined} units - units for the rendering
- * @argument {WxColorSchemes | undefined} colorSchemes - color schemes for the rendering
- * */
+/** WxAPI is a wrapper for WxTilesLib. @see {@link WxAPIOptions} */
 export class WxAPI {
+	/** @internal see {@link WxAPIOptions}*/
 	readonly dataServerURL: string;
+
+	/** @internal see {@link WxAPIOptions}*/
 	readonly maskURL?: string;
+
+	/** @internal see {@link WxAPIOptions}*/
 	readonly maskDepth: number;
+
+	/** @internal see {@link WxAPIOptions}*/
 	readonly requestInit?: RequestInit;
+
+	/** @internal see {@link WxDataSetsMetasJSON}*/
 	readonly datasetsMetas: WxDataSetsMetasJSON = { allDatasetsList: [] };
+
+	/** @internal resolved when {@link WxAPI} is ready to use */
 	readonly initDone: Promise<void>;
+
+	/** @internal instance of the qtree object */
 	readonly qtree: QTree = new QTree();
+
+	/** @internal function to load mask tiles */
 	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData> = () => Promise.reject(new Error('maskURL not defined'));
 
+	/** @param options - see {@link WxAPIOptions} */
 	constructor({ dataServerURL, maskURL = 'auto', maskDepth = 9, qtreeURL = 'auto', requestInit, colorStyles, units, colorSchemes }: WxAPIOptions) {
 		WxTilesLibSetup({ colorStyles, units, colorSchemes });
 
@@ -112,38 +188,36 @@ export class WxAPI {
 		});
 	}
 
-	protected getDatasetShortMeta(datasetName: 'allDatasetsList' | string): DatasetShortMeta | undefined {
+	/**
+	 * Get short meta for a given dataset name
+	 * @param datasetName - name of the dataset
+	 * @returns {WxDatasetShortMeta} - short meta for the dataset */
+	protected getDatasetShortMeta(datasetName: 'allDatasetsList' | string): WxDatasetShortMeta | undefined {
 		if (datasetName === 'allDatasetsList') return;
-		return this.datasetsMetas[datasetName] as DatasetShortMeta;
+		return this.datasetsMetas[datasetName] as WxDatasetShortMeta;
 	}
 
 	/**
 	 * Get all variables for the given dataset name.
-	 * @memberof WxAPI
-	 * @param {string} datasetName - dataset name
-	 * @returns {Promise<string[]>} - list of all available variables for the dataset
-	 */
+	 * @param datasetName - dataset name
+	 * @returns {Promise<string[]>} - list of all available variables for the dataset */
 	protected getDatasetInatance(datasetName: string): string | undefined {
 		return this.getDatasetShortMeta(datasetName)?.instance;
 	}
 
 	/**
 	 * Get all variables for the given dataset name.
-	 * @memberof WxAPI
-	 * @param {string} datasetName - dataset name
-	 * @returns {Promise<string[]>} - list of all available variables for the dataset
-	 */
+	 * @param datasetName - dataset name
+	 * @returns {Promise<string[]>} - list of all available variables for the dataset */
 	async getDatasetVariables(datasetName: string): Promise<string[]> {
 		await this.initDone;
-		return (this.datasetsMetas[datasetName] as DatasetShortMeta)?.variables;
+		return (this.datasetsMetas[datasetName] as WxDatasetShortMeta)?.variables;
 	}
 
 	/**
-	 * Create WxDataSetManager object for the given dataset name.
-	 * @memberof WxAPI
-	 * @param {string} datasetName - dataset name
-	 * @returns {Promise<WxDataSetManager>} - WxDataSetManager object for the given dataset name
-	 */
+	 * Create {@link WxDataSetManager} object for the given dataset name.
+	 * @param datasetName - dataset name
+	 * @returns {Promise<WxDataSetManager>} - WxDataSetManager object for the given dataset name */
 	async createDatasetManager(datasetName: string): Promise<WxDataSetManager> {
 		await this.initDone;
 		const shortMeta = this.getDatasetShortMeta(datasetName);
@@ -158,9 +232,7 @@ export class WxAPI {
 	 *  Creates all possible dataset managers
 	 * For each dataset in the datasets list, creates WxDataSetManager object.
 	 * Requests all datasets meta.json in parallel.
-	 * @memberof WxAPI
-	 * @returns {Promise<WxDataSetManager[]>} - list of all available dataset managers
-	 */
+	 * @returns {Promise<WxDataSetManager[]>} - list of all available dataset managers */
 	async createAllDatasetsManagers(): Promise<PromiseSettledResult<WxDataSetManager>[]> {
 		await this.initDone;
 		const res = Promise.allSettled(this.datasetsMetas.allDatasetsList.map((datasetName: string) => this.createDatasetManager(datasetName)));
@@ -169,22 +241,18 @@ export class WxAPI {
 
 	/**
 	 * Returns datasets names which have given variable
-	 * @memberof WxAPI
 	 * @argument {string} variableName - variable name to search for in datasets
-	 * @returns {Promise<string[]>} - list of datasets' names
-	 * */
+	 * @returns {Promise<string[]>} - list of datasets' names */
 	async filterDatasetsByVariableName(variableName: string): Promise<string[]> {
 		await this.initDone;
 		return this.datasetsMetas.allDatasetsList.filter((datasetName) =>
-			(this.datasetsMetas[datasetName] as DatasetShortMeta)?.variables?.includes?.(variableName)
+			(this.datasetsMetas[datasetName] as WxDatasetShortMeta)?.variables?.includes?.(variableName)
 		);
 	}
 
 	/**
 	 * Get the list of all available datasets' names
-	 * @memberof WxAPI
-	 * @returns {Promise<string[]>} - list of all available datasets' names
-	 */
+	 * @returns {Promise<string[]>} - list of all available datasets' names */
 	async getAllDatasetsNames(): Promise<string[]> {
 		await this.initDone;
 		return this.datasetsMetas.allDatasetsList;
