@@ -136,7 +136,12 @@ function subDataPicture(interpolator: InterpolatorSquare, inputData: DataPicture
 	return subData;
 }
 
-/** Get sub-tile of a mask via baricemrtric interpolation */
+/**
+ * Get sub-tile of a mask via baricemrtric interpolation
+ * @param {ImageData} inputData - input data
+ * @param {XYZ | undefined} subCoords - subtile coordinates
+ * @returns {ImageData} subtile data
+ * */
 export function subMask(inputData: ImageData, subCoords?: XYZ): ImageData {
 	if (!subCoords) return inputData;
 
@@ -166,14 +171,19 @@ export function subMask(inputData: ImageData, subCoords?: XYZ): ImageData {
 			const d = inData[di + 4 * 256 + 4]; // lower right
 			// const r = interpolatorSquare(a, b, c, d, dxt, dyt, 0, 0);
 			const r = dxt + dyt < 1 ? dxt * (b - a) + dyt * (c - a) + a : dxt * (d - c) + dyt * (d - b) + b + c - d;
-			outData[i * 4] = r > 128 ? 255 : 0;
+			outData[i * 4] = r > 127 ? 255 : 0;
 		} // for x
 	} // for y
 
 	return subData;
 }
 
-/** Get sub-tile of a regular data via baricemrtric interpolation */
+/**
+ * Get sub-tile of a regular data via baricemrtric interpolation
+ * @param {DataPicture} inputData - input data
+ * @param {XYZ | undefined} subCoords - subtile coordinates
+ * @returns {DataPicture} subtile data
+ * */
 export function subData(inputData: DataPicture, subCoords?: XYZ): DataPicture {
 	if (!subCoords) return inputData;
 	return subDataPicture(interpolatorSquare, inputData, subCoords);
@@ -181,9 +191,9 @@ export function subData(inputData: DataPicture, subCoords?: XYZ): DataPicture {
 
 /**
  * Get sub-tile of a degree data tile via bilinear degree interpolation, so middle of 350..10 degree is 0 degree.
- * @param inputData - input data
- * @param subCoords - subtile coordinates
- * @returns {DataPicture} - subtile
+ * @param {DataPicture} inputData - input data
+ * @param {XYZ | undefined} subCoords - subtile coordinates
+ * @returns {DataPicture} subtile data
  * */
 export function subDataDegree(inputData: DataPicture, subCoords?: XYZ): DataPicture {
 	if (!subCoords) return inputData;
@@ -192,26 +202,29 @@ export function subDataDegree(inputData: DataPicture, subCoords?: XYZ): DataPict
 
 /**
  *  Upply sea/land mask to a data tile
+ * 0 - for the masks from Sarah (current), 3 - for the masks from Mapbox
+ * @param {DataPicture} dataIn - data tile
  * @param {ImageData} mask - sea/land mask
- * @param {DataPicture} data - data tile
+ * @param {number} mc - mask channel of the mask picture to use (0 - Red, 1 - Green, 2 - Blue, 3 - Alpha)
  * @param {'sea' | 'land'} maskType - sea or land masking to apply
  * @returns {DataPicture} - masked data tile
  *  */
-export function applyMask(data: DataPicture, mask: ImageData, maskType: 'land' | 'sea'): DataPicture {
+export function applyMask(dataIn: DataPicture, { data }: ImageData, mc: number, maskType: 'land' | 'sea'): DataPicture {
 	const sea = maskType === 'sea';
-	for (let i = 0, y = 0; y < 256; y++) for (let x = 0, j = (y + 1) * 258 + 1; x < 256; x++, j++, i += 4) sea === !mask.data[i] && (data.raw[j] = 0);
+	const { raw } = dataIn;
+	for (let i = mc, j = 259, y = 0; y < 256; j += 2, y++) for (let x = 0; x < 256; x++, j++, i += 4) sea === !data[i] && (raw[j] = 0);
 
 	//// equal to
 	// for (let y = 0; y < 256; y++) {
 	// 	for (let x = 0; x < 256; x++) {
-	// 		const land = !mask.data[(y*256+x)*4+0];
+	// 		const land = !mask.data[(y*256+x)*4+mc];
 	// 		if (sea === land) {
 	// 			data.raw[(y + 1) * 258 + (x + 1)] = 0; // zeroing data if mask doesn't match the maskType
 	// 		}
 	// 	}
 	// }
 
-	return data;
+	return dataIn;
 }
 
 /**

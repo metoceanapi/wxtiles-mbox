@@ -15,12 +15,16 @@
 <li><a href="../modules.html">@metoceanapi/wxtiles-mbox</a></li>
 <li><a href="Loader.html">Loader</a></li></ul>
 <h1>Class Loader</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>A class to load and preprocess data from PNG tiles. Used intenally by WxLayer.
+Do not use directly.</p>
+</div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
 <li><span class="target">Loader</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L37">wxlayer/loader.ts:37</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxlayer/loader.ts#L41">wxlayer/loader.ts:41</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -37,12 +41,7 @@
 </div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Methods</h3>
-<div class="tsd-index-list"><a href="Loader.html#_applyMask" class="tsd-index-link tsd-kind-method tsd-parent-kind-class tsd-is-protected"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#FF4DB8" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-2048-path"></rect><path d="M9.162 16V7.24H10.578L11.514 10.072C11.602 10.328 11.674 10.584 11.73 10.84C11.794 11.088 11.842 11.28 11.874 11.416C11.906 11.28 11.954 11.088 12.018 10.84C12.082 10.584 12.154 10.324 12.234 10.06L13.122 7.24H14.538V16H13.482V12.82C13.482 12.468 13.49 12.068 13.506 11.62C13.53 11.172 13.558 10.716 13.59 10.252C13.622 9.78 13.654 9.332 13.686 8.908C13.726 8.476 13.762 8.1 13.794 7.78L12.366 12.16H11.334L9.894 7.78C9.934 8.092 9.97 8.456 10.002 8.872C10.042 9.28 10.078 9.716 10.11 10.18C10.142 10.636 10.166 11.092 10.182 11.548C10.206 12.004 10.218 12.428 10.218 12.82V16H9.162Z" fill="var(--color-text)" id="icon-2048-text"></path></svg><span>_apply<wbr/>Mask</span></a>
-<a href="Loader.html#_checkInsideBoundaries" class="tsd-index-link tsd-kind-method tsd-parent-kind-class tsd-is-protected"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>_check<wbr/>Inside<wbr/>Boundaries</span></a>
-<a href="Loader.html#_checkTypeAndMask" class="tsd-index-link tsd-kind-method tsd-parent-kind-class tsd-is-protected"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>_check<wbr/>Type<wbr/>And<wbr/>Mask</span></a>
-<a href="Loader.html#_createStreamLines" class="tsd-index-link tsd-kind-method tsd-parent-kind-class tsd-is-protected"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>_create<wbr/>Stream<wbr/>Lines</span></a>
-<a href="Loader.html#_vectorMagnitudesPrepare" class="tsd-index-link tsd-kind-method tsd-parent-kind-class tsd-is-protected"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>_vector<wbr/>Magnitudes<wbr/>Prepare</span></a>
-<a href="Loader.html#cacheLoad" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>cache<wbr/>Load</span></a>
+<div class="tsd-index-list"><a href="Loader.html#cacheLoad" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#FF4DB8" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-2048-path"></rect><path d="M9.162 16V7.24H10.578L11.514 10.072C11.602 10.328 11.674 10.584 11.73 10.84C11.794 11.088 11.842 11.28 11.874 11.416C11.906 11.28 11.954 11.088 12.018 10.84C12.082 10.584 12.154 10.324 12.234 10.06L13.122 7.24H14.538V16H13.482V12.82C13.482 12.468 13.49 12.068 13.506 11.62C13.53 11.172 13.558 10.716 13.59 10.252C13.622 9.78 13.654 9.332 13.686 8.908C13.726 8.476 13.762 8.1 13.794 7.78L12.366 12.16H11.334L9.894 7.78C9.934 8.092 9.97 8.456 10.002 8.872C10.042 9.28 10.078 9.716 10.11 10.18C10.142 10.636 10.166 11.092 10.182 11.548C10.206 12.004 10.218 12.428 10.218 12.82V16H9.162Z" fill="var(--color-text)" id="icon-2048-text"></path></svg><span>cache<wbr/>Load</span></a>
 <a href="Loader.html#clearCache" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>clear<wbr/>Cache</span></a>
 <a href="Loader.html#load" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>load</span></a>
 </div></section></div></details></section></section>
@@ -53,7 +52,7 @@
 <ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
 <li class="tsd-signature tsd-anchor-link" id="constructor.new_Loader">new <wbr/>Loader<span class="tsd-signature-symbol">(</span>layer<span class="tsd-signature-symbol">: </span><a href="WxLayer.html" class="tsd-signature-type" data-tsd-kind="Class">WxLayer</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="Loader.html" class="tsd-signature-type" data-tsd-kind="Class">Loader</a><a href="#constructor.new_Loader" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
-<div class="tsd-comment tsd-typography"><p>Do not use this function directly</p>
+<div class="tsd-comment tsd-typography"><p>Do not use constructor directly</p>
 </div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
@@ -62,7 +61,7 @@
 <h5>layer: <a href="WxLayer.html" class="tsd-signature-type" data-tsd-kind="Class">WxLayer</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="Loader.html" class="tsd-signature-type" data-tsd-kind="Class">Loader</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L45">wxlayer/loader.ts:45</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxlayer/loader.ts#L49">wxlayer/loader.ts:49</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a id="layer" class="tsd-anchor"></a>
@@ -71,87 +70,16 @@
 <div class="tsd-comment tsd-typography"><p>refference to the Layer <a href="WxLayer.html">WxLayer</a> in which this loader is used</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L39">wxlayer/loader.ts:39</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxlayer/loader.ts#L43">wxlayer/loader.ts:43</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a id="loadDataFunc" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>load<wbr/>Data<wbr/>Func</span><a href="#loadDataFunc" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">load<wbr/>Data<wbr/>Func<span class="tsd-signature-symbol">:</span> <a href="../types/UriLoaderPromiseFunc.html" class="tsd-signature-type" data-tsd-kind="Type alias">UriLoaderPromiseFunc</a><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/DataIntegral.html" class="tsd-signature-type" data-tsd-kind="Interface">DataIntegral</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
-<div class="tsd-comment tsd-typography"><p>function to load, preprocess and cache data from url</p>
+<div class="tsd-comment tsd-typography"><p>function to load, decode and cache data from URL</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L42">wxlayer/loader.ts:42</a></li></ul></aside></section></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxlayer/loader.ts#L46">wxlayer/loader.ts:46</a></li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
-<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="_applyMask" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_apply<wbr/>Mask</span><a href="#_applyMask" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
-<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
-<li class="tsd-signature tsd-anchor-link" id="_applyMask._applyMask-1">_apply<wbr/>Mask<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><a href="../types/DataPictures.html" class="tsd-signature-type" data-tsd-kind="Type alias">DataPictures</a>, tile<span class="tsd-signature-symbol">: </span><a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a>, tileType<span class="tsd-signature-symbol">: </span><a href="../enums/TileType.html" class="tsd-signature-type" data-tsd-kind="Enumeration">TileType</a>, needCopy<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#_applyMask._applyMask-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
-<li class="tsd-description">
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5>data: <a href="../types/DataPictures.html" class="tsd-signature-type" data-tsd-kind="Type alias">DataPictures</a></h5></li>
-<li>
-<h5>tile: <a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a></h5></li>
-<li>
-<h5>tileType: <a href="../enums/TileType.html" class="tsd-signature-type" data-tsd-kind="Enumeration">TileType</a></h5></li>
-<li>
-<h5>needCopy: <span class="tsd-signature-type">boolean</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L91">wxlayer/loader.ts:91</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="_checkInsideBoundaries" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_check<wbr/>Inside<wbr/>Boundaries</span><a href="#_checkInsideBoundaries" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
-<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
-<li class="tsd-signature tsd-anchor-link" id="_checkInsideBoundaries._checkInsideBoundaries-1">_check<wbr/>Inside<wbr/>Boundaries<span class="tsd-signature-symbol">(</span>coords<span class="tsd-signature-symbol">: </span><a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><a href="#_checkInsideBoundaries._checkInsideBoundaries-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
-<li class="tsd-description">
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5>coords: <a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L147">wxlayer/loader.ts:147</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="_checkTypeAndMask" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_check<wbr/>Type<wbr/>And<wbr/>Mask</span><a href="#_checkTypeAndMask" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
-<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
-<li class="tsd-signature tsd-anchor-link" id="_checkTypeAndMask._checkTypeAndMask-1">_check<wbr/>Type<wbr/>And<wbr/>Mask<span class="tsd-signature-symbol">(</span>coords<span class="tsd-signature-symbol">: </span><a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../enums/TileType.html" class="tsd-signature-type" data-tsd-kind="Enumeration">TileType</a><a href="#_checkTypeAndMask._checkTypeAndMask-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
-<li class="tsd-description">
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5>coords: <a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../enums/TileType.html" class="tsd-signature-type" data-tsd-kind="Enumeration">TileType</a></h4><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L133">wxlayer/loader.ts:133</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="_createStreamLines" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_create<wbr/>Stream<wbr/>Lines</span><a href="#_createStreamLines" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
-<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
-<li class="tsd-signature tsd-anchor-link" id="_createStreamLines._createStreamLines-1">_create<wbr/>Stream<wbr/>Lines<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><a href="../types/DataPictures.html" class="tsd-signature-type" data-tsd-kind="Type alias">DataPictures</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../types/SLine.html" class="tsd-signature-type" data-tsd-kind="Type alias">SLine</a><span class="tsd-signature-symbol">[]</span><a href="#_createStreamLines._createStreamLines-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
-<li class="tsd-description">
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5>data: <a href="../types/DataPictures.html" class="tsd-signature-type" data-tsd-kind="Type alias">DataPictures</a></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="../types/SLine.html" class="tsd-signature-type" data-tsd-kind="Type alias">SLine</a><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L160">wxlayer/loader.ts:160</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="_vectorMagnitudesPrepare" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_vector<wbr/>Magnitudes<wbr/>Prepare</span><a href="#_vectorMagnitudesPrepare" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
-<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
-<li class="tsd-signature tsd-anchor-link" id="_vectorMagnitudesPrepare._vectorMagnitudesPrepare-1">_vector<wbr/>Magnitudes<wbr/>Prepare<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><a href="../types/DataPictures.html" class="tsd-signature-type" data-tsd-kind="Type alias">DataPictures</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_vectorMagnitudesPrepare._vectorMagnitudesPrepare-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
-<li class="tsd-description">
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5>data: <a href="../types/DataPictures.html" class="tsd-signature-type" data-tsd-kind="Type alias">DataPictures</a></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L116">wxlayer/loader.ts:116</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="cacheLoad" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>cache<wbr/>Load</span><a href="#cacheLoad" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -168,15 +96,17 @@
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> requestInit: <a href="../interfaces/WxRequestInit.html" class="tsd-signature-type" data-tsd-kind="Interface">WxRequestInit</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span>rawdata<span class="tsd-signature-symbol">: </span><a href="../types/DataIntegrals.html" class="tsd-signature-type" data-tsd-kind="Type alias">DataIntegrals</a><span class="tsd-signature-symbol">; </span><br/><span>    </span>subCoords<span class="tsd-signature-symbol">?: </span><a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a><span class="tsd-signature-symbol">; </span><br/><span>    </span>tileType<span class="tsd-signature-symbol">: </span><a href="../enums/TileType.html" class="tsd-signature-type" data-tsd-kind="Enumeration">TileType</a><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L68">wxlayer/loader.ts:68</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxlayer/loader.ts#L72">wxlayer/loader.ts:72</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="clearCache" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>clear<wbr/>Cache</span><a href="#clearCache" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 <li class="tsd-signature tsd-anchor-link" id="clearCache.clearCache-1">clear<wbr/>Cache<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#clearCache.clearCache-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Clear cache</p>
+</div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L87">wxlayer/loader.ts:87</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxlayer/loader.ts#L92">wxlayer/loader.ts:92</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="load" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>load</span><a href="#load" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -199,7 +129,7 @@
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/WxData.html" class="tsd-signature-type" data-tsd-kind="Interface">WxData</a><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxlayer/loader.ts#L55">wxlayer/loader.ts:55</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxlayer/loader.ts#L59">wxlayer/loader.ts:59</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
@@ -228,11 +158,6 @@
 <li class="tsd-kind-constructor tsd-parent-kind-class"><a href="Loader.html#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-512-path"></use><use href="#icon-512-text"></use></svg>constructor</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="Loader.html#layer" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>layer</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="Loader.html#loadDataFunc" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>load<wbr/>Data<wbr/>Func</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="Loader.html#_applyMask" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>_apply<wbr/>Mask</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="Loader.html#_checkInsideBoundaries" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>_check<wbr/>Inside<wbr/>Boundaries</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="Loader.html#_checkTypeAndMask" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>_check<wbr/>Type<wbr/>And<wbr/>Mask</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="Loader.html#_createStreamLines" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>_create<wbr/>Stream<wbr/>Lines</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="Loader.html#_vectorMagnitudesPrepare" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>_vector<wbr/>Magnitudes<wbr/>Prepare</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="Loader.html#cacheLoad" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>cache<wbr/>Load</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="Loader.html#clearCache" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>clear<wbr/>Cache</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="Loader.html#load" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>load</a></li></ul></li></ul></nav></div></div>

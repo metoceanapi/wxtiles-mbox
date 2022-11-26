@@ -56,7 +56,14 @@ export interface WxLngLat {
 	lat: number;
 }
 
-/** Options to construct {@link WxLayer} object */
+/**
+ * Options to construct {@link WxTileSource} object
+ * @example
+ * ```ts
+ * const variables = wxdatasetManager.checkCombineVariableIfVector('air.temperature.at-2m');
+ * const options: WxLayerOptions = { variables, wxdatasetManager, time: Date.now() };
+ * ```
+ * */
 export interface WxLayerOptions {
 	/** Variables of the layer */
 	variables: WxVars;
@@ -74,7 +81,10 @@ export interface WxLayerOptions {
 	wxstyleName?: string;
 }
 
-/** @internal Used in {@link WxImplementation} */
+/**
+ * @internal
+ * Used in {@link WxLayerBaseImplementation} to manipulate the the layer's style, data and time
+ * */
 export class WxLayer {
 	/** @internal PNG only!*/
 	protected readonly ext: 'png'; // tiles extension. png by default

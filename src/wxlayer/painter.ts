@@ -11,20 +11,55 @@ interface IsoInfo {
 	mli: number;
 }
 
+/**
+ * data object contains raw data, contexts, and other info for fast rendering of a single tile
+ * */
 export interface WxRasterData {
+	/**
+	 * Context for drawing back fill and isolines
+	 */
 	ctxFill: CanvasRenderingContext2D;
+
+	/**
+	 * Context for rendering vector arrows, and other text
+	 * */
 	ctxText: CanvasRenderingContext2D;
+
+	/**
+	 * Context for rendering animated streamlines
+	 * */
 	ctxStreamLines: CanvasRenderingContext2D;
+
+	/**
+	 * {@link WxData} data object for this tile
+	 * */
 	data: WxData;
 }
 
+/**
+ * Calss for rendering a single tile.
+ * Do not create manually
+ * */
 export class Painter {
+	/**
+	 * @internal
+	 * {@link WxLayer} - parent layer
+	 * */
 	protected layer: WxLayer;
 
+	/**
+	 * @internal
+	 * Do not use constructor directly
+	 * */
 	constructor(layer: WxLayer) {
 		this.layer = layer;
 	}
 
+	/**
+	 * @internal
+	 * Render data of a single tile into canvases passed in {@link WxRasterData}
+	 * @param {WxRasterData} data - data object for this tile
+	 * */
 	paint({ data, ctxFill, ctxText, ctxStreamLines }: WxRasterData): void {
 		const { layer } = this;
 		const { units } = layer.currentMeta;
@@ -43,6 +78,12 @@ export class Painter {
 		_drawStreamLinesStatic(data, ctxText, layer);
 	} // paint
 
+	/**
+	 * @internal
+	 * Render animated streamlines for a single tile with time seed
+	 * @param {WxRasterData} data - data object for this tile
+	 * @param {number} seed - time seed
+	 * */
 	imprintVectorAnimationLinesStep({ data, ctxFill, ctxStreamLines }: WxRasterData, seed: number): void {
 		const { layer } = this;
 		ctxStreamLines.clearRect(0, 0, 256, 256);
@@ -52,6 +93,7 @@ export class Painter {
 	} // imprintVectorAnimationLinesStep
 }
 
+/** fill the background with colors from the CLUT */
 function _fill(data: DataPicture, imageBuffer: Uint32Array, { CLUT, style }: WxLayer) {
 	const { raw } = data; // scalar data
 	const { colorsI } = CLUT;
@@ -67,6 +109,7 @@ function _fill(data: DataPicture, imageBuffer: Uint32Array, { CLUT, style }: WxL
 	}
 } // _fill
 
+/** draw isolines */
 function _drawIsolines(imageBuffer: Uint32Array, data: DataPicture, { CLUT, style }: WxLayer): IsoInfo[] {
 	const { raw } = data; // scalar data
 	const { levelIndex, colorsI } = CLUT;
@@ -111,6 +154,7 @@ function _drawIsolines(imageBuffer: Uint32Array, data: DataPicture, { CLUT, styl
 	return info;
 } // _drawIsolines
 
+/** print isoline text */
 function _printIsolineText(info: IsoInfo[], ctx: CanvasRenderingContext2D, { CLUT }: WxLayer): void {
 	// drawing Info
 	if (info.length) {
@@ -133,6 +177,9 @@ function _printIsolineText(info: IsoInfo[], ctx: CanvasRenderingContext2D, { CLU
 	} // if info.length
 } // _printIsolineText
 
+/**
+ * draw static vectors/barbs
+ */
 function _printVectorsStatic(data: DataPictures, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer): void {
 	if (!CLUT.DataToKnots || style.vectorColor === 'none' || style.vectorType === 'none') return;
 	if (data.length !== 3) throw new Error('data.length !== 3');
@@ -184,6 +231,9 @@ function _printVectorsStatic(data: DataPictures, ctx: CanvasRenderingContext2D, 
 	} // for y
 } // _printVectorsStatic
 
+/**
+ * Draw degree information as vectors
+ * */
 function _printDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, units: string, { CLUT, style }: WxLayer): void {
 	if (units !== 'degree') return;
 	const addDegrees = 0.017453292519943 * style.addDegrees;
@@ -219,6 +269,9 @@ function _printDegreesStatic(data: DataPicture, ctx: CanvasRenderingContext2D, u
 	} // for y
 } // _printDegreesStatic
 
+/**
+ * Draw static streamlines
+ * */
 function _drawStreamLinesStatic(wxdata: WxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer): void {
 	const { data, slines } = wxdata;
 	if (!slines.length || !style.streamLineStatic || style.streamLineColor === 'none') return;
@@ -250,6 +303,9 @@ function _drawStreamLinesStatic(wxdata: WxData, ctx: CanvasRenderingContext2D, {
 	}
 } // _drawStreamLinesStatic
 
+/**
+ * Draw animation step for isolines with a time seed
+ * */
 function _drawVectorAnimationLinesStep(wxdata: WxData, ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer, seed: number): void {
 	// 'seed' is a time tick given by the browser's scheduller
 	const { data, slines } = wxdata;

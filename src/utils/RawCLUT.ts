@@ -129,7 +129,7 @@ function numToString(n: number) {
 	return ns;
 }
 
-/** Legend - data structure for rendering legends */
+/** Legend - data structure that contains information for rendering legends */
 export interface WxLegend {
 	/** size of the legend in pixels */
 	size: number;

@@ -9,7 +9,7 @@ import { WxDataSetManager } from './WxDataSetManager';
 
 /**
  * type array of strings - available instances of a dataset */
-export type WxInstances = Array<string>;
+export type WxInstances = string[];
 
 /**
  * Short description of a dataset */
@@ -112,7 +112,20 @@ export interface WxDatasetMeta {
 	model?: string;
 }
 
-/** Options to construct {@link WxAPI} object */
+/**
+ * Options to construct {@link WxAPI} object
+ * @example
+ * ```typescript
+ *	const requestInit: RequestInit = {
+ *		headers
+ *	}; // add more options if needed such as headers, mode, credentials, etc
+ *	const options = {
+ *		dataServerURL:'https://tiles.metoceanapi.com/data/',
+ *		requestInit: { headers: myHeaders },
+ *	}
+ *	const wxapi = new WxAPI(options);
+ * ```
+ *  */
 export interface WxAPIOptions extends WxTilesLibOptions {
 	/**  base URL of the server*/
 	dataServerURL: string;
@@ -121,6 +134,11 @@ export interface WxAPIOptions extends WxTilesLibOptions {
 	 * @default 'auto' - will be set to `dataServerURL + 'masks/{z}/{x}/{y}.png'`
 	 * 'none' - will disable masks */
 	maskURL?: 'none' | 'auto' | string;
+
+	/** channel to use for masking from RGBA masks
+	 *  0 - for the masks from Sarah (current), 3 - for the masks from Mapbox
+	 * @default 'R' */
+	maskChannel?: 'R' | 'G' | 'B' | 'A';
 
 	/** maximum zoom level for mask tiles on the server
 	 * @default 9 */
@@ -132,18 +150,29 @@ export interface WxAPIOptions extends WxTilesLibOptions {
 	 * 'none' - will disable the use of {@link QTree} */
 	qtreeURL?: 'none' | 'auto' | string;
 
-	/** parameters to be passed to every fetch() aks _headers, credentials, cors, etc._
-	 * for interaction with backend data server */
+	/** parameters to be passed to every fetch() aka _headers, credentials, cors, etc_ for interaction with backend data server */
 	requestInit?: RequestInit;
 }
 
-/** WxAPI is a wrapper for WxTilesLib. @see {@link WxAPIOptions} */
+/** WxAPI is an initialisation object for the library. See {@link WxAPIOptions} for options.
+ * @example
+ * ```typescript
+ * import { WxAPI } from 'wx-tiles';
+ * const wxapi = new WxAPI({
+ * 	dataServerURL: 'https://server.com/',
+ * 	// other options
+ * });
+ * ```
+ */
 export class WxAPI {
 	/** @internal see {@link WxAPIOptions}*/
 	readonly dataServerURL: string;
 
 	/** @internal see {@link WxAPIOptions}*/
-	readonly maskURL?: string;
+	readonly maskURL: string = 'auto';
+
+	/** @internal see {@link WxAPIOptions}*/
+	readonly maskChannel: number;
 
 	/** @internal see {@link WxAPIOptions}*/
 	readonly maskDepth: number;
@@ -164,7 +193,17 @@ export class WxAPI {
 	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData> = () => Promise.reject(new Error('maskURL not defined'));
 
 	/** @param options - see {@link WxAPIOptions} */
-	constructor({ dataServerURL, maskURL = 'auto', maskDepth = 9, qtreeURL = 'auto', requestInit, colorStyles, units, colorSchemes }: WxAPIOptions) {
+	constructor({
+		dataServerURL,
+		maskURL = 'auto',
+		maskChannel = 'R',
+		maskDepth = 9,
+		qtreeURL = 'auto',
+		requestInit,
+		colorStyles,
+		units,
+		colorSchemes,
+	}: WxAPIOptions) {
 		WxTilesLibSetup({ colorStyles, units, colorSchemes });
 
 		this.dataServerURL = dataServerURL;
@@ -177,6 +216,7 @@ export class WxAPI {
 			this.loadMaskFunc = (coord: XYZ) => maskloader(uriXYZ(maskURL, coord), requestInit);
 		}
 
+		this.maskChannel = maskChannel === 'R' ? 0 : maskChannel === 'G' ? 1 : maskChannel === 'B' ? 2 : maskChannel === 'A' ? 3 : 0; // default to R
 		this.maskDepth = maskDepth;
 
 		this.initDone = Promise.all([

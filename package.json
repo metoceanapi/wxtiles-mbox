@@ -8,7 +8,7 @@
 	"scripts": {
 		"build": "rm -rf dist/ && node build.js && tsc",
 		"buildDEMOForDocs": "node build-for-docs.js",
-		"buldDODC": "./node_modules/.bin/typedoc --out dist/docs  src",
+		"buldDODC": "./node_modules/.bin/typedoc --out docs/docs  src",
 		"start": "PORT=3003 node watch-public.js",
 		"preversion": "npm run build",
 		"version": "changelogkeeper && git add CHANGELOG.md",

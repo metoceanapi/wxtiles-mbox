@@ -1,5 +1,8 @@
 /**
- * Leaflet's or Mapbox's class to inherit from when creating a new layer type.
+ * Framework dependent source type to be inherited by the framework dependent custom source type.
+ * Mapbox does not provide a parent type for the custom source.
+ * Leaflet provides a parent type for the custom layer to inherit from L.GridLayer.
+ * Used as universal type for the custom source parent class. see {@link WxTileSource}
  */
 export class FrameworkParentClass {
 	/**
@@ -10,6 +13,14 @@ export class FrameworkParentClass {
 
 /**
  * Framework's basic options to construct the layer.
+ * @example
+ * ```ts
+ *  const options = {
+ * 	id: 'wxlayer',
+ * 	bounds: [ -180, -90, 180, 90 ],
+ * 	attribution: 'WxTiles',
+ * };
+ * ```
  */
 export interface FrameworkOptions {
 	id: string; // MAPBOX API

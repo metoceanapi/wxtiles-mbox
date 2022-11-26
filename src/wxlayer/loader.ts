@@ -34,14 +34,18 @@ export interface WxData {
 	slines: SLine[];
 }
 
+/**
+ * A class to load and preprocess data from PNG tiles. Used intenally by WxLayer.
+ * Do not use directly.
+ */
 export class Loader {
 	/** refference to the Layer {@link WxLayer} in which this loader is used */
 	protected readonly layer: WxLayer;
 
-	/** function to load, preprocess and cache data from url */
+	/** function to load, decode and cache data from URL */
 	protected loadDataFunc: UriLoaderPromiseFunc<DataIntegral> = /*loadDataIntegral; //*/ cacheUriPromise(loadDataIntegral);
 
-	/** Do not use this function directly */
+	/** Do not use constructor directly */
 	constructor(layer: WxLayer) {
 		this.layer = layer;
 	}
@@ -50,7 +54,8 @@ export class Loader {
 	 * Load and preprocess data for a single tile
 	 * @param tile - tile coordinates
 	 * @param requestInit - requestInit for fetch
-	 * @returns {Promise<WxData | null> } data of the tile */
+	 * @returns {Promise<WxData | null> } data of the tile
+	 * */
 	async load(tile: XYZ, requestInit?: WxRequestInit): Promise<WxData | null> {
 		const preloaded = await this.cacheLoad(tile, this.layer.tilesURIs, requestInit);
 		if (!preloaded) return null;
@@ -83,6 +88,7 @@ export class Loader {
 		// we don't need to process data, as it's for cache preloading only
 	}
 
+	/** Clear cache */
 	clearCache(): void {
 		this.loadDataFunc = cacheUriPromise(loadDataIntegral);
 	}
@@ -109,7 +115,7 @@ export class Loader {
 				return;
 			}
 
-			applyMask(data[0], maskImage, style.mask);
+			applyMask(data[0], maskImage, this.layer.wxdatasetManager.wxapi.maskChannel, style.mask);
 		}
 	}
 

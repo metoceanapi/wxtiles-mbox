@@ -1,3 +1,24 @@
+/**
+ * Main classes and interfaces to use in your application are:
+ * - {@link WxAPIOptions} options to pass to the constructor of {@link WxAPI}.
+ * - {@link WxAPI} the main class to use to interact with the *WxTiles* API and to create {@link WxDataSetManager} instances
+ * - {@link WxDataSetManager} class for managing WX datasets and create {@link WxTileSource}.
+ * * {@link FrameworkOptions} framework specific options to pass to the constructor of {@link WxTileSource}.
+ * - {@link WxLayerOptions} options to pass to the constructor of {@link WxTileSource}.
+ * - {@link WxTileSource} class for managing WX tiles sources.
+ * - {@link WxColorStyleWeak} interface for color styles.
+ * - {@link WxDate} type for dates.
+ * - {@link WxVars} type for variables.
+ * - {@link WxDatasetMeta} interface for dataset's meta data.
+ * - {@link WxVariableMeta} interface for variable's meta data.
+ * - {@link WxAllBoundariesMeta} interface for boundaries of a dataset.
+ * - {@link WxTileInfo} interface for tile's information.
+ *
+ * ### Note
+ * In case of use **async** member functions, you must use the **await** syntax.
+ * @module
+ */
+
 export { WxAPI } from './wxAPI/wxAPI';
 export type {
 	WxAPIOptions,
@@ -10,7 +31,7 @@ export type {
 	WxAllBoundariesMeta,
 } from './wxAPI/wxAPI';
 
-export { WxDataSetManager } from './wxAPI/WxDataSetManager';
+export { WxDataSetManager, type WxDataSetManagerOptions } from './wxAPI/WxDataSetManager';
 
 export { WxTileSource } from './wxsource/wxsource';
 
@@ -19,7 +40,7 @@ export { type FrameworkOptions, FrameworkParentClass } from './wxsource/wxsource
 export type { WxLayerOptions, WxDate, WxRequestInit, WxTileInfo, WxVars, WxLngLat, WxURIs } from './wxlayer/wxlayer';
 export { WxLayer } from './wxlayer/wxlayer';
 
-export type { WxImplementationAPI, WxImplementation, WxLayerAPI } from './wxlayer/WxImplementation';
+export type { WxLayerBaseAPI, WxLayerBaseImplementation, WxLayerAPI } from './wxlayer/WxImplementation';
 
 export { WxCreateLegend, type WxLegend, type WxTick } from './utils/RawCLUT';
 

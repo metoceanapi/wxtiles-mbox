@@ -1,31 +1,51 @@
 import mapboxgl from 'mapbox-gl';
 
 import { type XYZ, WXLOG } from '../utils/wxtools';
-import { type WxRequestInit, type WxDate, type WxVars, type WxTileInfo, type WxLngLat, WxLayerOptions } from '../wxlayer/wxlayer';
-import { WxImplementation, type WxLayerAPI } from '../wxlayer/WxImplementation';
+import { type WxRequestInit, type WxTileInfo, type WxLngLat, WxLayerOptions } from '../wxlayer/wxlayer';
+import { WxLayerBaseImplementation, type WxLayerAPI } from '../wxlayer/WxImplementation';
 import { FrameworkOptions } from './wxsourcetypes';
 import { type WxRasterData } from '../wxlayer/painter';
 
 /**
- * A custom source implementation.
+ * A custom source implementation (for Mapbox)
  * It is used to load and display weather data from the WxTiles server.
- */
-export class WxTileSource extends WxImplementation implements WxLayerAPI, mapboxgl.CustomSourceInterface<any> {
-	readonly id: string; // MAPBOX API
-	readonly type: 'custom' = 'custom'; // MAPBOX API
-	readonly dataType: 'raster' = 'raster'; // MAPBOX API
-	readonly tileSize: number = 256; // MAPBOX API only 256
-	readonly maxzoom?: number; // MAPBOX API
-	readonly bounds?: [number, number, number, number]; // MAPBOX API
-	readonly attribution?: string; // MAPBOX API
+ * @example
+ * ```ts
+	const wxapi = new WxAPI({ 'http://dataserver.com' });
 
-	// Wx implementation
-	protected redrawRequested?: Promise<void>;
+	const datasetName = 'gfs.global';
+	const variable = 'air.temperature.at-2m'; // Scalar example
+
+	// Create a dataset manager (may be used for many layers from this dataset)
+	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
+	
+	// get proper representation of the variable
+	const variables = wxdatasetManager.checkCombineVariableIfVector(variable);
+
+	// create a layer source
+	const wxsource = new WxTileSource({ wxdatasetManager, variables }, { id: 'wxsource', attribution: 'WxTiles' });
+ * ```
+ */
+export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAPI, mapboxgl.CustomSourceInterface<any> {
+	/** MAPBOX API required */
+	readonly id: string;
+	/** MAPBOX API required */
+	readonly type: 'custom' = 'custom';
+	/** MAPBOX API required */
+	readonly dataType: 'raster' = 'raster';
+	/** MAPBOX API required. only 256 */
+	readonly tileSize: number = 256;
+	/** MAPBOX API */
+	readonly maxzoom?: number;
+	/** MAPBOX API */
+	readonly bounds?: [number, number, number, number];
+	/** MAPBOX API */
+	readonly attribution?: string;
 
 	/**
 	 *
-	 * @param wxlayeroptions - The options for the WxTileSource.
-	 * @param frameworkOptions - The options for the framework.
+	 * @param {WxLayerOptions} wxlayeroptions - The options for the {@link WxLayerBaseImplementation}.
+	 * @param {FrameworkOptions} frameworkOptions - The options for the framework.
 	 */
 	constructor(wxlayeroptions: WxLayerOptions, { id, maxzoom, bounds, attribution }: FrameworkOptions) {
 		super(wxlayeroptions);
@@ -37,11 +57,11 @@ export class WxTileSource extends WxImplementation implements WxLayerAPI, mapbox
 	} // constructor
 
 	/**
-	 * @description Get comprehensive information about the current point on map.
-	 * @param lnglat - Coordinates of the point.
-	 * @param  anymap - map instance.
-	 * @returns {WxTileInfo | undefined } 
-	 */
+	 * Get comprehensive information about the current point on map.
+	 * @param {WxLngLat} lnglat - Coordinates of the point.
+	 * @param map - map instance.
+	 * @returns {WxTileInfo | undefined }
+	 * */
 	getLayerInfoAtLatLon(lnglat: WxLngLat, anymap: any): WxTileInfo | undefined {
 		WXLOG(`WxTileSource getLayerInfoAtLatLon (${this.layer.wxdatasetManager.datasetName})`, lnglat);
 		const worldsize = anymap.transform.worldSize as number;
@@ -57,8 +77,8 @@ export class WxTileSource extends WxImplementation implements WxLayerAPI, mapbox
 	}
 
 	/**
-	 * @internal
-	 * @description Reloads the tiles that are currently visible on the map. Used for time/particles animation.
+	 * @ignore
+	 * Reloads the tiles that are currently visible on the map. Used for time/particles animation.
 	 **/
 	async _reloadVisible(requestInit?: WxRequestInit): Promise<void> {
 		WXLOG(`WxTileSource _reloadVisible (${this.layer.wxdatasetManager.datasetName})`);
@@ -72,8 +92,8 @@ export class WxTileSource extends WxImplementation implements WxLayerAPI, mapbox
 	}
 
 	/**
-	 * @internal
-	 * @description Get the tiles that are currently visible on the map.
+	 * @ignore
+	 * Get the tiles that are currently visible on the map.
 	 * <MBOX API> get assigned by map.addSource */
 	coveringTiles(): XYZ[] {
 		return [];
@@ -81,7 +101,7 @@ export class WxTileSource extends WxImplementation implements WxLayerAPI, mapbox
 	}
 
 	/**
-	 * @internal
+	 * @ignore
 	 * @description reload tiles that are currently visible on the map.
 	 * 	<MBOX API> get assigned by map.addSource
 	 */
@@ -91,7 +111,7 @@ export class WxTileSource extends WxImplementation implements WxLayerAPI, mapbox
 
 	/**
 	 * @internal
-	 * @description Used by framework. Creates a representation of a tile for the framework.
+	 * Used by framework. Creates a representation of a tile for the framework.
 	 * @param tile - The tile coordinates to be loaded.
 	 * @param requestInit - The request options.
 	 * @returns {Promise<Picture>} - A picture of the tile.

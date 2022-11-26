@@ -17,13 +17,16 @@
 <h1>Class WxDataSetManager</h1></div>
 <section class="tsd-panel tsd-comment">
 <div class="tsd-comment tsd-typography"><p>Class for managing WX datasets.</p>
+
+<h3>Example</h3><pre><code class="language-ts"><span class="hl-1">    </span><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">wxdatasetManager</span><span class="hl-1"> = </span><span class="hl-0">await</span><span class="hl-1"> </span><span class="hl-3">wxapi</span><span class="hl-1">.</span><span class="hl-4">createDatasetManager</span><span class="hl-1">(</span><span class="hl-2">&#39;gfs.global&#39;</span><span class="hl-1">);</span>
+</code></pre>
 </div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
 <li><span class="target">WxDataSetManager</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L8">wxAPI/WxDataSetManager.ts:8</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L48">wxAPI/WxDataSetManager.ts:48</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -62,29 +65,18 @@
 <section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class"><a id="constructor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" id="icon-anchor-a"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" id="icon-anchor-b"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" id="icon-anchor-c"></path></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="constructor.new_WxDataSetManager">new <wbr/>Wx<wbr/>Data<wbr/>Set<wbr/>Manager<span class="tsd-signature-symbol">(</span>__namedParameters<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span>datasetName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>instanced<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>meta<span class="tsd-signature-symbol">: </span><a href="../interfaces/WxDatasetMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxDatasetMeta</a><span class="tsd-signature-symbol">; </span><br/><span>    </span>wxapi<span class="tsd-signature-symbol">: </span><a href="WxAPI.html" class="tsd-signature-type" data-tsd-kind="Class">WxAPI</a><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="WxDataSetManager.html" class="tsd-signature-type" data-tsd-kind="Class">WxDataSetManager</a><a href="#constructor.new_WxDataSetManager" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="constructor.new_WxDataSetManager">new <wbr/>Wx<wbr/>Data<wbr/>Set<wbr/>Manager<span class="tsd-signature-symbol">(</span>__namedParameters<span class="tsd-signature-symbol">: </span><a href="../interfaces/WxDataSetManagerOptions.html" class="tsd-signature-type" data-tsd-kind="Interface">WxDataSetManagerOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="WxDataSetManager.html" class="tsd-signature-type" data-tsd-kind="Class">WxDataSetManager</a><a href="#constructor.new_WxDataSetManager" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
-<div class="tsd-comment tsd-typography"><p>Do not use this method directly, use <a href="WxAPI.html#createDatasetManager">createDatasetManager</a> instead.</p>
+<div class="tsd-comment tsd-typography"><p>Do not use this constructor directly, use <a href="WxAPI.html#createDatasetManager">createDatasetManager</a> instead.</p>
 </div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5>__namedParameters: <span class="tsd-signature-symbol">{ </span><br/><span>    </span>datasetName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>instanced<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>meta<span class="tsd-signature-symbol">: </span><a href="../interfaces/WxDatasetMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxDatasetMeta</a><span class="tsd-signature-symbol">; </span><br/><span>    </span>wxapi<span class="tsd-signature-symbol">: </span><a href="WxAPI.html" class="tsd-signature-type" data-tsd-kind="Class">WxAPI</a><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h5>
-<ul class="tsd-parameters">
-<li class="tsd-parameter">
-<h5>dataset<wbr/>Name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5></li>
-<li class="tsd-parameter">
-<h5>instance<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5></li>
-<li class="tsd-parameter">
-<h5><code class="tsd-tag ts-flagOptional">Optional</code> instanced<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5></li>
-<li class="tsd-parameter">
-<h5>meta<span class="tsd-signature-symbol">: </span><a href="../interfaces/WxDatasetMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxDatasetMeta</a></h5></li>
-<li class="tsd-parameter">
-<h5>wxapi<span class="tsd-signature-symbol">: </span><a href="WxAPI.html" class="tsd-signature-type" data-tsd-kind="Class">WxAPI</a></h5></li></ul></li></ul></div>
+<h5>__namedParameters: <a href="../interfaces/WxDataSetManagerOptions.html" class="tsd-signature-type" data-tsd-kind="Interface">WxDataSetManagerOptions</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="WxDataSetManager.html" class="tsd-signature-type" data-tsd-kind="Class">WxDataSetManager</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L31">wxAPI/WxDataSetManager.ts:31</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L65">wxAPI/WxDataSetManager.ts:65</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="datasetName" class="tsd-anchor"></a>
@@ -93,35 +85,35 @@
 <div class="tsd-comment tsd-typography"><p>dataset&#39;s name</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L11">wxAPI/WxDataSetManager.ts:11</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L50">wxAPI/WxDataSetManager.ts:50</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="instance" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>instance</span><a href="#instance" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">instance<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 <div class="tsd-comment tsd-typography"><p>Get dataset&#39;s current instance.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L19">wxAPI/WxDataSetManager.ts:19</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L56">wxAPI/WxDataSetManager.ts:56</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="instanced" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>instanced</span><a href="#instanced" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">instanced<span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></div>
 <div class="tsd-comment tsd-typography"><p>if not empty, returns dataset&#39;s instances to be used as time steps in the dataset</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L15">wxAPI/WxDataSetManager.ts:15</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L53">wxAPI/WxDataSetManager.ts:53</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="meta" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>meta</span><a href="#meta" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">meta<span class="tsd-signature-symbol">:</span> <a href="../interfaces/WxDatasetMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxDatasetMeta</a></div>
 <div class="tsd-comment tsd-typography"><p>dataset&#39;s meta</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L23">wxAPI/WxDataSetManager.ts:23</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L59">wxAPI/WxDataSetManager.ts:59</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="wxapi" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>wxapi</span><a href="#wxapi" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">wxapi<span class="tsd-signature-symbol">:</span> <a href="WxAPI.html" class="tsd-signature-type" data-tsd-kind="Class">WxAPI</a></div>
 <div class="tsd-comment tsd-typography"><p>a reference to the wxAPI object</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L27">wxAPI/WxDataSetManager.ts:27</a></li></ul></aside></section></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L62">wxAPI/WxDataSetManager.ts:62</a></li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="checkCombineVariableIfVector" class="tsd-anchor"></a>
@@ -144,7 +136,7 @@
 <h5>variable: <span class="tsd-signature-type">string</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="../types/WxVars.html" class="tsd-signature-type" data-tsd-kind="Type alias">WxVars</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L146">wxAPI/WxDataSetManager.ts:146</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L178">wxAPI/WxDataSetManager.ts:178</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="checkDatasetOutdated" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>check<wbr/>Dataset<wbr/>Outdated</span><a href="#checkDatasetOutdated" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -158,7 +150,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L155">wxAPI/WxDataSetManager.ts:155</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L188">wxAPI/WxDataSetManager.ts:188</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="checkVariableValid" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>check<wbr/>Variable<wbr/>Valid</span><a href="#checkVariableValid" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -179,7 +171,7 @@
 <h5>variable: <span class="tsd-signature-type">string</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L138">wxAPI/WxDataSetManager.ts:138</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L169">wxAPI/WxDataSetManager.ts:169</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="createURI" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>createURI</span><a href="#createURI" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -208,7 +200,7 @@
 <h5>ext: <span class="tsd-signature-type">&quot;png&quot;</span><span class="tsd-signature-symbol"> = &#39;png&#39;</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L127">wxAPI/WxDataSetManager.ts:127</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L157">wxAPI/WxDataSetManager.ts:157</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getBoundaries" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Boundaries</span><a href="#getBoundaries" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -222,7 +214,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/WxAllBoundariesMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxAllBoundariesMeta</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L117">wxAPI/WxDataSetManager.ts:117</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L146">wxAPI/WxDataSetManager.ts:146</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getBoundaries180" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Boundaries180</span><a href="#getBoundaries180" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -236,7 +228,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">]</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L107">wxAPI/WxDataSetManager.ts:107</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L135">wxAPI/WxDataSetManager.ts:135</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="getDatasetInstance" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>get<wbr/>Dataset<wbr/>Instance</span><a href="#getDatasetInstance" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
@@ -250,7 +242,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L163">wxAPI/WxDataSetManager.ts:163</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L197">wxAPI/WxDataSetManager.ts:197</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="getDatasetInstances" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>get<wbr/>Dataset<wbr/>Instances</span><a href="#getDatasetInstances" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
@@ -264,7 +256,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L171">wxAPI/WxDataSetManager.ts:171</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L206">wxAPI/WxDataSetManager.ts:206</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getMaxZoom" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Max<wbr/>Zoom</span><a href="#getMaxZoom" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -278,7 +270,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L100">wxAPI/WxDataSetManager.ts:100</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L127">wxAPI/WxDataSetManager.ts:127</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getTimes" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Times</span><a href="#getTimes" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -292,7 +284,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L78">wxAPI/WxDataSetManager.ts:78</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L102">wxAPI/WxDataSetManager.ts:102</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getValidTime" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Valid<wbr/>Time</span><a href="#getValidTime" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -313,7 +305,7 @@
 <h5>time: <a href="../types/WxDate.html" class="tsd-signature-type" data-tsd-kind="Type alias">WxDate</a><span class="tsd-signature-symbol"> = ...</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L56">wxAPI/WxDataSetManager.ts:56</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L79">wxAPI/WxDataSetManager.ts:79</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getVariableMeta" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Variable<wbr/>Meta</span><a href="#getVariableMeta" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -334,7 +326,7 @@
 <h5>variable: <span class="tsd-signature-type">string</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/WxVariableMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxVariableMeta</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L93">wxAPI/WxDataSetManager.ts:93</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L119">wxAPI/WxDataSetManager.ts:119</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getVariables" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Variables</span><a href="#getVariables" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -348,7 +340,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/98c3842/src/wxAPI/WxDataSetManager.ts#L85">wxAPI/WxDataSetManager.ts:85</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/8f2a292/src/wxAPI/WxDataSetManager.ts#L110">wxAPI/WxDataSetManager.ts:110</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
