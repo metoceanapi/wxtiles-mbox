@@ -9,7 +9,7 @@
 		"build_DEMO_Docs": "npm run build && npm run buildDOCS && node build-for-docs.js",
 		"start": "PORT=3003 node watch-public.js",
 		"build": "rm -rf dist/ && node build.js && tsc",
-		"buildDOCS": "./node_modules/.bin/typedoc --out docs/docs --excludeExternals src",
+		"buildDOCS": "./node_modules/.bin/typedoc --out docs/docs --excludeExternals -gitRevision main src",
 		"preversion": "npm run build",
 		"version": "changelogkeeper && git add CHANGELOG.md",
 		"npm_reinstall": "rm -rf node_modules package-lock.json && npm i",
