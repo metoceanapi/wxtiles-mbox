@@ -78,6 +78,15 @@ export class Painter {
 		_drawStreamLinesStatic(data, ctxText, layer);
 	} // paint
 
+	getPaintedCanvas(data: WxRasterData, animation: boolean, seed: number): HTMLCanvasElement {
+		if (animation) {
+			this.imprintVectorAnimationLinesStep(data, seed);
+			return data.ctxStreamLines.canvas;
+		}
+		
+		return data.ctxFill.canvas;
+	}
+
 	/**
 	 * @internal
 	 * Render animated streamlines for a single tile with time seed

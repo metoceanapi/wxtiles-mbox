@@ -117,16 +117,14 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	 * @returns {Promise<Picture>} - A picture of the tile.
 	 */
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<any> {
-		let raster_data: WxRasterData;
-		// try {
-		raster_data = await this.layer.loadTile(tile, requestInit);
-		// } catch (error) {
-		// 	return new ImageData(1, 1);
-		// }
-		if (!this.animation) return raster_data.ctxFill.canvas;
+		let raster_data: WxRasterData | null = null;
+		try {
+			raster_data = await this.layer.loadTile(tile, requestInit);
+		} catch (_) {
+			// do nothing. Just no tile on the server But we have to catch the case for the mapbox-gl-js
+		}
 
-		this.layer.painter.imprintVectorAnimationLinesStep(raster_data, this.animationSeed);
-		return raster_data.ctxStreamLines.canvas; // to shut up TS errors
+		return raster_data ? this.layer.painter.getPaintedCanvas(raster_data, this.animation, this.animationSeed) : new ImageData(1, 1);
 	} // loadTile
 
 	/**
