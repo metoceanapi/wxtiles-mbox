@@ -6,7 +6,7 @@
 	"types": "dist/es/index.d.ts",
 	"private": false,
 	"scripts": {
-		"build&EMO&Docs": "npm run build && npm run buildDOCS && node build-for-docs.js",
+		"build_DEMO_Docs": "npm run build && npm run buildDOCS && node build-for-docs.js",
 		"start": "PORT=3003 node watch-public.js",
 		"build": "rm -rf dist/ && node build.js && tsc",
 		"buildDOCS": "./node_modules/.bin/typedoc --out docs/docs  src",
