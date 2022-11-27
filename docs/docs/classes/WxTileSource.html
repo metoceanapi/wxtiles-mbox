@@ -16,7 +16,7 @@
 <li><a href="WxTileSource.html">WxTileSource</a></li></ul>
 <h1>Class WxTileSource</h1></div>
 <section class="tsd-panel tsd-comment">
-<div class="tsd-comment tsd-typography"><p>A custom source implementation (for Mapbox)
+<div class="tsd-comment tsd-typography"><p>A custom layer source implementation
 It is used to load and display weather data from the WxTiles server.</p>
 
 <h3>Example</h3><pre><code class="language-ts"><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">wxapi</span><span class="hl-1"> = </span><span class="hl-6">new</span><span class="hl-1"> </span><span class="hl-4">WxAPI</span><span class="hl-1">({ </span><span class="hl-2">&#39;http://dataserver.com&#39;</span><span class="hl-1"> });</span><br/><br/><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">datasetName</span><span class="hl-1"> = </span><span class="hl-2">&#39;gfs.global&#39;</span><span class="hl-1">;</span><br/><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">variable</span><span class="hl-1"> = </span><span class="hl-2">&#39;air.temperature.at-2m&#39;</span><span class="hl-1">; </span><span class="hl-5">// Scalar example</span><br/><br/><span class="hl-5">// Create a dataset manager (may be used for many layers from this dataset)</span><br/><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">wxdatasetManager</span><span class="hl-1"> = </span><span class="hl-0">await</span><span class="hl-1"> </span><span class="hl-3">wxapi</span><span class="hl-1">.</span><span class="hl-4">createDatasetManager</span><span class="hl-1">(</span><span class="hl-3">datasetName</span><span class="hl-1">);</span><br/><br/><span class="hl-5">// get proper representation of the variable</span><br/><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">variables</span><span class="hl-1"> = </span><span class="hl-3">wxdatasetManager</span><span class="hl-1">.</span><span class="hl-4">checkCombineVariableIfVector</span><span class="hl-1">(</span><span class="hl-3">variable</span><span class="hl-1">);</span><br/><br/><span class="hl-5">// create a layer source</span><br/><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">wxsource</span><span class="hl-1"> = </span><span class="hl-6">new</span><span class="hl-1"> </span><span class="hl-4">WxTileSource</span><span class="hl-1">({ </span><span class="hl-3">wxdatasetManager</span><span class="hl-1">, </span><span class="hl-3">variables</span><span class="hl-1"> }, { </span><span class="hl-3">id:</span><span class="hl-1"> </span><span class="hl-2">&#39;wxsource&#39;</span><span class="hl-1">, </span><span class="hl-3">attribution:</span><span class="hl-1"> </span><span class="hl-2">&#39;WxTiles&#39;</span><span class="hl-1"> });</span>
@@ -34,7 +34,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <li><a href="../interfaces/WxLayerAPI.html" class="tsd-signature-type" data-tsd-kind="Interface">WxLayerAPI</a></li>
 <li><span class="tsd-signature-type">CustomSourceInterface</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L29">wxsource/wxsource.ts:29</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L29">wxsource/wxsource.ts:29</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -98,7 +98,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <h4 class="tsd-returns-title">Returns <a href="WxTileSource.html" class="tsd-signature-type" data-tsd-kind="Class">WxTileSource</a></h4><aside class="tsd-sources">
 <p>Overrides <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#constructor">constructor</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L50">wxsource/wxsource.ts:50</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L50">wxsource/wxsource.ts:50</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="attribution" class="tsd-anchor"></a>
@@ -108,7 +108,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 </div><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.attribution</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L43">wxsource/wxsource.ts:43</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L43">wxsource/wxsource.ts:43</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="bounds" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>bounds</span><a href="#bounds" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">bounds<span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">]</span></div>
@@ -116,7 +116,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 </div><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.bounds</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L41">wxsource/wxsource.ts:41</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L41">wxsource/wxsource.ts:41</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="dataType" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>data<wbr/>Type</span><a href="#dataType" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">data<wbr/>Type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;raster&quot;</span><span class="tsd-signature-symbol"> = &#39;raster&#39;</span></div>
@@ -124,7 +124,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 </div><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.dataType</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L35">wxsource/wxsource.ts:35</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L35">wxsource/wxsource.ts:35</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="id" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>id</span><a href="#id" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
@@ -132,7 +132,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 </div><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.id</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L31">wxsource/wxsource.ts:31</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L31">wxsource/wxsource.ts:31</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="maxzoom" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>maxzoom</span><a href="#maxzoom" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">maxzoom<span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
@@ -140,7 +140,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 </div><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.maxzoom</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L39">wxsource/wxsource.ts:39</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L39">wxsource/wxsource.ts:39</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="tileSize" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>tile<wbr/>Size</span><a href="#tileSize" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">tile<wbr/>Size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 256</span></div>
@@ -148,7 +148,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 </div><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.tileSize</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L37">wxsource/wxsource.ts:37</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L37">wxsource/wxsource.ts:37</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="type" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>type</span><a href="#type" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;custom&quot;</span><span class="tsd-signature-symbol"> = &#39;custom&#39;</span></div>
@@ -156,7 +156,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 </div><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.type</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L33">wxsource/wxsource.ts:33</a></li></ul></aside></section></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L33">wxsource/wxsource.ts:33</a></li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Accessors</h2>
 <section class="tsd-panel tsd-member tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><a id="wxdatasetManager" class="tsd-anchor"></a>
@@ -172,7 +172,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#wxdatasetManager">wxdatasetManager</a></p>
 <p>Inherited from WxLayerBaseImplementation.wxdatasetManager</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L87">wxlayer/WxImplementation.ts:87</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L87">wxlayer/WxImplementation.ts:87</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="clearCache" class="tsd-anchor"></a>
@@ -186,7 +186,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#clearCache">clearCache</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#clearCache">clearCache</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L112">wxlayer/WxImplementation.ts:112</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L112">wxlayer/WxImplementation.ts:112</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getCurrentStyleObjectCopy" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Current<wbr/>Style<wbr/>Object<wbr/>Copy</span><a href="#getCurrentStyleObjectCopy" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -200,7 +200,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getCurrentStyleObjectCopy">getCurrentStyleObjectCopy</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getCurrentStyleObjectCopy">getCurrentStyleObjectCopy</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L121">wxlayer/WxImplementation.ts:121</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L121">wxlayer/WxImplementation.ts:121</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getLayerInfoAtLatLon" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Layer<wbr/>Info<wbr/>At<wbr/>Lat<wbr/>Lon</span><a href="#getLayerInfoAtLatLon" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -221,7 +221,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/WxTileInfo.html" class="tsd-signature-type" data-tsd-kind="Interface">WxTileInfo</a></h4><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getLayerInfoAtLatLon">getLayerInfoAtLatLon</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L65">wxsource/wxsource.ts:65</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L65">wxsource/wxsource.ts:65</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getMetadata" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Metadata</span><a href="#getMetadata" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -237,7 +237,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getMetadata">getMetadata</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getMetadata">getMetadata</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L95">wxlayer/WxImplementation.ts:95</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L95">wxlayer/WxImplementation.ts:95</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getTime" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Time</span><a href="#getTime" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -251,7 +251,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getTime">getTime</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getTime">getTime</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L130">wxlayer/WxImplementation.ts:130</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L130">wxlayer/WxImplementation.ts:130</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getVariables" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Variables</span><a href="#getVariables" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -265,7 +265,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getVariables">getVariables</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getVariables">getVariables</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L104">wxlayer/WxImplementation.ts:104</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L104">wxlayer/WxImplementation.ts:104</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="loadTile" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>load<wbr/>Tile</span><a href="#loadTile" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -291,7 +291,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.loadTile</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L119">wxsource/wxsource.ts:119</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L120">wxsource/wxsource.ts:120</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="onRemove" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>on<wbr/>Remove</span><a href="#onRemove" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -308,7 +308,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.onRemove</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxsource/wxsource.ts#L134">wxsource/wxsource.ts:134</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxsource/wxsource.ts#L135">wxsource/wxsource.ts:135</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="preloadTime" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>preload<wbr/>Time</span><a href="#preloadTime" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -333,7 +333,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#preloadTime">preloadTime</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#preloadTime">preloadTime</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L156">wxlayer/WxImplementation.ts:156</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L156">wxlayer/WxImplementation.ts:156</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="setCoarseLevel" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Coarse<wbr/>Level</span><a href="#setCoarseLevel" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -350,7 +350,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#setCoarseLevel">setCoarseLevel</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#setCoarseLevel">setCoarseLevel</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L202">wxlayer/WxImplementation.ts:202</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L202">wxlayer/WxImplementation.ts:202</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="setStyleByName" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Style<wbr/>By<wbr/>Name</span><a href="#setStyleByName" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -375,7 +375,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#setStyleByName">setStyleByName</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#setStyleByName">setStyleByName</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L224">wxlayer/WxImplementation.ts:224</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L224">wxlayer/WxImplementation.ts:224</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="setTime" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Time</span><a href="#setTime" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -400,7 +400,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#setTime">setTime</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#setTime">setTime</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L141">wxlayer/WxImplementation.ts:141</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L141">wxlayer/WxImplementation.ts:141</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="startAnimation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>start<wbr/>Animation</span><a href="#startAnimation" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -412,7 +412,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#startAnimation">startAnimation</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#startAnimation">startAnimation</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L164">wxlayer/WxImplementation.ts:164</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L164">wxlayer/WxImplementation.ts:164</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="stopAnimation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>stop<wbr/>Animation</span><a href="#stopAnimation" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -424,7 +424,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#stopAnimation">stopAnimation</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#stopAnimation">stopAnimation</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L195">wxlayer/WxImplementation.ts:195</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L195">wxlayer/WxImplementation.ts:195</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="unsetCoarseLevel" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>unset<wbr/>Coarse<wbr/>Level</span><a href="#unsetCoarseLevel" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -436,7 +436,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#unsetCoarseLevel">unsetCoarseLevel</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#unsetCoarseLevel">unsetCoarseLevel</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L210">wxlayer/WxImplementation.ts:210</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L210">wxlayer/WxImplementation.ts:210</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="updateCurrentStyleObject" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>update<wbr/>Current<wbr/>Style<wbr/>Object</span><a href="#updateCurrentStyleObject" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -465,7 +465,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#updateCurrentStyleObject">updateCurrentStyleObject</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#updateCurrentStyleObject">updateCurrentStyleObject</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/d366133/src/wxlayer/WxImplementation.ts#L236">wxlayer/WxImplementation.ts:236</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/3869336/src/wxlayer/WxImplementation.ts#L236">wxlayer/WxImplementation.ts:236</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
@@ -476,8 +476,7 @@ It is used to load and display weather data from the WxTiles server.</p>
 <ul id="tsd-filter-options">
 <li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
 <li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-private" name="private"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Private</span></label></li>
-<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
-<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></form></div>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></form></div>
 <div class="tsd-theme-toggle">
 <h4 class="uppercase">Theme</h4><select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
 <nav class="tsd-navigation primary">

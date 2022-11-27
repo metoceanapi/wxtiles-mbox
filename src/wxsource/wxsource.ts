@@ -7,7 +7,7 @@ import { FrameworkOptions } from './wxsourcetypes';
 import { type WxRasterData } from '../wxlayer/painter';
 
 /**
- * A custom source implementation (for Mapbox)
+ * A custom layer source implementation
  * It is used to load and display weather data from the WxTiles server.
  * @example
  * ```ts
@@ -94,7 +94,8 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	/**
 	 * @ignore
 	 * Get the tiles that are currently visible on the map.
-	 * <MBOX API> get assigned by map.addSource */
+	 * <MBOX API> get assigned by map.addSource
+	 * */
 	coveringTiles(): XYZ[] {
 		return [];
 		// mapbox-gl-js implementation: return (this.map.getSource(this.id) as any)?._coveringTiles?.() || [];

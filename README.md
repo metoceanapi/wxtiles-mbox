@@ -9,7 +9,8 @@ There are three main parts of the project:
 
 ## DOCS
 
-https://metoceanapi.github.io/wxtiles-mbox/docs/
+- Mapbox-gl: https://metoceanapi.github.io/wxtiles-mbox/docs/
+- Leaflet: https://metoceanapi.github.io/wxtiles-leaflet/docs/
 
 ## API
 

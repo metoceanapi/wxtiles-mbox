@@ -241,7 +241,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	}
 
 	/** @ignore */
-	_redrawTiles(): Promise<void> {
+	protected _redrawTiles(): Promise<void> {
 		if (this.redrawRequested) return this.redrawRequested;
 		this.redrawRequested = new Promise((resolve) => {
 			requestAnimationFrame(() => {

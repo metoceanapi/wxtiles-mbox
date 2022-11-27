@@ -27,4 +27,4 @@ export interface FrameworkOptions {
 	maxzoom?: number; // MAPBOX API
 	bounds?: [number, number, number, number]; // MAPBOX API
 	attribution?: string; // MAPBOX API
-} // Leaflet
+} 
