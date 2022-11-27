@@ -7,14 +7,16 @@ There are three main parts of the project:
 2. [WxTiles-mbox source code](https://github.com/metoceanapi/wxtiles-mbox), npm [@metoceanapi/wxtiles-mbox](https://www.npmjs.com/package/@metoceanapi/wxtiles-mbox) - a JS API providing work with metadata, dataset manager and an implementation of a Custom MapBox-gl-gs Layer for visualizing the tiles using [Mapbox-gl-gs](https://www.mapbox.com/).
 3. [WxTiles-leaflet source code](https://github.com/metoceanapi/wxtiles-leaflet), npm [@metoceanapi/wxtiles-leaflet](https://www.npmjs.com/package/@metoceanapi/wxtiles-leaflet) - a JS API providing work with metadata, dataset manager and an implementation of a Custom Leaflet Layer for visualizing the tiles using [Leaflet](https://leafletjs.com/).
 
+## API
+
+APIs for Leaflet and Mapbox-gl-gs are similar in many ways. The difference is in framework-specific implementations of the Custom Source/Layer.
+
+Usage and API documentation is mainly equal for both frameworks.
+
 ## DOCS
 
 - Mapbox-gl: https://metoceanapi.github.io/wxtiles-mbox/docs/
 - Leaflet: https://metoceanapi.github.io/wxtiles-leaflet/docs/
-
-## API
-
-APIs for Leaflet and Mapbox-gl-gs are similar, but they have different implementations of the Custom Source/Layer.
 
 ## Examples
 
@@ -107,19 +109,19 @@ await wxsource.setTimeStep(new Date('2020-01-01T00:00:00Z')); // Date object
 ### Update the style
 
 ```ts
-await wxsource.updateCurrentStyleObject({ units: 'm/s', levels: undefined }); // levels: undefined - to recalculate levels
+await wxsource.updateCurrentStyleObject({ units: 'm/s', levels: undefined }); // set levels to undefined - to automatically calculate the levels from the dataset
 ```
 
 ### Preload the time steps
 
 ```ts
-// load to the cache the time steps 10 but not render it
+// load the time step 10 to the cache but do not not render it
 const prom = wxsource.preloadTime(10);
 // do stuff asyncronously
 // ...
 await prom; // wait for the time step to finish loading
 // now set the time step to 10
-await wxsource.setTime(10); // will be rendered from the cache
+await wxsource.setTime(10); // will be fast rendered from the cache
 ```
 
 ### Abort loading
@@ -155,17 +157,10 @@ map.on('mousemove', (e) => {
 ### animated blur effect
 
 ```ts
-let b = 0;
-let db = 1;
-const nextAnim = async () => {
-	if (!wxsource) return;
-	await wxsource.updateCurrentStyleObject({ blurRadius: b }); // await always !!
-
-	b += db;
-	if (b > 16 || b < 0) db = -db;
-	setTimeout(nextAnim, 1);
-};
-setTimeout(nextAnim, 2000);
+(async function step(n: number = 0) {
+	await wxsource.updateCurrentStyleObject({ isolineText: false, blurRadius: ~~(10 * Math.sin(n / 500) + 10) }); // await always !!
+	requestAnimationFrame(step);
+})();
 ```
 
 ### more interactive - additional level and a bit of the red transparentness around the level made from current mouse position

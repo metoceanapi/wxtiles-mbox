@@ -54,7 +54,7 @@ async function start() {
 	const lng = (params && parseFloat(params[4])) || 0;
 	const lat = (params && parseFloat(params[5])) || 0;
 	const bearing = (params && parseFloat(params[6])) || 0;
-	const pitch = (params && parseFloat(params[3])) || 0;
+	const pitch = (params && parseFloat(params[7])) || 0;
 	flyTo(map, zoom, lng, lat, bearing, pitch);
 
 	map.on('zoom', () => setURL(map, time, datasetName, variables));
@@ -114,6 +114,15 @@ async function start() {
 
 	await apiControl.onchange(datasetName, variables[0]); // initial load
 
+	try {
+		// apply style from URL
+		const str = params?.[8] && decodeURI(params[8]);
+		const style = str && { ...{ levels: undefined }, ...JSON.parse(str) }; // reset levels if change units
+		await customStyleEditorControl.onchange?.(style); // apply style and refresh legend
+		// wxsource?.updateCurrentStyleObject(style);
+	} catch (e) {
+		/* ignore errors silently */
+	}
 	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	if (wxsource) {
 		let busy = false;
@@ -198,17 +207,12 @@ async function start() {
 	//*/
 
 	/*/ DEMO: Dynamic blur effect /
-	let b = 0;
-	let db = 1;
-	const nextAnim = async () => {
-		if (!wxsource) return;
-		await wxsource.updateCurrentStyleObject({ blurRadius: b }); // await always !!
-
-		b += db;
-		if (b > 16 || b < 0) db = -db;
-		setTimeout(nextAnim, 1);
-	};
-	setTimeout(nextAnim, 2000); //*/
+	wxsource &&
+		(async function step(n: number = 0) {
+			await wxsource.updateCurrentStyleObject({ isolineText: false, blurRadius: ~~(10 * Math.sin(n / 500) + 10) }); // await always !!
+			requestAnimationFrame(step);
+		})();
+		//*/
 }
 
 function flyTo(map: mapboxgl.Map, zoom: number, lng: number, lat: number, bearing: number, pitch: number) {

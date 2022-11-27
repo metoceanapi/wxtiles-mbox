@@ -42,48 +42,58 @@ export interface ColorStylesIncomplete {
 
 /** Strict style interface */
 export interface WxColorStyleStrict {
-	/** name of the style */
+	/** Name of the style */
 	name: string;
 
-	/** name of a parent style to inherit from */
+	/** Name of a parent style to inherit from */
 	parent?: string;
 
-	/** fill schema. 'none' means no fill. 'solid' means solid fill. 'gradient' means gradient fill. */
+	/** Tile filling schema.
+	 * - **'none'** means no fill, leave the tile transparent
+	 * - **'solid'** means solid fill, no gradient between levels.
+	 * - **'gradient'** means gradient fill.
+	 * */
 	fill: 'none' | 'gradient' | 'solid';
 
 	/**
-	 * color of isolines.
-	 * 'none' means no isolines.
-	 * 'inverted' use inverted value of {@link fill} in each pixel.
-	 * 'fill' means use value of {@link fill}  in each pixel. */
+	 * Color of isolines.
+	 * - **'none'** do not render.
+	 * - **'fill'** using value of {@link WxColorStyleStrict.fill} in each pixel.
+	 * - **'inverted'** using *inverted* value of {@link WxColorStyleStrict.fill} in each pixel.
+	 * - **'#RGB'** or '**#RRGGBB**' or '**#RRGGBBAA**' - using this WEB-color.
+	 * */
 	isolineColor: 'none' | 'inverted' | 'fill' | `#${string}`;
 
 	/** if true then render isoline text values */
 	isolineText: boolean;
 
 	/**
-	 * 'none' means no vectors.
-	 * 'arrows' means render vectors as arrows.
-	 * 'barbs' means render vectors as barbs.*/
+	 * Representation of the wind/current field.
+	 * - **'none'** do not render vectors.
+	 * - **'arrows'** use arrows to represent winds/currents.
+	 * - **'barbs'** use barbs.
+	 * */
 	vectorType: 'none' | 'arrows' | 'barbs';
 
 	/**
-	 * color of vectors
-	 * 'none' means no vectors.
-	 * 'inverted' use inverted value of {@link fill} in each pixel.
-	 * 'fill' means use value of {@link fill}  in each pixel.
-	 * '#RRGGBB' means use this color for vectors. */
+	 * Color of vectors.
+	 * - **'none'** do not render vectors.
+	 * - **'fill'** using value of {@link WxColorStyleStrict.fill} in each pixel.
+	 * - **'inverted'** using *inverted* value of {@link WxColorStyleStrict.fill} in each pixel.
+	 * - **'#RGB'** or '**#RRGGBB**' or '**#RRGGBBAA**' - using this WEB-color.
+	 * */
 	vectorColor: 'none' | 'inverted' | 'fill' | `#${string}`;
 
-	/** factor to scale vector length */
+	/** Factor for vectors length */
 	vectorFactor: number;
 
 	/**
-	 * Draw streamlines.
-	 * 'none' means no streamlines.
-	 * 'inverted' use inverted value of {@link fill} in each pixel.
-	 * 'fill' means use value of {@link fill}  in each pixel.
-	 * '#RRGGBB' means use this color for streamlines. */
+	 * Draw streamlines:
+	 * - **'none'** means no streamlines.
+	 * - **'fill'** using value of {@link WxColorStyleStrict.fill} in each pixel.
+	 * - **'inverted'** using *inverted* value of {@link WxColorStyleStrict.fill} in each pixel.
+	 * - **'#RGB'** or '**#RRGGBB**' or '**#RRGGBBAA**' - using this WEB-color.
+	 * */
 	streamLineColor: 'none' | 'inverted' | 'fill' | `#${string}`;
 
 	/** factor to scale streamlines length */
@@ -91,53 +101,61 @@ export interface WxColorStyleStrict {
 
 	/**
 	 * Step to seed streamlines. Streamlines spread both ways from seed point.
-	 * less value means more streamlines. */
+	 * less value means more streamlines.
+	 * */
 	streamLineGridStep?: number;
 
 	/** steps in each streamline */
 	streamLineSteps?: number;
 
-	/** if true then render streamlines as static lines.
-	 * if false then render streamlines as animated lines. */
+	/**
+	 * - if true then render streamlines as static lines.
+	 * - if false then render streamlines as animated lines.
+	 * */
 	streamLineStatic: boolean;
 
-	/** if true then fill values below style's minimum. */
+	/** If true then fill values below style's minimum. */
 	showBelowMin: boolean;
 
-	/** if true then fill values above style's maximum. */
+	/** If true then fill values above style's maximum. */
 	showAboveMax: boolean;
 
-	/** color scheme name from the default set. May be extended in {@link WxAPI}*/
+	/** Color scheme name from the default set. May be extended in {@link WxAPI}*/
 	colorScheme: string;
 
-	/** colors. Used if presented instead of colorScheme */
+	/** Used if presented instead of colorScheme */
 	colors?: string[];
 
-	/** color map. Used if presented instead of levels, colors, colorScheme*/
+	/**
+	 * Used if presented instead of levels, colors, colorScheme.
+	 * Array of [level,color] tuples. Colors are WEB-colors.
+	 */
 	colorMap?: [number, string][];
 
-	/** levels. Used if presented, otherwise 10 levels are evenly calculated from given data */
+	/** Levels to build legend. Used if presented, otherwise 10 levels are calculated evenly on given data */
 	levels?: number[];
 
 	/** radius for the BOX filter */
 	blurRadius: number;
 
-	/** rotate vectors by this angle */
+	/** Additional rotation of all wind or current's vectors or directions by angle in degrees.*/
 	addDegrees: number;
 
 	/** Units of the style (from the default set)*/
 	units: string;
 
 	/**
-	 * Additional units for the style to be used within {@link units}.
-	 * @see {@link WxUnits} */
+	 * Additional units for the style to be used within {@link WxColorStyleStrict.units}.
+	 * @see {@link WxUnits}
+	 * */
 	extraUnits?: WxUnits;
 
 	/**
-	 * masking
-	 * 'none' means no masking.
-	 * 'sea' means mask sea.
-	 * 'land' means mask land. */
+	 * masking:
+	 * - **'none'** - no masking.
+	 * - **'sea'** - make sea transparent.
+	 * - **'land'** - make land transparent.
+	 * */
 	mask?: 'land' | 'sea' | 'none';
 }
 
@@ -220,8 +238,10 @@ export interface Converter {
  * @param customUnits - custom units to use if needed
  * @returns a function that converts a value from one unit to another
  * @example
+ * ```ts
  * const convert = makeConverter('m/s', 'km/h');
  * const speed = convert(10); // speed is now 36
+ * ```
  * */
 export function makeConverter(from: string, to: string, customUnits?: WxUnits): Converter {
 	WXLOG('makeConverter: From=', from, ' To=', to);
@@ -372,7 +392,8 @@ export type DataPictures = [DataPicture] | [DataPicture, DataPicture, DataPictur
 
 /**
  * interface extends {@link DataPictures} with {@link IntegralPare} and current
- * calculated radius of the box-filter */
+ * calculated radius of the box-filter
+ * */
 export interface DataIntegral extends DataPicture {
 	integral: IntegralPare;
 	radius: number;
@@ -457,9 +478,9 @@ export async function loadDataIntegral(url: string, requestInit?: RequestInit): 
 }
 
 /**
- * Calculaates {@link IntegralPare} from raw data Uint16Array
- * Integarl image: https://en.wikipedia.org/wiki/Summed-area_table
- * used for fast box-blur algo
+ * Calculaates {@link IntegralPare} from raw data Uint16Array.
+ * Used for fast box-blur algo
+ * Integarl image: https://en.wikipedia.org/wiki/Summed-area_table.
  * @param raw - raw data
  * @returns IntegralPare
  * */
