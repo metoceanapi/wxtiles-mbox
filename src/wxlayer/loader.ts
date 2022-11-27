@@ -58,7 +58,7 @@ export class Loader {
 	 * */
 	async load(tile: XYZ, requestInit?: WxRequestInit): Promise<WxData | null> {
 		const preloaded = await this.cacheLoad(tile, this.layer.tilesURIs, requestInit);
-		if (!preloaded) return null;
+		if (!preloaded) return null; // tile is cut by boundaries or mask QTree
 		const { rawdata, subCoords, tileType } = preloaded;
 		const { units } = this.layer.currentMeta;
 		const interpolator = units === 'degree' ? subDataDegree : subData;
@@ -110,8 +110,8 @@ export class Loader {
 				maskImage = await this.layer.wxdatasetManager.wxapi.loadMaskFunc(upCoords);
 				maskImage = subMask(maskImage, subCoords); // preprocess all loaded data
 			} catch (e) {
-				// style.mask = undefined;
-				WXLOG("Can't load Mask. Masking is Turned OFF");
+				style.mask = undefined;
+				WXLOG("Can't load Mask. Masking is disabled");
 				return;
 			}
 
