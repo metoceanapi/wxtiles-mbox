@@ -189,7 +189,7 @@ export class WxLayer {
 	} // _setURLsAndTime
 
 	/** @internal load, cache, draw the tile. Abortable */
-	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData> {
+	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
 		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
 	} // _loadTile
 
@@ -215,20 +215,12 @@ export class WxLayer {
 	} // _reloadTiles
 
 	/** @ignore */
-	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: Map<string, WxRasterData>, requestInit?: WxRequestInit): Promise<WxRasterData> {
+	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: Map<string, WxRasterData>, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
 		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
 
-		let data: WxData | null = null;
-		try {
-			data = await this.loader.load(tile, requestInit);
-		} catch (e) {
-			throw { status: 404 }; // happens when tile is not available (does not exist)
-		}
-
-		if (!data) {
-			throw { status: 404 }; // happens when tile is cut by qTree or by Mask
-		}
+		const data = await this.loader.load(tile, requestInit);
+		if (!data) return null; // also happens when tile is cut by qTree or by Mask
 
 		const ctxFill = create2DContext(256, 256);
 		const ctxText = ctxFill; //  check if some browsers need separate canvas for text
