@@ -96,6 +96,8 @@ async function start() {
 		await wxsource.updateCurrentStyleObject(style);
 		const nstyle = wxsource.getCurrentStyleObjectCopy();
 		legendControl.drawLegend(nstyle);
+		nstyle.levels = style?.levels; // keep levels empty if they are not defined
+		nstyle.colors = style?.colors; // keep colors empty if they are not defined
 		customStyleEditorControl.setStyle(nstyle);
 		sth.style = nstyle;
 		setURL(map, time, datasetName, variables, sth.style);
@@ -121,9 +123,12 @@ async function start() {
 		} else {
 			wxsource = new WxTileSource({ wxdatasetManager, variables }, frameworkOptions);
 			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
-			await customStyleEditorControl.onchange?.(wxsource.getCurrentStyleObjectCopy());
-			legendControl.drawLegend(wxsource.getCurrentStyleObjectCopy());
+			const styleCopy = wxsource.getCurrentStyleObjectCopy();
+			legendControl.drawLegend(styleCopy); // first draw legend with current style
 			timeControl.updateSource(wxsource);
+			styleCopy.levels = undefined; // no need to show defaults it in the editor and URL
+			styleCopy.colors = undefined; // no need to show defaults it in the editor and URL
+			await customStyleEditorControl.onchange?.(styleCopy);
 		}
 	};
 
