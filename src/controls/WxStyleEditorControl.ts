@@ -242,7 +242,7 @@ export class WxStyleEditorControl {
 		};
 
 		const style: WxColorStyleWeak = {
-			parent: this.parentInput.value, // string;
+			parent: this.parentInput.value || undefined, // string;
 			name: this.nameInput.value || undefined, //string;
 			fill: (this.fillSelect.value as any) || undefined, //string;
 			isolineColor: colorFromSelectInput(this.isolineColorSelect, this.isolineColorInput) as any, //string;
