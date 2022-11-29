@@ -67,6 +67,17 @@ async function start() {
 	const bearing = (params && parseFloat(params[6])) || 0;
 	const pitch = (params && parseFloat(params[7])) || 0;
 	const str = params?.[8] && params[8];
+	let wxstyle = {};
+	try {
+		// apply style from URL
+		wxstyle = str && { ...{ levels: undefined }, ...JSON.parse(decodeURI(str)) }; // reset levels if change units
+		// await customStyleEditorControl.onchange?.(style); // apply style and refresh legend
+		// wxsource?.updateCurrentStyleObject(style);
+	} catch (e) {
+		/* ignore errors silently */
+		console.log(e);
+	}
+
 	flyTo(map, zoom, lng, lat, bearing, pitch);
 
 	const sth = { style: {} };
@@ -85,9 +96,9 @@ async function start() {
 	const apiControl = new WxAPIControl(wxapi, datasetName, variables[0]);
 	addControl(map, apiControl, 'top-left');
 
-	const timeControl = new WxTimeControl(10);
+	const timeControl = new WxTimeControl(50);
 	addControl(map, timeControl, 'top-left');
-	timeControl.onchange = (time_) => setURL(map, (time = time_), datasetName, variables);
+	timeControl.onchange = (time_) => setURL(map, (time = time_), datasetName, variables, sth.style);
 
 	const customStyleEditorControl = new WxStyleEditorControl();
 	addControl(map, customStyleEditorControl, 'top-left');
@@ -121,7 +132,7 @@ async function start() {
 			timeControl.setTimes(wxdatasetManager.getTimes());
 			legendControl.clear();
 		} else {
-			wxsource = new WxTileSource({ wxdatasetManager, variables }, frameworkOptions);
+			wxsource = new WxTileSource({ wxdatasetManager, variables, wxstyle }, frameworkOptions);
 			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
 			const styleCopy = wxsource.getCurrentStyleObjectCopy();
 			legendControl.drawLegend(styleCopy); // first draw legend with current style
@@ -134,15 +145,6 @@ async function start() {
 
 	await apiControl.onchange(datasetName, variables[0]); // initial load
 
-	try {
-		// apply style from URL
-		const style = str && { ...{ levels: undefined }, ...JSON.parse(decodeURI(str)) }; // reset levels if change units
-		await customStyleEditorControl.onchange?.(style); // apply style and refresh legend
-		// wxsource?.updateCurrentStyleObject(style);
-	} catch (e) {
-		/* ignore errors silently */
-		console.log(e);
-	}
 	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	if (wxsource) {
 		let busy = false;
@@ -239,23 +241,15 @@ function flyTo(map: mapboxgl.Map, zoom: number, lng: number, lat: number, bearin
 	map.flyTo({ zoom, center: [lng, lat], bearing, pitch });
 }
 
-function setURL(map: mapboxgl.Map, time: string, datasetName: string, variables: string[], nstyle?: any) {
-	const getStyle = () => {
-		const bs = WxGetColorStyles()['base'];
-		let ns: WxColorStyleWeak = {};
-		for (const i in nstyle) {
-			if (nstyle[i] !== bs[i]) ns[i] = nstyle[i];
-		}
+function setURL(map: mapboxgl.Map, time: string, datasetName: string, variables: string[], style: any) {
+	const base = WxGetColorStyles()['base'];
+	for (const i in style) style[i] === base[i] && delete style[i]; // remove default values
 
-		return ns;
-	};
-
-	const ds = nstyle ? '/' + JSON.stringify(getStyle()) : '';
-	const center = map.getCenter();
+	const center = map.getCenter().wrap();
 	const href =
 		`##${datasetName}/${variables.join(',')}/${time}/${map.getZoom().toFixed(2)}/${center.lng.toFixed(2)}/${center.lat.toFixed(2)}/${map
 			.getBearing()
-			.toFixed(2)}/${map.getPitch().toFixed(2)}` + ds;
+			.toFixed(2)}/${map.getPitch().toFixed(2)}` + (style ? '/' + JSON.stringify(style) : '');
 
 	history.replaceState(null, '', href);
 }
