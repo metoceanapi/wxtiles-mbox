@@ -1,4 +1,4 @@
-import { type DataPicture, HEXtoRGBA, RGBtoHEX, type DataPictures } from '../utils/wxtools';
+import { type DataPicture, HEXtoRGBA, RGBtoHEX, type DataPictures, refineColor } from '../utils/wxtools';
 import { type WxData } from './loader';
 import { type WxLayer } from './wxlayer';
 
@@ -83,7 +83,7 @@ export class Painter {
 			this.imprintVectorAnimationLinesStep(data, seed);
 			return data.ctxStreamLines.canvas;
 		}
-		
+
 		return data.ctxFill.canvas;
 	}
 
@@ -287,7 +287,7 @@ function _drawStreamLinesStatic(wxdata: WxData, ctx: CanvasRenderingContext2D, {
 
 	const l = data[0];
 	ctx.lineWidth = 1;
-	ctx.strokeStyle = style.streamLineColor;
+	style.streamLineColor[0] === '#' && (ctx.strokeStyle = refineColor(style.streamLineColor));
 	for (let i = slines.length; i--; ) {
 		const sLine = slines[i];
 		for (let k = 0; k < sLine.length - 1; ++k) {
@@ -321,7 +321,8 @@ function _drawVectorAnimationLinesStep(wxdata: WxData, ctx: CanvasRenderingConte
 	// if (!slines.length || !style.streamLineStatic || style.streamLineColor === 'none') return; // done by the caller!!!
 	const l = data[0];
 
-	let baseColor = style.streamLineColor.substring(0, 7);
+	let baseColor = style.streamLineColor[0] === '#' ? refineColor(style.streamLineColor).substring(0, 7) : '#000000';
+
 	seed = seed >> 5;
 	for (let i = 0; i < slines.length; ++i) {
 		const sLine = slines[i];

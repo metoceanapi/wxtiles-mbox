@@ -1,5 +1,5 @@
 import { RawCLUT } from '../utils/RawCLUT';
-import { WxGetColorStyles, refineColor, HashXYZ, RGBtoHEX, create2DContext, WXLOG } from '../utils/wxtools';
+import { WxGetColorStyles, HashXYZ, RGBtoHEX, create2DContext, WXLOG } from '../utils/wxtools';
 import type { WxColorStyleStrict, XYZ, DataPictures, WxColorStyleWeak } from '../utils/wxtools';
 import { type WxVariableMeta } from '../wxAPI/wxAPI';
 import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
@@ -79,6 +79,9 @@ export interface WxLayerOptions {
 
 	/** initial style name */
 	wxstyleName?: string;
+
+	/** initial style, applyed on top of style passed by name {@link wxstyleName} */
+	wxstyle?: WxColorStyleWeak;
 }
 
 /**
@@ -119,7 +122,7 @@ export class WxLayer {
 	/** @internal Loader object to load and preprocess tiles */
 	protected readonly loader: Loader = new Loader(this);
 
-	constructor({ time, variables, wxdatasetManager, ext = 'png', wxstyleName = 'base' }: WxLayerOptions) {
+	constructor({ time, variables, wxdatasetManager, ext = 'png', wxstyleName = 'base', wxstyle }: WxLayerOptions) {
 		// check variables
 		if (!variables?.length || variables.length > 2) {
 			throw new Error(`WxTileSource ${wxdatasetManager.datasetName}: only 1 or 2 variables are supported but ${variables.length} were given`);
@@ -134,7 +137,7 @@ export class WxLayer {
 		this.ext = ext;
 		this.currentMeta = this._getCurrentMeta();
 		[this.tilesURIs, this.time] = this._createURLsAndTime(time);
-		[this.style, this.CLUT] = this._createCurrentStyleObject(WxGetColorStyles()[wxstyleName]);
+		[this.style, this.CLUT] = this._createCurrentStyleObject({ ...WxGetColorStyles()[wxstyleName], ...wxstyle });
 		WXLOG(`WxTileSource created ${wxdatasetManager.datasetName}, ${variables.join(', ')}, ${wxstyleName}`);
 	} // constructor
 
@@ -233,9 +236,9 @@ export class WxLayer {
 
 	/** @ignore */
 	protected _createCurrentStyleObject(style_?: WxColorStyleWeak): [WxColorStyleStrict, RawCLUT] {
+		// don't use {...obj} spread operator! as we need to assign 'undefined' values
 		const style = Object.assign(this.getCurrentStyleObjectCopy(), style_); // deep copy, so could be (and is) changed
-		style.streamLineColor = refineColor(style.streamLineColor) as typeof style.streamLineColor;
-		const CLUT = this._prepareCLUT(style); //new RawCLUT(this.style, units, [min, max], this.variables.length === 2);
+		const CLUT = this._prepareCLUT(style);
 		return [style, CLUT];
 	}
 
