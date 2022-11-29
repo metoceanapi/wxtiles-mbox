@@ -136,11 +136,12 @@ async function start() {
 			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
 			const styleCopy = wxsource.getCurrentStyleObjectCopy();
 			legendControl.drawLegend(styleCopy); // first draw legend with current style
-			timeControl.updateSource(wxsource);
 			styleCopy.levels = undefined; // no need to show defaults it in the editor and URL
 			styleCopy.colors = undefined; // no need to show defaults it in the editor and URL
 			await customStyleEditorControl.onchange?.(styleCopy);
 		}
+
+		timeControl.updateSource(wxsource);
 	};
 
 	await apiControl.onchange(datasetName, variables[0]); // initial load
