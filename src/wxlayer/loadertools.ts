@@ -109,30 +109,29 @@ function interpolatorSquare(a: number, b: number, c: number, d: number, dxt: num
 }
 
 function subDataPicture(interpolator: InterpolatorSquare, inputData: DataPicture, subCoords: XYZ): DataPicture {
-	const s = 0.9999999 / Math.pow(2, subCoords.z); // a subsize of a tile // 0.99999 - a dirty trick to never cross the bottom and rigth edges of the original tile.
-	const sx = subCoords.x * 256 * s; // upper left point of a subtile
-	const sy = subCoords.y * 256 * s;
+	const subTileSize = 1 / Math.pow(2, subCoords.z); // a size of a subtile
+	const subTileStartX = subCoords.x * 256 * subTileSize - 0.5; // upper left point of a subtile Shifted by 0.5 to get the center of the pixel
+	const subTileStartY = subCoords.y * 256 * subTileSize - 0.5;
 	const { raw: inRaw, dmin, dmax, dmul } = inputData;
 	const subData: DataPicture = { raw: new Uint16Array(258 * 258), dmin, dmax, dmul };
 	const { raw: outRaw } = subData;
-	for (let y = -1, i = 0; y <= 256; y++) {
-		const dy = sy + y * s; // `y` projection of the subtile onto the original tile
-		const dyi = Math.floor(dy); // don't use `~~` because of negatives on left and upper borders
-		const dyt = dy - dyi; // [0, 1] - `y` interpolation coeff
-		for (let x = -1; x <= 256; x++, i++) {
-			const dx = sx + x * s;
-			const dxi = Math.floor(dx); // don't use ~~ because of negatives
-			const dxt = dx - dxi;
-			const di = dxi + 1 + (dyi + 1) * 258; // data index
-
+	for (let outY = -1, outIndex = 0, inYf = subTileStartY - subTileSize + 1 /*+1 to shift index */; outY <= 256; outY++, inYf += subTileSize) {
+		const inYi = Math.floor(inYf); // don't use `~~` because of negatives on left and upper borders
+		const yt = inYf - inYi; // [0, 1] - `y` interpolati`on coeff
+		const inYi258 = inYi * 258;
+		for (let outX = -1, inXf = subTileStartX - subTileSize + 1 /*+1 to shift index */; outX <= 256; outX++, outIndex++, inXf += subTileSize) {
+			const inXi = Math.floor(inXf); // don't use ~~ because of negatives
+			const xt = inXf - inXi;
+			const inIndex = inXi + inYi258; // data index
 			// interpolation inside a rectangular
-			const a = inRaw[di]; // upper left corner
-			const b = inRaw[di + 1]; // upper right
-			const c = inRaw[di + 258]; // lower left
-			const d = inRaw[di + 258 + 1]; // lower right
-			outRaw[i] = interpolator(a, b, c, d, dxt, dyt, dmin, dmul);
+			const a = inRaw[inIndex]; // upper left corner
+			const b = inRaw[inIndex + 1]; // upper right
+			const c = inRaw[inIndex + 258]; // lower left
+			const d = inRaw[inIndex + 258 + 1]; // lower right
+			outRaw[outIndex] = interpolator(a, b, c, d, xt, yt, dmin, dmul);
 		} // for x
 	} // for y
+	
 	return subData;
 }
 
@@ -142,36 +141,31 @@ function subDataPicture(interpolator: InterpolatorSquare, inputData: DataPicture
  * @param {XYZ | undefined} subCoords - subtile coordinates
  * @returns {ImageData} subtile data
  * */
-export function subMask(inputData: ImageData, subCoords?: XYZ): ImageData {
+export function subMask(inputData: ImageData, subCoords: XYZ | undefined, channel: number): ImageData {
 	if (!subCoords) return inputData;
 
-	const s = 1 / Math.pow(2, subCoords.z); // a subsize of a tile // 0.99999 - a dirty trick to never cross the bottom and rigth edges of the original tile.
-	const sx = subCoords.x * 256 * s; // upper left point of a subtile
-	const sy = subCoords.y * 256 * s;
+	const clamp = (v: number) => (v < 0 ? 0 : v > 254 ? 254 : v);
+	const subTileSize = 1 / Math.pow(2, subCoords.z); // a size of a subtile
+	const subTileStartX = subCoords.x * 256 * subTileSize - 0.5; // upper left point of a subtile Shifted by 0.5 to get the center of the pixel
+	const subTileStartY = subCoords.y * 256 * subTileSize - 0.5;
 	const { data: inData } = inputData;
 	const subData: ImageData = new ImageData(256, 256);
 	const { data: outData } = subData;
-	for (let y = 0, i = 0; y < 256; y++) {
-		// i = 0, as we use Red channel only
-		const dy = sy + y * s; // `y` projection of the subtile onto the original tile
-		let dyi = Math.floor(dy); // don't use `~~` because of negatives on left and upper borders
-		if (dyi === 255) dyi = 254; // dirty trick to never cross the bottom and rigth edges of the original tile.
-		const dyt = dy - dyi; // [0, 1] - `y` interpolation coeff
-		for (let x = 0; x < 256; x++, i++) {
-			const dx = sx + x * s;
-			let dxi = Math.floor(dx); // don't use ~~ because of negatives
-			if (dxi === 255) dxi = 254; // dirty trick to never cross the bottom and rigth edges of the original tile.
-			const dxt = dx - dxi;
-			const di = (dxi + dyi * 256) * 4 + 0; // data index - Red used as a mask
-
+	for (let outY = 0, outIndex = channel, inYf = subTileStartY; outY < 256; outY++, inYf += subTileSize) {
+		const inYi = ~~clamp(inYf);
+		const yt = inYf - inYi; // [0, 1] - `y` interpolation coeff
+		const inYi256 = inYi * 256;
+		for (let outX = 0, inXf = subTileStartX; outX < 256; outX++, outIndex += 4, inXf += subTileSize) {
+			const inXi = ~~clamp(inXf);
+			const xt = inXf - inXi;
+			const inIndex = (inXi + inYi256) * 4 + channel; // data index to pixel/channel used as a mask
 			// interpolation inside a rectangular
-			const a = inData[di]; // upper left corner
-			const b = inData[di + 4]; // upper right
-			const c = inData[di + 4 * 256]; // lower left
-			const d = inData[di + 4 * 256 + 4]; // lower right
-			// const r = interpolatorSquare(a, b, c, d, dxt, dyt, 0, 0);
-			const r = dxt + dyt < 1 ? dxt * (b - a) + dyt * (c - a) + a : dxt * (d - c) + dyt * (d - b) + b + c - d;
-			outData[i * 4] = r > 127 ? 255 : 0;
+			const a = inData[inIndex]; // upper left corner
+			const b = inData[inIndex + 4]; // upper right
+			const c = inData[inIndex + 4 * 256]; // lower left
+			const d = inData[inIndex + 4 * 256 + 4]; // lower right
+			const r = xt + yt < 1 ? xt * (b - a) + yt * (c - a) + a : xt * (d - c) + yt * (d - b) + b + c - d; // baricentric interpolation
+			outData[outIndex] = r > 127 ? 255 : 0;
 		} // for x
 	} // for y
 

@@ -108,7 +108,7 @@ export class Loader {
 			try {
 				const { upCoords, subCoords } = splitCoords(tile, this.layer.wxdatasetManager.wxapi.maskDepth);
 				maskImage = await this.layer.wxdatasetManager.wxapi.loadMaskFunc(upCoords);
-				maskImage = subMask(maskImage, subCoords); // preprocess all loaded data
+				maskImage = subMask(maskImage, subCoords, this.layer.wxdatasetManager.wxapi.maskChannel);
 			} catch (e) {
 				style.mask = undefined;
 				WXLOG("Can't load Mask. Masking is disabled");
