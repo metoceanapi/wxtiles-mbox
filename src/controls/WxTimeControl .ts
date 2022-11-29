@@ -13,7 +13,7 @@ export class WxTimeControl {
 	private readonly button: HTMLButtonElement;
 	private readonly timesEl: HTMLSelectElement;
 	onchange: (time: string) => void = () => {};
-	constructor(private readonly delay: number, private wxsource?: WxTileSource) {
+	constructor(public readonly delay: number, private wxsource?: WxTileSource) {
 		const div = document.createElement('div');
 		div.className = 'mapboxgl-ctrl leaflet-control';
 		div.style.borderStyle = 'solid';
@@ -37,22 +37,32 @@ export class WxTimeControl {
 
 		this.button.innerHTML = 'Start';
 		let t = 0;
-		let abortController: AbortController;
+		const holder = { abortController: new AbortController() };
 
-		this.button.onclick = () => {
+		this.button.onclick = async () => {
 			if (this.button.innerHTML === 'Start') {
-				this.button.innerHTML = 'Stop';
-				abortController = new AbortController();
+				this.button.innerHTML = 'Stop'; // change button text
 				const nextTimeStep = async () => {
-					await this.wxsource?.setTime(t++ % this.wxsource.wxdatasetManager.getTimes().length, abortController); // await always !!
-					this.timesEl.value = this.wxsource?.getTime() || '';
+					// recursive time steps renderer function
+					if (!this.wxsource) return;
+					if (this.button.innerHTML === 'Stop') {
+						const nextTimeIndex = t++ % this.wxsource.wxdatasetManager.getTimes().length;
+						await this.wxsource.setTime(nextTimeIndex, holder.abortController);
+						setTimeout(nextTimeStep, this.delay);
+					} else {
+						await this.wxsource.unsetCoarseLevel();
+					}
+
+					this.timesEl.value = this.wxsource.getTime() || '';
 					this.onchange(this.timesEl.value);
-					this.button.innerHTML === 'Stop' && setTimeout(nextTimeStep, this.delay);
 				};
+
+				await this.wxsource?.setCoarseLevel(3);
 				nextTimeStep();
 			} else {
+				holder.abortController.abort();
+				holder.abortController = new AbortController(); // recreate new abort controller
 				this.button.innerHTML = 'Start';
-				abortController.abort();
 			}
 		};
 	}
