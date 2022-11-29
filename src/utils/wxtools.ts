@@ -58,8 +58,8 @@ export interface WxColorStyleStrict {
 	/**
 	 * Color of isolines.
 	 * - **'none'** do not render.
-	 * - **'fill'** using value of {@link WxColorStyleStrict.fill} in each pixel.
-	 * - **'inverted'** using *inverted* value of {@link WxColorStyleStrict.fill} in each pixel.
+	 * - **'fill'** using value of {@link fill} in each pixel.
+	 * - **'inverted'** using *inverted* value of {@link fill} in each pixel.
 	 * - **'#RGB'** or '**#RRGGBB**' or '**#RRGGBBAA**' - using this WEB-color.
 	 * */
 	isolineColor: 'none' | 'inverted' | 'fill' | `#${string}`;
@@ -78,8 +78,8 @@ export interface WxColorStyleStrict {
 	/**
 	 * Color of vectors.
 	 * - **'none'** do not render vectors.
-	 * - **'fill'** using value of {@link WxColorStyleStrict.fill} in each pixel.
-	 * - **'inverted'** using *inverted* value of {@link WxColorStyleStrict.fill} in each pixel.
+	 * - **'fill'** using value of {@link fill} in each pixel.
+	 * - **'inverted'** using *inverted* value of {@link fill} in each pixel.
 	 * - **'#RGB'** or '**#RRGGBB**' or '**#RRGGBBAA**' - using this WEB-color.
 	 * */
 	vectorColor: 'none' | 'inverted' | 'fill' | `#${string}`;
@@ -90,8 +90,8 @@ export interface WxColorStyleStrict {
 	/**
 	 * Draw streamlines:
 	 * - **'none'** means no streamlines.
-	 * - **'fill'** using value of {@link WxColorStyleStrict.fill} in each pixel.
-	 * - **'inverted'** using *inverted* value of {@link WxColorStyleStrict.fill} in each pixel.
+	 * - **'fill'** using value of {@link fill} in each pixel.
+	 * - **'inverted'** using *inverted* value of {@link fill} in each pixel.
 	 * - **'#RGB'** or '**#RRGGBB**' or '**#RRGGBBAA**' - using this WEB-color.
 	 * */
 	streamLineColor: 'none' | 'inverted' | 'fill' | `#${string}`;
@@ -145,7 +145,7 @@ export interface WxColorStyleStrict {
 	units: string;
 
 	/**
-	 * Additional units for the style to be used within {@link WxColorStyleStrict.units}.
+	 * Additional extend of default {@link units}.
 	 * @see {@link WxUnits}
 	 * */
 	extraUnits?: WxUnits;
