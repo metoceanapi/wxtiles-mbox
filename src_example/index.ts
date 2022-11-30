@@ -1,7 +1,7 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl, { IControl } from 'mapbox-gl';
 
-import { WxTileSource, type WxVars, WxAPI, WxTilesLogging, type WxTileInfo, WxColorStyleWeak, WxGetColorStyles } from '../src/index';
+import { WxTileSource, type WxVars, WxAPI, WxTilesLogging, type WxTileInfo, WxColorStyleWeak, WxGetColorStyles, WXLOG } from '../src/index';
 import { WxLegendControl } from '../src/controls/WxLegendControl';
 import { WxStyleEditorControl } from '../src/controls/WxStyleEditorControl';
 import { WxInfoControl } from '../src/controls/WxInfoControl';
@@ -34,19 +34,8 @@ async function start() {
 		requestInit: { headers: myHeaders },
 	});
 
-	// const bs = WxGetColorStyles()['base'];
-	// let ns: WxColorStyleWeak = {};
-	// let nstyle = { mask: 'none' };
-	// for (const i in nstyle) {
-	// 	if (nstyle[i] !== bs[i]) ns[i] = nstyle[i];
-	// }
-
-	// const ds = JSON.stringify(ns).replace(/"/g, "'");
-	// ns = JSON.parse(ds.replace(/'/g, '"'));
-	// console.log(ns);
-
 	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
-	let variables: WxVars = ['air.temperature.at-2m'];
+	let variable = 'air.temperature.at-2m';
 	// let variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
 
 	// let datasetName = 'ww3-ecmwf.global';
@@ -59,7 +48,7 @@ async function start() {
 	const urlParams = window.location.toString().split('##')[1];
 	const params = urlParams?.split('/');
 	datasetName = params?.[0] || datasetName;
-	if (params?.[1]) variables = params[1].split(',') as WxVars;
+	if (params?.[1]) variable = params[1];
 	let time = params?.[2] || '';
 	const zoom = (params && parseFloat(params[3])) || 0;
 	const lng = (params && parseFloat(params[4])) || 0;
@@ -67,12 +56,10 @@ async function start() {
 	const bearing = (params && parseFloat(params[6])) || 0;
 	const pitch = (params && parseFloat(params[7])) || 0;
 	const str = params?.[8] && params[8];
-	let wxstyle = {};
+	const styleHolder = { style: {} };
 	try {
-		// apply style from URL
-		wxstyle = str && { ...{ levels: undefined }, ...JSON.parse(decodeURI(str)) }; // reset levels if change units
-		// await customStyleEditorControl.onchange?.(style); // apply style and refresh legend
-		// wxsource?.updateCurrentStyleObject(style);
+		// get style from URL
+		styleHolder.style = str && { ...{ levels: undefined }, ...JSON.parse(decodeURI(str)) }; // reset levels if change units
 	} catch (e) {
 		/* ignore errors silently */
 		console.log(e);
@@ -81,44 +68,21 @@ async function start() {
 	flyTo(map, zoom, lng, lat, bearing, pitch);
 
 	const sth = { style: {} };
-	map.on('zoom', () => setURL(map, time, datasetName, variables, sth.style));
-	map.on('drag', () => setURL(map, time, datasetName, variables, sth.style));
-	map.on('rotate', () => setURL(map, time, datasetName, variables, sth.style));
-	map.on('pitch', () => setURL(map, time, datasetName, variables, sth.style));
-
-	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: 'WxTiles' };
+	map.on('zoom', () => setURL(map, time, datasetName, variable, sth.style));
+	map.on('drag', () => setURL(map, time, datasetName, variable, sth.style));
+	map.on('rotate', () => setURL(map, time, datasetName, variable, sth.style));
+	map.on('pitch', () => setURL(map, time, datasetName, variable, sth.style));
 
 	let wxsource: WxTileSource | undefined;
 
 	const legendControl = new WxLegendControl();
 	addControl(map, legendControl, 'top-right');
 
-	const apiControl = new WxAPIControl(wxapi, datasetName, variables[0]);
+	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: 'WxTiles' };
+	const apiControl = new WxAPIControl(wxapi, datasetName, variable);
 	addControl(map, apiControl, 'top-left');
-
-	const timeControl = new WxTimeControl(50);
-	addControl(map, timeControl, 'top-left');
-	timeControl.onchange = (time_) => setURL(map, (time = time_), datasetName, variables, sth.style);
-
-	const customStyleEditorControl = new WxStyleEditorControl();
-	addControl(map, customStyleEditorControl, 'top-left');
-	customStyleEditorControl.onchange = async (style) => {
-		if (!wxsource) return;
-		await wxsource.updateCurrentStyleObject(style);
-		const nstyle = wxsource.getCurrentStyleObjectCopy();
-		legendControl.drawLegend(nstyle);
-		nstyle.levels = style?.levels; // keep levels empty if they are not defined
-		nstyle.colors = style?.colors; // keep colors empty if they are not defined
-		customStyleEditorControl.setStyle(nstyle);
-		sth.style = nstyle;
-		setURL(map, time, datasetName, variables, sth.style);
-	};
-
-	const infoControl = new WxInfoControl();
-	addControl(map, infoControl, 'bottom-left');
-	map.on('mousemove', (e) => infoControl.update(wxsource, map, position(e)));
-
 	apiControl.onchange = async (datasetName_: string, variable: string): Promise<void> => {
+		WXLOG('apiControl.onchange datasetName=', datasetName_, 'variable=', variable);
 		// remove existing source and layer
 		removeLayer(map, frameworkOptions.id, wxsource);
 		//
@@ -126,25 +90,49 @@ async function start() {
 		datasetName = datasetName_;
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 		const meta = wxdatasetManager.getVariableMeta(variable);
-		variables = wxdatasetManager.checkCombineVariableIfVector(variable); // check if variable is vector and use vector components if so
 		if (meta?.units === 'RGB') {
-			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variables[0], 0), wxdatasetManager.getMaxZoom());
+			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variable, 0), wxdatasetManager.getMaxZoom());
 			timeControl.setTimes(wxdatasetManager.getTimes());
 			legendControl.clear();
 		} else {
-			wxsource = new WxTileSource({ wxdatasetManager, variables, wxstyle }, frameworkOptions);
+			wxsource = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: styleHolder.style }, frameworkOptions);
 			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
 			const styleCopy = wxsource.getCurrentStyleObjectCopy();
 			legendControl.drawLegend(styleCopy); // first draw legend with current style
 			styleCopy.levels = undefined; // no need to show defaults it in the editor and URL
 			styleCopy.colors = undefined; // no need to show defaults it in the editor and URL
-			await customStyleEditorControl.onchange?.(styleCopy);
+			await customStyleEditorControl.onchange?.(styleCopy, true);
 		}
 
 		timeControl.updateSource(wxsource);
 	};
 
-	await apiControl.onchange(datasetName, variables[0]); // initial load
+	const timeControl = new WxTimeControl(50);
+	addControl(map, timeControl, 'top-left');
+	timeControl.onchange = (time_) => {
+		setURL(map, (time = time_), datasetName, variable, sth.style);
+	};
+
+	const customStyleEditorControl = new WxStyleEditorControl();
+	addControl(map, customStyleEditorControl, 'top-right');
+	customStyleEditorControl.onchange = async (style, nonnativecall) => {
+		WXLOG('customStyleEditorControl.onchange');
+		if (!wxsource) return;
+		!nonnativecall && (await wxsource.updateCurrentStyleObject(style)); // if called manually, do not update wxsource's style
+		const nstyle = wxsource.getCurrentStyleObjectCopy();
+		legendControl.drawLegend(nstyle);
+		nstyle.levels = style?.levels; // keep levels empty if they are not defined
+		nstyle.colors = style?.colors; // keep colors empty if they are not defined
+		customStyleEditorControl.setStyle(nstyle); // if called from wxsource, update customStyleEditorControl
+		sth.style = nstyle;
+		setURL(map, time, datasetName, variable, sth.style);
+	};
+
+	const infoControl = new WxInfoControl();
+	addControl(map, infoControl, 'bottom-left');
+	// map.on('mousemove', (e) => infoControl.update(wxsource, map, position(e)));
+
+	await apiControl.onchange(datasetName, variable); // initial load
 
 	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	if (wxsource) {
@@ -242,15 +230,15 @@ function flyTo(map: mapboxgl.Map, zoom: number, lng: number, lat: number, bearin
 	map.flyTo({ zoom, center: [lng, lat], bearing, pitch });
 }
 
-function setURL(map: mapboxgl.Map, time: string, datasetName: string, variables: string[], style: any) {
+function setURL(map: mapboxgl.Map, time: string, datasetName: string, variable: string, style: any) {
 	const base = WxGetColorStyles()['base'];
 	for (const i in style) style[i] === base[i] && delete style[i]; // remove default values
 
 	const center = map.getCenter().wrap();
 	const href =
-		`##${datasetName}/${variables.join(',')}/${time}/${map.getZoom().toFixed(2)}/${center.lng.toFixed(2)}/${center.lat.toFixed(2)}/${map
-			.getBearing()
-			.toFixed(2)}/${map.getPitch().toFixed(2)}` + (style ? '/' + JSON.stringify(style) : '');
+		`##${datasetName}/${variable}/${time}/${map.getZoom().toFixed(2)}/${center.lng.toFixed(2)}/${center.lat.toFixed(2)}/${map.getBearing().toFixed(2)}/${map
+			.getPitch()
+			.toFixed(2)}` + (style ? '/' + JSON.stringify(style) : '');
 
 	history.replaceState(null, '', href);
 }
@@ -389,22 +377,15 @@ async function simpleDemo() {
 	WxTilesLogging(true); // If needed
 	const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit });
 
-	const datasetName = 'gfs.global';
+	// Create a dataset manager (may be used for many layers from this dataset)
+	const wxdatasetManager = await wxapi.createDatasetManager('gfs.global');
+
 	const variable = 'air.temperature.at-2m'; // Scalar example
 	// const variable = 'wind.speed.eastward.at-10m'; // Vector example
 
-	// Create a dataset manager (may be used for many layers from this dataset)
-	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
-
-	// Usefull to automatically get the vector component variables from the dataset manager if given variable is northward or eastward
-	// if not a vector component, then just return the variable itself
-	const variables = wxdatasetManager.checkCombineVariableIfVector(variable);
-
-	// create a layer
-	const mboxSourceOptions = { id: 'wxsource', attribution: 'WxTiles' };
-	const wxsource = new WxTileSource({ wxdatasetManager, variables }, mboxSourceOptions);
-
-	// add the layer to the map
+	// create a source layer
+	const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
+	// add the layer to the map. Framework dependant part
 	map.addSource(wxsource.id, wxsource);
 	map.addLayer({
 		id: 'wxlayer',
