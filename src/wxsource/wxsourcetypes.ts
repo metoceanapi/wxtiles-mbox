@@ -1,3 +1,5 @@
+import { WXLOG } from '../utils/wxtools';
+
 /**
  * Framework dependent source type to be inherited by the framework dependent custom source type.
  * Mapbox does not provide a parent type for the custom source.
@@ -8,7 +10,28 @@ export class FrameworkParentClass {
 	/**
 	 * @param {FrameworkOptions} options - Framework's basic options to construct the layer.
 	 */
-	constructor(options?: any) {}
+	/** MAPBOX API required */
+	readonly id: string;
+	/** MAPBOX API required */
+	readonly type: 'custom' = 'custom';
+	/** MAPBOX API required */
+	readonly dataType: 'raster' = 'raster';
+	/** MAPBOX API required. only 256 */
+	readonly tileSize: number = 256;
+	/** MAPBOX API */
+	readonly maxzoom?: number;
+	/** MAPBOX API */
+	readonly bounds?: [number, number, number, number];
+	/** MAPBOX API */
+	readonly attribution?: string;
+
+	constructor(frwOptions: FrameworkOptions) {
+		WXLOG(`FrameworkParentClass.constructor frwOptions: ${JSON.stringify(frwOptions)}`);
+		this.id = frwOptions.id;
+		this.maxzoom = frwOptions.maxzoom;
+		this.bounds = frwOptions.bounds;
+		this.attribution = frwOptions.attribution;
+	}
 }
 
 /**
@@ -27,4 +50,4 @@ export interface FrameworkOptions {
 	maxzoom?: number; // MAPBOX API
 	bounds?: [number, number, number, number]; // MAPBOX API
 	attribution?: string; // MAPBOX API
-} 
+}

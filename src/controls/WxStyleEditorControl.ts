@@ -11,7 +11,7 @@ import { WxColorStyleWeak } from '../index';
 // map.addControl(editor, 'top-left');
 
 export class WxStyleEditorControl {
-	onchange?: (style: WxColorStyleWeak) => Promise<void>;
+	onchange?: (style: WxColorStyleWeak, nonnative?: boolean) => Promise<void>;
 
 	editorTextAreaEl: HTMLTextAreaElement;
 	editorDivEl: HTMLDivElement;

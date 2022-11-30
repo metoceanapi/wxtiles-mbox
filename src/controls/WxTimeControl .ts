@@ -87,6 +87,7 @@ export class WxTimeControl {
 		const times = this.wxsource?.wxdatasetManager.getTimes() || [];
 		this.setTimes(times);
 		this.timesEl.value = this.wxsource?.getTime() || '';
+		this.onchange(this.timesEl.value);
 	}
 
 	onAdd(/* map */) {

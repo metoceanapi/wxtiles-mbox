@@ -700,30 +700,24 @@ export function getClosestTimeString(times: string[], time: Date | string | numb
 }
 
 var wxlogging: boolean = false;
+/**
+ * Logging helper
+ * */
+export let WXLOG = (...args: any[]) => {};
 
 /**
  * Set logging on/off
  * @param logging - true to turn on logging
  * */
-export function WxTilesLogging(on: boolean) {
-	if (on) {
-		console.log('Logging on');
-	} else {
-		console.log('Logging off');
-	}
-
-	wxlogging = on;
+export function WxTilesLogging(on?: boolean | ((...args: any[]) => void)) {
+	wxlogging = !!on;
+	console.log('WXLOGing', wxlogging);
+	WXLOG = typeof on === 'function' ? on : wxlogging ? console.log : () => {};
 }
 
-/**
- * Logging helper
- * @param args - arguments to log
- * */
-export function WXLOG(...str: any) {
-	if (wxlogging) {
-		console.log(...str);
-	}
-}
+// export function WXLOG(...str: any) {
+// 	wxlogging && console.log(...str);
+// }
 
 /**
  * Helper to convert short form of web color from '#RGB' to '#RRGGBB'

@@ -3,7 +3,7 @@ import './wxtiles.css';
 import { __colorSchemes_default_preset } from '../defaults/colorschemes';
 import { __colorStyles_default_preset } from '../defaults/styles';
 import { __units_default_preset } from '../defaults/uconv';
-import { fetchJson, loadImageData, cacheUriPromise, uriXYZ, XYZ, WxTilesLibOptions, WxTilesLibSetup, WxColorSchemes } from '../utils/wxtools';
+import { fetchJson, loadImageData, cacheUriPromise, uriXYZ, XYZ, WxTilesLibOptions, WxTilesLibSetup, WxColorSchemes, WXLOG } from '../utils/wxtools';
 import { QTree } from '../utils/qtree';
 import { WxDataSetManager } from './WxDataSetManager';
 
@@ -204,6 +204,7 @@ export class WxAPI {
 		units,
 		colorSchemes,
 	}: WxAPIOptions) {
+		WXLOG('WxAPI.constructor', dataServerURL);
 		WxTilesLibSetup({ colorStyles, units, colorSchemes });
 
 		this.dataServerURL = dataServerURL;
@@ -224,7 +225,8 @@ export class WxAPI {
 			qtreeURL !== 'none' ? this.qtree.load(qtreeURL, requestInit) : Promise.resolve(),
 		]).then(([datasetsMetas, _]): void => {
 			datasetsMetas.allDatasetsList || (datasetsMetas.allDatasetsList = Object.keys(datasetsMetas));
-			(this as any).datasetsMetas = datasetsMetas; // ovbercome readonly once :/
+			(this as any).datasetsMetas = datasetsMetas; // overcome readonly once :/
+			WXLOG('WxAPI.constructor initDone');
 		});
 	}
 
@@ -233,6 +235,7 @@ export class WxAPI {
 	 * @param datasetName - name of the dataset
 	 * @returns {WxDatasetShortMeta} - short meta for the dataset */
 	protected getDatasetShortMeta(datasetName: 'allDatasetsList' | string): WxDatasetShortMeta | undefined {
+		WXLOG('WxAPI.getDatasetShortMeta', datasetName);
 		if (datasetName === 'allDatasetsList') return;
 		return this.datasetsMetas[datasetName] as WxDatasetShortMeta;
 	}
@@ -242,6 +245,7 @@ export class WxAPI {
 	 * @param datasetName - dataset name
 	 * @returns {Promise<string[]>} - list of all available variables for the dataset */
 	protected getDatasetInatance(datasetName: string): string | undefined {
+		WXLOG('WxAPI.getDatasetInatance', datasetName);
 		return this.getDatasetShortMeta(datasetName)?.instance;
 	}
 
@@ -251,6 +255,7 @@ export class WxAPI {
 	 * @returns {Promise<string[]>} - list of all available variables for the dataset */
 	async getDatasetVariables(datasetName: string): Promise<string[]> {
 		await this.initDone;
+		WXLOG('WxAPI.getDatasetVariables', datasetName);
 		return (this.datasetsMetas[datasetName] as WxDatasetShortMeta)?.variables;
 	}
 
@@ -260,6 +265,7 @@ export class WxAPI {
 	 * @returns {Promise<WxDataSetManager>} - WxDataSetManager object for the given dataset name */
 	async createDatasetManager(datasetName: string): Promise<WxDataSetManager> {
 		await this.initDone;
+		WXLOG('WxAPI.createDatasetManager', datasetName);
 		const shortMeta = this.getDatasetShortMeta(datasetName);
 		const instance = shortMeta?.instance;
 		if (!instance) throw new Error('Dataset/instance not found:' + datasetName);
@@ -275,6 +281,7 @@ export class WxAPI {
 	 * @returns {Promise<WxDataSetManager[]>} - list of all available dataset managers */
 	async createAllDatasetsManagers(): Promise<PromiseSettledResult<WxDataSetManager>[]> {
 		await this.initDone;
+		WXLOG('WxAPI.createAllDatasetsManagers');
 		const res = Promise.allSettled(this.datasetsMetas.allDatasetsList.map((datasetName: string) => this.createDatasetManager(datasetName)));
 		return res;
 	}
@@ -285,6 +292,7 @@ export class WxAPI {
 	 * @returns {Promise<string[]>} - list of datasets' names */
 	async filterDatasetsByVariableName(variableName: string): Promise<string[]> {
 		await this.initDone;
+		WXLOG('WxAPI.filterDatasetsByVariableName', variableName);
 		return this.datasetsMetas.allDatasetsList.filter((datasetName) =>
 			(this.datasetsMetas[datasetName] as WxDatasetShortMeta)?.variables?.includes?.(variableName)
 		);
@@ -295,6 +303,7 @@ export class WxAPI {
 	 * @returns {Promise<string[]>} - list of all available datasets' names */
 	async getAllDatasetsNames(): Promise<string[]> {
 		await this.initDone;
+		WXLOG('WxAPI.getAllDatasetsNames');
 		return this.datasetsMetas.allDatasetsList;
 	}
 }

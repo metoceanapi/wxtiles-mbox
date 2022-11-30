@@ -1,6 +1,12 @@
-import { fetchJson } from '../utils/wxtools';
-import type { WxDate, WxVars } from '../wxlayer/wxlayer';
+import { fetchJson, WXLOG } from '../utils/wxtools';
+import type { WxDate, WxLayerOptions, WxVars } from '../wxlayer/wxlayer';
+import { WxTileSource } from '../wxsource/wxsource';
+import { FrameworkOptions } from '../wxsource/wxsourcetypes';
 import type { WxDatasetMeta, WxAPI, WxVariableMeta, WxInstances, WxAllBoundariesMeta } from './wxAPI';
+
+export interface WxSourceLayerOptions extends Omit<WxLayerOptions, 'variables' | 'wxdatasetManager'> {
+	variable: string;
+}
 
 /**
  * Options to pass to the constructor of {@link WxDataSetManager}
@@ -69,6 +75,7 @@ export class WxDataSetManager {
 		this.instance = instance;
 		this.meta = meta;
 		this.wxapi = wxapi;
+		WXLOG(`WxDataSetManager.constructor: ${this.datasetName}`);
 	}
 
 	/**
@@ -77,6 +84,7 @@ export class WxDataSetManager {
 	 * @returns {string} - closest valid time from the dataset's time array
 	 * */
 	getValidTime(time: WxDate = Date()): string {
+		WXLOG(`WxDataSetManager.getValidTime: ${this.datasetName}, ${time}`);
 		const times = this.getTimes();
 		if (typeof time === 'number') {
 			if (time <= 0) return times[0]; // for negative numbers use first time
@@ -100,6 +108,7 @@ export class WxDataSetManager {
 	 * @returns {string[]} - copy of dataset's time steps
 	 * */
 	getTimes(): string[] {
+		WXLOG(`WxDataSetManager.getTimes: ${this.datasetName}`);
 		return this.instanced || this.meta.times;
 	}
 
@@ -108,6 +117,7 @@ export class WxDataSetManager {
 	 * @returns {string[]} - all dataset's variables
 	 * */
 	getVariables(): string[] {
+		WXLOG(`WxDataSetManager.getVariables: ${this.datasetName}`);
 		return this.meta.variables;
 	}
 
@@ -117,6 +127,7 @@ export class WxDataSetManager {
 	 * @returns {WxVariableMeta} - some of dataset's variable meta
 	 * */
 	getVariableMeta(variable: string): WxVariableMeta | undefined {
+		WXLOG(`WxDataSetManager.getVariableMeta: ${this.datasetName}, ${variable}`);
 		return this.meta.variablesMeta[variable];
 	}
 
@@ -155,6 +166,7 @@ export class WxDataSetManager {
 	 * @returns {string} - dataset's current URI ready for fetching tiles
 	 * */
 	createURI(variable: string, time?: WxDate, ext: 'png' = 'png'): string {
+		WXLOG(`WxDataSetManager.createURI: ${this.datasetName}, ${variable}, ${time}`);
 		if (!this.checkVariableValid(variable)) throw new Error(`in dataset ${this.datasetName} variable ${variable} not found`);
 		const validTime = this.getValidTime(time);
 		const instance = this.instanced ? validTime : this.instance;
@@ -167,6 +179,7 @@ export class WxDataSetManager {
 	 * @returns {boolean} - true if variable is available in the dataset
 	 * */
 	checkVariableValid(variable: string): boolean {
+		WXLOG(`WxDataSetManager.checkVariableValid: ${this.datasetName}, ${variable}`);
 		return this.getVariableMeta(variable) !== undefined;
 	}
 
@@ -176,9 +189,21 @@ export class WxDataSetManager {
 	 * @returns {WxVars} - [variable] or [variable.eastward, variable.northward]
 	 * */
 	checkCombineVariableIfVector(variable: string): WxVars {
+		WXLOG(`WxDataSetManager.checkCombineVariableIfVector: ${this.datasetName}, ${variable}`);
 		const meta = this.getVariableMeta(variable);
 		if (!meta) throw new Error(`in dataset ${this.datasetName} variable ${variable} not found`);
 		return meta.vector || [variable]; // check if variable is vector and use vector components if so
+	}
+
+	createSourceLayer(options: WxSourceLayerOptions, frwOptions: FrameworkOptions) {
+		WXLOG(`WxDataSetManager.createSourceLayer: ${this.datasetName}`);
+		const layerOptions: WxLayerOptions = {
+			...options,
+			variables: this.checkCombineVariableIfVector(options.variable),
+			wxdatasetManager: this,
+		};
+
+		return new WxTileSource(layerOptions, frwOptions);
 	}
 
 	/**
@@ -186,6 +211,7 @@ export class WxDataSetManager {
 	 * @returns {boolean} - true if dataset's instance updated since datasset object was created
 	 * */
 	async checkDatasetOutdated(): Promise<boolean> {
+		WXLOG(`WxDataSetManager.checkDatasetOutdated: ${this.datasetName}`);
 		await this.wxapi.initDone;
 		return (await this.getDatasetInstance()) === this.instance;
 	}
@@ -195,6 +221,7 @@ export class WxDataSetManager {
 	 * @returns {Promise<string>} - dataset's instance
 	 * */
 	protected async getDatasetInstance(): Promise<string> {
+		WXLOG(`WxDataSetManager.getDatasetInstance: ${this.datasetName}`);
 		const instances = await this.getDatasetInstances();
 		return instances[instances.length - 1];
 	}
@@ -204,6 +231,7 @@ export class WxDataSetManager {
 	 * @returns {Promise<string[]>} - dataset's all instances
 	 * */
 	protected async getDatasetInstances(): Promise<string[]> {
+		WXLOG(`WxDataSetManager.getDatasetInstances: ${this.datasetName}`);
 		try {
 			const instances = await fetchJson<WxInstances>(this.wxapi.dataServerURL + this.datasetName + '/instances.json', this.wxapi.requestInit);
 			if (instances.length === 0) throw new Error(`No instances found for dataset ${this.datasetName}`);

@@ -1,4 +1,4 @@
-import { HEXtoRGBA, RGBtoHEX, makeConverter, WxGetColorSchemes, mixColor, createLevels } from './wxtools';
+import { HEXtoRGBA, RGBtoHEX, makeConverter, WxGetColorSchemes, mixColor, createLevels, WXLOG } from './wxtools';
 import { Converter, WxColorStyleStrict } from './wxtools';
 
 /** classic clamp */
@@ -41,6 +41,7 @@ export class RawCLUT {
 	 * @param vector if true, the style is for vector data
 	 * */
 	constructor(style: WxColorStyleStrict, dUnits: string, [dMin, dMax]: [number, number], vector: boolean) {
+		WXLOG(`RawCLUT.constructor`);
 		const dDif = dMax - dMin;
 		this.levelIndex = new Uint32Array(65536);
 		this.colorsI = new Uint32Array(65536);

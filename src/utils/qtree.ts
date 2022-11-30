@@ -1,4 +1,4 @@
-import { fetchJson, XYZ } from './wxtools';
+import { fetchJson, WXLOG, XYZ } from './wxtools';
 
 /** a code for an empty node in the qtree string*/
 const codeEmpty = 'A'.charCodeAt(0);
@@ -27,7 +27,9 @@ export class QTree {
 	qtree: Tree = { nodes: null }; // by default a tree with no nodes and depth 0 always gives TileType.Mixed
 	qtreedepth: number = 0;
 
-	constructor() {}
+	constructor() {
+		WXLOG('QTree.constructor');
+	}
 
 	async load(input: RequestInfo, requestInit?: RequestInit | undefined): Promise<void> {
 		try {
@@ -38,6 +40,7 @@ export class QTree {
 		}
 
 		this.qtreedepth = getTreeDepth(this.qtree);
+		WXLOG(`QTree.load: qtreedepth=${this.qtreedepth}`);
 	}
 
 	check(coord: XYZ): TileType {

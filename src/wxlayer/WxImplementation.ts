@@ -73,11 +73,12 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 
 	/**
 	 * @internal
-	 * Do not use this constructo directly
+	 * Do not use this constructor directly
 	 * */
-	constructor(wxlayeroptions: WxLayerOptions, options?: FrameworkOptions) {
-		super(options);
-		this.layer = new WxLayer(wxlayeroptions);
+	constructor(wxLayerOptions: WxLayerOptions, frwOptions: FrameworkOptions) {
+		WXLOG(`WxLayerBaseImplementation.constructor (${frwOptions.id})`);
+		super(frwOptions);
+		this.layer = new WxLayer(wxLayerOptions);
 		this.oldMaxZoom = this.layer.wxdatasetManager.meta.maxZoom;
 	} // constructor
 
@@ -85,7 +86,8 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * returns the dataset manager of the source
 	 * @returns {WxDataSetManager} the dataset manager of the source
 	 * */
-	get wxdatasetManager() {
+	get wxdatasetManager(): WxDataSetManager {
+		WXLOG(`WxLayerBaseImplementation.wxdatasetManager (${this.id})`);
 		return this.layer.wxdatasetManager;
 	}
 
@@ -94,7 +96,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @returns {WxVariableMeta} - The metadata of the current variable.
 	 */
 	getMetadata(): WxVariableMeta {
-		WXLOG(`WxTileSource getMetadata (${this.layer.wxdatasetManager.datasetName})`);
+		WXLOG(`WxLayerBaseImplementation.getMetadata (${this.id})`);
 		return { ...this.layer.currentMeta };
 	}
 
@@ -103,7 +105,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @returns {WxVars} variables of the source.
 	 */
 	getVariables(): WxVars {
-		WXLOG(`WxTileSource getVariables (${this.layer.wxdatasetManager.datasetName})`);
+		WXLOG(`WxLayerBaseImplementation.getVariables (${this.id})`);
 		return [...this.layer.variables];
 	}
 
@@ -111,7 +113,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * Clears the cache of the source.
 	 */
 	clearCache(): void {
-		WXLOG(`WxTileSource clearCache (${this.layer.wxdatasetManager.datasetName})`);
+		WXLOG(`WxLayerBaseImplementation.clearCache (${this.id})`);
 		this.layer.clearCache();
 	}
 
@@ -120,7 +122,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @returns {WxColorStyleStrict} A copy of the current style of the source.
 	 */
 	getCurrentStyleObjectCopy(): WxColorStyleStrict {
-		WXLOG(`WxTileSource getCurrentStyleObjectCopy (${this.layer.wxdatasetManager.datasetName})`);
+		WXLOG(`WxLayerBaseImplementation.getCurrentStyleObjectCopy (${this.id})`);
 		return this.layer.getCurrentStyleObjectCopy();
 	}
 
@@ -129,7 +131,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @returns {string} The current time of the source from array of times.
 	 */
 	getTime(): string {
-		WXLOG(`WxTileSource getTime (${this.layer.wxdatasetManager.datasetName})`);
+		WXLOG(`WxLayerBaseImplementation.getTime (${this.id})`);
 		return this.layer.getTime();
 	}
 
@@ -140,7 +142,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @returns {Promise<string>} A promise that resolves with current time step when the time is set and the source is loaded and rendered.
 	 */
 	async setTime(time?: WxDate, requestInit?: WxRequestInit): Promise<string> {
-		WXLOG(`WxTileSource setTime (${this.layer.wxdatasetManager.datasetName}) `, { time });
+		WXLOG(`WxLayerBaseImplementation.setTime (${this.id}) time=${time}`);
 		const oldtime = this.getTime();
 		this.layer.setURLsAndTime(time);
 		await this._reloadVisible(requestInit);
@@ -155,7 +157,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @returns {Promise<void>} A promise that resolves when finished preload.
 	 */
 	async preloadTime(time: WxDate, requestInit?: WxRequestInit): Promise<void> {
-		WXLOG(`WxTileSource preloadTime (${this.layer.wxdatasetManager.datasetName}) `, { time });
+		WXLOG(`WxLayerBaseImplementation.preloadTime (${this.id}) time=${time}`);
 		return this.layer.preloadTime(time, this.coveringTiles(), requestInit);
 	}
 
@@ -164,19 +166,19 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 */
 	startAnimation(): void {
 		if (this.animation) {
-			WXLOG(`WxTileSource startAnimation (${this.layer.wxdatasetManager.datasetName}) already started`);
+			WXLOG(`WxLayerBaseImplementation.startAnimation (${this.id}) already started`);
 			return;
 		}
 
 		if (this.layer.nonanimatable) {
-			WXLOG(`WxTileSource startAnimation (${this.layer.wxdatasetManager.datasetName}) nonanimatable`);
+			WXLOG(`WxLayerBaseImplementation.startAnimation (${this.id}) nonanimatable`);
 			return;
 		}
 
-		WXLOG(`WxTileSource startAnimation (${this.layer.wxdatasetManager.datasetName})`);
+		WXLOG(`WxLayerBaseImplementation.startAnimation (${this.id})`);
 		this.animation = true;
 		const animationStep = async (seed: number) => {
-			WXLOG(`WxTileSource animationStep (${this.layer.wxdatasetManager.datasetName})`);
+			WXLOG(`WxLayerBaseImplementation.startAnimation (${this.id}) animationStep`);
 			if (!this.animation || this.layer.nonanimatable) {
 				this.animation = false;
 				return;
@@ -194,14 +196,14 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * Stops the particle animation.
 	 */
 	async stopAnimation(): Promise<void> {
-		WXLOG(`WxTileSource stopAnimation (${this.layer.wxdatasetManager.datasetName})`);
+		WXLOG(`WxLayerBaseImplementation.stopAnimation (${this.id})`);
 		this.animation = false;
 		return this._redrawTiles();
 	}
 
 	/** set coarse maximum zoom level to make tiles load faster during animation */
 	async setCoarseLevel(level: number = 2): Promise<void> {
-		WXLOG(`WxTileSource setCoarseLevel (${this.layer.wxdatasetManager.datasetName})`, { level });
+		WXLOG(`WxLayerBaseImplementation.setCoarseLevel (${this.id}) level=${level}`);
 		const desLevel = Math.max(this.oldMaxZoom - level, 0);
 		if (this.layer.wxdatasetManager.meta.maxZoom !== desLevel) {
 			this.layer.wxdatasetManager.meta.maxZoom = desLevel;
@@ -211,7 +213,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 
 	/** restores to the dataset's maximum zoom level */
 	async unsetCoarseLevel(): Promise<void> {
-		WXLOG(`WxTileSource unsetCoarseLevel (${this.layer.wxdatasetManager.datasetName})`);
+		WXLOG(`WxLayerBaseImplementation.unsetCoarseLevel (${this.id})`);
 		if (this.layer.wxdatasetManager.meta.maxZoom !== this.oldMaxZoom) {
 			this.layer.wxdatasetManager.meta.maxZoom = this.oldMaxZoom;
 			return this._reloadVisible();
@@ -225,7 +227,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @returns {Promise<void>} A promise that resolves when the style is set.
 	 */
 	async setStyleByName(wxstyleName: string, reload: boolean = true): Promise<void> {
-		WXLOG(`WxTileSource setStyleByName (${this.layer.wxdatasetManager.datasetName})`);
+		WXLOG(`WxLayerBaseImplementation.setStyleByName (${this.id}) wxstyleName=${wxstyleName} reload=${reload}`);
 		return this.updateCurrentStyleObject(WxGetColorStyles()[wxstyleName], reload);
 	}
 
@@ -237,7 +239,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @returns {Promise<void>} A promise that resolves when the style is set.
 	 */
 	async updateCurrentStyleObject(style?: WxColorStyleWeak, reload: boolean = true, requestInit?: WxRequestInit): Promise<void> {
-		WXLOG(`WxTileSource updateCurrentStyleObject (${this.layer.wxdatasetManager.datasetName})`, { style });
+		WXLOG(`WxLayerBaseImplementation.updateCurrentStyleObject (${this.id}) style=${style} reload=${reload}`);
 		this.layer.updateCurrentStyleObject(style);
 		this.startAnimation();
 		if (reload) return this._reloadVisible(requestInit);
@@ -248,7 +250,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 		if (this.redrawRequested) return this.redrawRequested;
 		this.redrawRequested = new Promise((resolve) => {
 			requestAnimationFrame(() => {
-				WXLOG(`WxTileSource _redrawTiles (${this.layer.wxdatasetManager.datasetName})`);
+				WXLOG(`WxTileSource _redrawTiles (${this.id})`);
 
 				this.update();
 
