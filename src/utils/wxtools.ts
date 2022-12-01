@@ -391,12 +391,15 @@ export interface DataPicture {
 export type DataPictures = [DataPicture] | [DataPicture, DataPicture, DataPicture];
 
 /**
- * interface extends {@link DataPictures} with {@link IntegralPare} and current
- * calculated radius of the box-filter
+ * class implements {@link DataPictures} with lazy calculation of {@link IntegralPare} for fast box blur algorithm
  * */
-export interface DataIntegral extends DataPicture {
-	integral: IntegralPare;
-	radius: number;
+export class DataIntegral implements DataPicture {
+	integral_?: IntegralPare;
+	radius: number = 0;
+	constructor(public raw: Uint16Array, public dmin: number, public dmax: number, public dmul: number) {}
+	get integral(): IntegralPare {
+		return this.integral_ || (this.integral_ = buildIntegralPare(this.raw));
+	}
 }
 
 /** One (scalar) or two (vector) {@link DataIntegral} */
@@ -463,8 +466,9 @@ function dataToIntegral(imData: ImageData): DataIntegral {
 	const dmin = view.getFloat32(0, true);
 	const dmax = view.getFloat32(4, true);
 	const dmul = (dmax - dmin) / 65535;
-	const integral = buildIntegralPare(raw);
-	return { raw, dmin, dmax, dmul, integral, radius: 0 };
+	// const integral = buildIntegralPare(raw);
+	// return new DataIntegral({ raw, dmin, dmax, dmul }, 0);
+	return new DataIntegral(raw, dmin, dmax, dmul);
 }
 
 /**
