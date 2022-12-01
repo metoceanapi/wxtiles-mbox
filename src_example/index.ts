@@ -81,13 +81,14 @@ async function start() {
 	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: 'WxTiles' };
 	const apiControl = new WxAPIControl(wxapi, datasetName, variable);
 	addControl(map, apiControl, 'top-left');
-	apiControl.onchange = async (datasetName_: string, variable: string): Promise<void> => {
-		WXLOG('apiControl.onchange datasetName=', datasetName_, 'variable=', variable);
+	apiControl.onchange = async (datasetName_: string, variable_: string): Promise<void> => {
+		WXLOG('apiControl.onchange datasetName=', datasetName_, 'variable=', variable_);
 		// remove existing source and layer
 		removeLayer(map, frameworkOptions.id, wxsource);
 		//
 		wxsource = undefined;
 		datasetName = datasetName_;
+		variable = variable_;
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 		const meta = wxdatasetManager.getVariableMeta(variable);
 		if (meta?.units === 'RGB') {
