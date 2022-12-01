@@ -59,7 +59,7 @@ async function start() {
 	const styleHolder = { style: {} };
 	try {
 		// get style from URL
-		styleHolder.style = str && { ...{ levels: undefined }, ...JSON.parse(decodeURI(str)) }; // reset levels if change units
+		styleHolder.style = str && { ...JSON.parse(decodeURI(str)) }; // reset levels if change units
 	} catch (e) {
 		/* ignore errors silently */
 		console.log(e);
