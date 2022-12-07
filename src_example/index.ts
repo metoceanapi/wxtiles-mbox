@@ -55,11 +55,13 @@ async function start() {
 	const lat = (params && parseFloat(params[5])) || 0;
 	const bearing = (params && parseFloat(params[6])) || 0;
 	const pitch = (params && parseFloat(params[7])) || 0;
+	if (params?.length > 8) params[8] = params.slice(8).join('/');
+
 	const str = params?.[8] && params[8];
-	const styleHolder = { style: {} };
+	const sth = { style: {} as WxColorStyleWeak };
 	try {
 		// get style from URL
-		styleHolder.style = str && { ...JSON.parse(decodeURI(str)) }; // reset levels if change units
+		sth.style = str && { ...JSON.parse(decodeURI(str)) }; // reset levels if change units
 	} catch (e) {
 		/* ignore errors silently */
 		console.log(e);
@@ -67,7 +69,7 @@ async function start() {
 
 	flyTo(map, zoom, lng, lat, bearing, pitch);
 
-	const sth = { style: {} };
+	// const sth = { style: {} };
 	map.on('zoom', () => setURL(map, time, datasetName, variable, sth.style));
 	map.on('drag', () => setURL(map, time, datasetName, variable, sth.style));
 	map.on('rotate', () => setURL(map, time, datasetName, variable, sth.style));
@@ -81,11 +83,12 @@ async function start() {
 	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: 'WxTiles' };
 	const apiControl = new WxAPIControl(wxapi, datasetName, variable);
 	addControl(map, apiControl, 'top-left');
-	apiControl.onchange = async (datasetName_: string, variable_: string): Promise<void> => {
+	apiControl.onchange = async (datasetName_, variable_, nonnativecall): Promise<void> => {
 		WXLOG('apiControl.onchange datasetName=', datasetName_, 'variable=', variable_);
 		// remove existing source and layer
 		removeLayer(map, frameworkOptions.id, wxsource);
 		//
+		nonnativecall || (sth.style = {}); // reset style if change dataset/variable
 		wxsource = undefined;
 		datasetName = datasetName_;
 		variable = variable_;
@@ -96,12 +99,12 @@ async function start() {
 			timeControl.setTimes(wxdatasetManager.getTimes());
 			legendControl.clear();
 		} else {
-			wxsource = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: styleHolder.style }, frameworkOptions);
+			wxsource = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: sth.style }, frameworkOptions);
 			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
 			const styleCopy = wxsource.getCurrentStyleObjectCopy();
 			legendControl.drawLegend(styleCopy); // first draw legend with current style
-			styleCopy.levels = undefined; // no need to show defaults it in the editor and URL
-			styleCopy.colors = undefined; // no need to show defaults it in the editor and URL
+			styleCopy.levels = sth.style?.levels; // no need to show defaults it in the editor and URL
+			styleCopy.colors = sth.style?.colors; // no need to show defaults it in the editor and URL
 			await customStyleEditorControl.onchange?.(styleCopy, true);
 		}
 
@@ -119,7 +122,7 @@ async function start() {
 	customStyleEditorControl.onchange = async (style, nonnativecall) => {
 		WXLOG('customStyleEditorControl.onchange');
 		if (!wxsource) return;
-		!nonnativecall && (await wxsource.updateCurrentStyleObject(style)); // if called manually, do not update wxsource's style
+		nonnativecall || (await wxsource.updateCurrentStyleObject(style)); // if called manually, do not update wxsource's style
 		const nstyle = wxsource.getCurrentStyleObjectCopy();
 		legendControl.drawLegend(nstyle);
 		nstyle.levels = style?.levels; // keep levels empty if they are not defined
@@ -133,7 +136,7 @@ async function start() {
 	addControl(map, infoControl, 'bottom-left');
 	// map.on('mousemove', (e) => infoControl.update(wxsource, map, position(e)));
 
-	await apiControl.onchange(datasetName, variable); // initial load
+	await apiControl.onchange(datasetName, variable, true); // initial load
 
 	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	if (wxsource) {

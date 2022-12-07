@@ -13,7 +13,7 @@ export class WxAPIControl {
 	private readonly datasets: HTMLSelectElement;
 	private readonly variables: HTMLSelectElement;
 
-	onchange?: (dataset: string, variable: string) => Promise<void>;
+	onchange?: (dataset: string, variable: string, nonnativecall?: boolean) => Promise<void>;
 
 	constructor(private readonly wxapi: WxAPI, dataset?: string, variable?: string) {
 		const div = document.createElement('div');
