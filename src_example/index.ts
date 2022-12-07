@@ -134,7 +134,7 @@ async function start() {
 
 	const infoControl = new WxInfoControl();
 	addControl(map, infoControl, 'bottom-left');
-	// map.on('mousemove', (e) => infoControl.update(wxsource, map, position(e)));
+	map.on('mousemove', (e) => infoControl.update(wxsource, map, position(e)));
 
 	await apiControl.onchange(datasetName, variable, true); // initial load
 
