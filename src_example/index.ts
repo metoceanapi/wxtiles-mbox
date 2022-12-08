@@ -13,9 +13,9 @@ start();
 
 const OPACITY = 1;
 
-// this is universal function for Leaflet and Mapbox.
+// "start()" is a universal function for Leaflet and Mapbox.
 // Functions below are just framework specific wrappers for this universal function
-// start() is the fully interchangable function for Leaflet and Mapbox
+// It is the fully interchangable function for Leaflet and Mapbox
 async function start() {
 	const map = await initFrameWork();
 	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);

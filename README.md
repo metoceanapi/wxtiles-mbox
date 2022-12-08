@@ -1,17 +1,21 @@
-# wxtiles
+# WXTiles API Product Documentation
 
-This is a project for weather data visualization.
-There are three main parts of the project:
+WXTiles API enable weather data visualization for programmers.
+This documentation provides instructions for how to use WXTiles API in your project.
+
+There are three main components of the product:
 
 1. [Splitter](https://github.com/metocean/wxtile-splitter) - a service that splits the datasets into tiles (PNG) and some metadata (JSON) served by a fileserver backend aka NGINX.
 2. [WxTiles-mbox source code](https://github.com/metoceanapi/wxtiles-mbox), npm [@metoceanapi/wxtiles-mbox](https://www.npmjs.com/package/@metoceanapi/wxtiles-mbox) - a JS API providing work with metadata, dataset manager and an implementation of a Custom MapBox-gl-gs Layer for visualizing the tiles using [Mapbox-gl-gs](https://www.mapbox.com/).
 3. [WxTiles-leaflet source code](https://github.com/metoceanapi/wxtiles-leaflet), npm [@metoceanapi/wxtiles-leaflet](https://www.npmjs.com/package/@metoceanapi/wxtiles-leaflet) - a JS API providing work with metadata, dataset manager and an implementation of a Custom Leaflet Layer for visualizing the tiles using [Leaflet](https://leafletjs.com/).
 
-## API
+## API Description
 
-APIs for Leaflet and Mapbox-gl-gs are similar in many ways. The difference is in framework-specific implementations of the Custom Source/Layer.
+The API can be used with 2 different frameworks: Leaflet and Mapbox-gl-gs.
+API for Leaflet and Mapbox-gl-gs are similar in many ways.
+The difference is in the framework-specific implementations of the Custom Source/Layer.
 
-Usage and API documentation is mainly equal for both frameworks.
+Usage and API documentation is mainly the same for both frameworks.
 
 ## DOCS
 
@@ -27,8 +31,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl';
 import { WxAPI } from '@metoceanapi/wxtiles-mbox';
 
-async func(){
-	// Get the API ready - should be ONE per application
+(async func(){
+	// Get the API ready - there should be ONE per application
 	// requestInit is used in every request to the server. Add your keys, credentials, mode, etc.
 	const wxapi = new WxAPI({ dataServerURL: 'https://tiles.metoceanapi.com/data/',
 		requestInit: { /* headers: new Headers([['x-api-key', 'key']]), */ } });
@@ -36,19 +40,16 @@ async func(){
 	// Create a dataset manager (may be used for many variables-layers from this dataset)
 	const wxdatasetManager = await wxapi.createDatasetManager('gfs.global');
 
-	// Automatically gets a proper set of variable(s) from the dataset and composes northward or eastward components if needed
-	const variables = wxdatasetManager.checkCombineVariableIfVector('air.temperature.at-2m'); // 'wind.speed.eastward.at-10m' - Vector example
-
-	// create a Mapbox layer source
-	const mboxSourceOptions = { id: 'wxsource', attribution: 'WxTiles' };
-	const wxsource = new WxTileSource({ wxdatasetManager, variables }, mboxSourceOptions);
+	// create a source layer
+	const wxsource = wxdatasetManager.createSourceLayer({ variable:'air.temperature.at-2m' },
+		{ id: 'wxsource', opacity: 1,attribution: 'WxTiles' });
 
 	// add the layer to the map
     const map = new mapboxgl.Map({ container: 'map', accessToken:'token', style: { version: 8, name: 'Empty', sources: {}, layers: [] } });
     await map.once('load');
 	map.addSource(wxsource.id, wxsource);
 	map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 /*NEDDED for animation*/ } });
-}()
+})()
 
 ```
 
@@ -59,8 +60,8 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { WxAPI } from '@metoceanapi/wxtiles-leaflet';
 
-async func(){
-	// Get the API ready - should be ONE per application
+(async func(){
+	// Get the API ready - there should be ONE per application
 	// requestInit is used in every request to the server. Add your keys, credentials, mode, etc.
 	const wxapi = new WxAPI({ dataServerURL: 'https://tiles.metoceanapi.com/data/',
 		requestInit: { /* headers: new Headers([['x-api-key', 'key']]), */ } });
@@ -68,18 +69,15 @@ async func(){
 	// Create a dataset manager (may be used for many variables-layers from this dataset)
 	const wxdatasetManager = await wxapi.createDatasetManager('gfs.global');
 
-	// Automatically gets a proper set of variable(s) from the dataset and composes northward or eastward components if needed
-	const variables = wxdatasetManager.checkCombineVariableIfVector('air.temperature.at-2m'); // 'wind.speed.eastward.at-10m' - Vector example
-
-	// create a layer
-	const leafletOptions: L.GridLayerOptions = { opacity: 1, attribution: 'WxTiles' };
-	const wxsource = new WxTileSource({ wxdatasetManager, variables }, leafletOptions);
+	// create a source layer
+	const wxsource = wxdatasetManager.createSourceLayer({ variable:'air.temperature.at-2m' },
+		{ id: 'wxsource', opacity: 1,attribution: 'WxTiles' });
 
 	// add the layer to the map
 	const map = L.map('map', { center: [0, 0], zoom: 2, zoomControl: true });
 	map.addLayer(wxsource);
 	await new Promise((done) => wxsource.once('load', done)); // highly recommended to await for the first load
-}()
+})()
 ```
 
 ### Change the time step
@@ -166,7 +164,7 @@ map.on('mousemove', (e) => {
 ### more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 
 ```ts
-await wxsource.updateCurrentStyleObject({ levels: undefined }); // reset levels if existed in the style
+await wxsource.updateCurrentStyleObject({ levels: undefined }); // reset levels if existing in the style
 const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
 // generate a new color map from the levels
 const colMap: [number, string][] = levels.map((level) => [level, '#' + Math.random().toString(16).slice(2, 8) + 'ff']);
