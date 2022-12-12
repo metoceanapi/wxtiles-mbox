@@ -93,6 +93,12 @@ async function start() {
 		datasetName = datasetName_;
 		variable = variable_;
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
+		const boundaries = wxdatasetManager.getBoundaries();
+		if (boundaries) {
+			const { east, west, north, south } = boundaries.boundariesnorm;
+			const zoom = Math.round(Math.log((360 * 360) / Math.max((east - west + 360) % 360, north - south) / 360) / Math.LN2); // from https://stackoverflow.com/questions/6048975/google-maps-v3-how-to-calculate-the-zoom-level-for-a-given-bounds
+			flyTo(map, zoom, (east + west) / 2, (north + south) / 2, 0, 0);
+		}
 		const meta = wxdatasetManager.getVariableMeta(variable);
 		if (meta?.units === 'RGB') {
 			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variable, 0), wxdatasetManager.getMaxZoom());
