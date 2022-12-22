@@ -164,7 +164,9 @@ export function subMask(inputData: ImageData, subCoords: XYZ | undefined, channe
 			const b = inData[inIndex + 4]; // upper right
 			const c = inData[inIndex + 4 * 256]; // lower left
 			const d = inData[inIndex + 4 * 256 + 4]; // lower right
-			const r = xt + yt < 1 ? xt * (b - a) + yt * (c - a) + a : xt * (d - c) + yt * (d - b) + b + c - d; // baricentric interpolation
+			const r = interpolatorSquare(a, b, c, d, xt, yt, 0, 0);
+			// const r = xt + yt < 1 ? xt * (b - a) + yt * (c - a) + a : xt * (d - c) + yt * (d - b) + b + c - d; // baricentric interpolation
+			// const r = xt + yt < 1 ? xt * (b - a) + yt * (c - a) + a : xt * (d - c) + yt * (d - b) + b + c - d; // baricentric interpolation
 			outData[outIndex] = r > 127 ? 255 : 0;
 		} // for x
 	} // for y
