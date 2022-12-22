@@ -140,16 +140,12 @@ export class Loader {
 	/** @ignore */
 	protected _checkTypeAndMask(coords: XYZ): TileType | undefined {
 		const { mask } = this.layer.style;
-		// Check by QTree
-		var tileType: TileType | undefined = TileType.Mixed;
 		if (mask === 'land' || mask === 'sea') {
-			tileType = this.layer.wxdatasetManager.wxapi.qtree.check(coords); // check 'type' of a tile
-			if (mask === tileType) {
-				return undefined; // cut by QTree
-			}
+			const tileType = this.layer.wxdatasetManager.wxapi.qtree.check(coords); // check 'type' of the tile
+			return mask === tileType ? undefined /* cut by QTree */ : tileType;
 		}
 
-		return tileType;
+		return TileType.Mixed;
 	}
 
 	/** @ignore */

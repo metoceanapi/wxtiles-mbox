@@ -195,10 +195,10 @@ export class WxAPI {
 	/** @param options - see {@link WxAPIOptions} */
 	constructor({
 		dataServerURL,
-		maskURL = 'auto',
+		maskURL = 'none',
 		maskChannel = 'R',
-		maskDepth = 9,
-		qtreeURL = 'auto',
+		maskDepth = 11,
+		qtreeURL = 'none',
 		requestInit,
 		colorStyles,
 		units,
@@ -209,7 +209,7 @@ export class WxAPI {
 
 		this.dataServerURL = dataServerURL;
 		this.requestInit = requestInit;
-		qtreeURL = qtreeURL === 'auto' ? dataServerURL + 'masks/9+1.seamask.qtree' : qtreeURL;
+		qtreeURL = qtreeURL === 'auto' ? dataServerURL + 'masks/11+1.seamask.qtree' : qtreeURL;
 
 		if (maskURL !== 'none') {
 			const maskloader = cacheUriPromise(loadImageData);
