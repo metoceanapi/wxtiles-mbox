@@ -195,7 +195,7 @@ export class WxDataSetManager {
 		return meta.vector || [variable]; // check if variable is vector and use vector components if so
 	}
 
-	createSourceLayer(options: WxSourceLayerOptions, frwOptions: FrameworkOptions) {
+	createSourceLayer(options: WxSourceLayerOptions, frwOptions: FrameworkOptions): WxTileSource {
 		WXLOG(`WxDataSetManager.createSourceLayer: ${this.datasetName}`);
 		const layerOptions: WxLayerOptions = {
 			...options,
