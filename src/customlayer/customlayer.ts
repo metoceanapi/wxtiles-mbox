@@ -1,0 +1,466 @@
+// Stolen from mapbox, handles automatic fades
+function getFadeValues(tile, parentTile, sourceCache, transform) {
+	const fadeDuration = 0.3;
+
+	function clamp(n, min, max) {
+		return Math.min(max, Math.max(min, n));
+	}
+
+	if (fadeDuration > 0) {
+		const nowFunc = window.performance && window.performance.now ? window.performance.now.bind(window.performance) : Date.now.bind(Date);
+		const now = nowFunc();
+
+		const sinceTile = (now - tile.timeAdded) / fadeDuration;
+		const sinceParent = parentTile ? (now - parentTile.timeAdded) / fadeDuration : -1;
+
+		const source = sourceCache.getSource();
+		const idealZ = transform.coveringZoomLevel({
+			tileSize: source.tileSize,
+			roundZoom: source.roundZoom,
+		});
+
+		// if no parent or parent is older, fade in; if parent is younger, fade out
+		const fadeIn = !parentTile || Math.abs(parentTile.tileID.overscaledZ - idealZ) > Math.abs(tile.tileID.overscaledZ - idealZ);
+
+		const childOpacity = fadeIn && tile.refreshedUponExpiration ? 1 : clamp(fadeIn ? sinceTile : 1 - sinceParent, 0, 1);
+
+		// we don't crossfade tiles that were just refreshed upon expiring:
+		// once they're old enough to pass the crossfading threshold
+		// (fadeDuration), unset the `refreshedUponExpiration` flag so we don't
+		// incorrectly fail to crossfade them when zooming
+		if (tile.refreshedUponExpiration && sinceTile >= 1) tile.refreshedUponExpiration = false;
+
+		if (parentTile) {
+			return {
+				opacity: 1,
+				mix: 1 - childOpacity,
+			};
+		} else {
+			return {
+				opacity: childOpacity,
+				mix: 0,
+			};
+		}
+	} else {
+		return {
+			opacity: 1,
+			mix: 0,
+		};
+	}
+}
+
+// Stolen from mapbox, handles binding vertex/index buffers in a way I haven't bothered to figure out
+class VertexArrayObject {
+	boundProgram: null;
+	boundLayoutVertexBuffer: null;
+	boundPaintVertexBuffers: never[];
+	boundIndexBuffer: null;
+	boundVertexOffset: null;
+	boundDynamicVertexBuffer: null;
+	vao: null;
+	context: any;
+	boundDynamicVertexBuffer2: any;
+	constructor() {
+		this.boundProgram = null;
+		this.boundLayoutVertexBuffer = null;
+		this.boundPaintVertexBuffers = [];
+		this.boundIndexBuffer = null;
+		this.boundVertexOffset = null;
+		this.boundDynamicVertexBuffer = null;
+		this.vao = null;
+	}
+
+	bind(context, program, layoutVertexBuffer, paintVertexBuffers, indexBuffer, vertexOffset, dynamicVertexBuffer, dynamicVertexBuffer2) {
+		this.context = context;
+
+		let paintBuffersDiffer = this.boundPaintVertexBuffers.length !== paintVertexBuffers.length;
+		for (let i = 0; !paintBuffersDiffer && i < paintVertexBuffers.length; i++) {
+			if (this.boundPaintVertexBuffers[i] !== paintVertexBuffers[i]) {
+				paintBuffersDiffer = true;
+			}
+		}
+
+		const isFreshBindRequired =
+			!this.vao ||
+			this.boundProgram !== program ||
+			this.boundLayoutVertexBuffer !== layoutVertexBuffer ||
+			paintBuffersDiffer ||
+			this.boundIndexBuffer !== indexBuffer ||
+			this.boundVertexOffset !== vertexOffset ||
+			this.boundDynamicVertexBuffer !== dynamicVertexBuffer ||
+			this.boundDynamicVertexBuffer2 !== dynamicVertexBuffer2;
+
+		if (!context.extVertexArrayObject || isFreshBindRequired) {
+			this.freshBind(program, layoutVertexBuffer, paintVertexBuffers, indexBuffer, vertexOffset, dynamicVertexBuffer, dynamicVertexBuffer2);
+		} else {
+			context.bindVertexArrayOES.set(this.vao);
+
+			if (dynamicVertexBuffer) {
+				// The buffer may have been updated. Rebind to upload data.
+				dynamicVertexBuffer.bind();
+			}
+
+			if (indexBuffer && indexBuffer.dynamicDraw) {
+				indexBuffer.bind();
+			}
+
+			if (dynamicVertexBuffer2) {
+				dynamicVertexBuffer2.bind();
+			}
+		}
+	}
+
+	freshBind(program, layoutVertexBuffer, paintVertexBuffers, indexBuffer, vertexOffset, dynamicVertexBuffer, dynamicVertexBuffer2) {
+		let numPrevAttributes;
+		const numNextAttributes = program.numAttributes;
+
+		const context = this.context;
+		const gl = context.gl;
+
+		if (context.extVertexArrayObject) {
+			if (this.vao) this.destroy();
+			this.vao = context.extVertexArrayObject.createVertexArrayOES();
+			context.bindVertexArrayOES.set(this.vao);
+			numPrevAttributes = 0;
+
+			// store the arguments so that we can verify them when the vao is bound again
+			this.boundProgram = program;
+			this.boundLayoutVertexBuffer = layoutVertexBuffer;
+			this.boundPaintVertexBuffers = paintVertexBuffers;
+			this.boundIndexBuffer = indexBuffer;
+			this.boundVertexOffset = vertexOffset;
+			this.boundDynamicVertexBuffer = dynamicVertexBuffer;
+			this.boundDynamicVertexBuffer2 = dynamicVertexBuffer2;
+		} else {
+			numPrevAttributes = context.currentNumAttributes || 0;
+
+			// Disable all attributes from the previous program that aren't used in
+			// the new program. Note: attribute indices are *not* program specific!
+			for (let i = numNextAttributes; i < numPrevAttributes; i++) {
+				// WebGL breaks if you disable attribute 0.
+				// http://stackoverflow.com/questions/20305231
+				if (i !== 0) gl.disableVertexAttribArray(i);
+			}
+		}
+
+		layoutVertexBuffer.enableAttributes(gl, program);
+		for (const vertexBuffer of paintVertexBuffers) {
+			vertexBuffer.enableAttributes(gl, program);
+		}
+
+		if (dynamicVertexBuffer) {
+			dynamicVertexBuffer.enableAttributes(gl, program);
+		}
+		if (dynamicVertexBuffer2) {
+			dynamicVertexBuffer2.enableAttributes(gl, program);
+		}
+
+		layoutVertexBuffer.bind();
+		layoutVertexBuffer.setVertexAttribPointers(gl, program, vertexOffset);
+		for (const vertexBuffer of paintVertexBuffers) {
+			vertexBuffer.bind();
+			vertexBuffer.setVertexAttribPointers(gl, program, vertexOffset);
+		}
+
+		if (dynamicVertexBuffer) {
+			dynamicVertexBuffer.bind();
+			dynamicVertexBuffer.setVertexAttribPointers(gl, program, vertexOffset);
+		}
+		if (indexBuffer) {
+			indexBuffer.bind();
+		}
+		if (dynamicVertexBuffer2) {
+			dynamicVertexBuffer2.bind();
+			dynamicVertexBuffer2.setVertexAttribPointers(gl, program, vertexOffset);
+		}
+
+		context.currentNumAttributes = numNextAttributes;
+	}
+
+	destroy() {
+		if (this.vao) {
+			this.context.extVertexArrayObject.deleteVertexArrayOES(this.vao);
+			this.vao = null;
+		}
+	}
+}
+
+// Our custom tileset renderer!
+export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
+	id: string;
+	type: 'custom' = 'custom';
+	renderingMode: '2d' | '3d' = '3d';
+	opacity: number;
+	map: any;
+	program: any;
+	attributes?: { a_pos: any; a_texture_pos: any };
+	u_matrix: any;
+	u_tl_parent: any;
+	u_scale_parent: any;
+	u_buffer_scale: any;
+	u_fade_t: any;
+	u_opacity: any;
+	u_image0: any;
+	u_image1: any;
+	u_falsecolor_start: any;
+	u_falsecolor_end: any;
+
+	constructor(public sourceID: string) {
+		this.id = 'custom-wxtiles-layer:' + sourceID;
+		this.opacity = 1;
+	}
+
+	onAdd(map, gl) {
+		this.map = map;
+
+		// This vertex shader is verbatim the same as the raster vertex shader
+		const vertexSource = `
+                  uniform mat4 u_matrix;
+                  uniform vec2 u_tl_parent;
+                  uniform float u_scale_parent;
+                  uniform float u_buffer_scale;
+            
+                  attribute vec2 a_pos;
+                  attribute vec2 a_texture_pos;
+            
+                  varying vec2 v_pos0;
+                  varying vec2 v_pos1;
+            
+                  void main() {
+                      gl_Position = u_matrix * vec4(a_pos, 0, 1);
+                      // We are using Int16 for texture position coordinates to give us enough precision for
+                      // fractional coordinates. We use 8192 to scale the texture coordinates in the buffer
+                      // as an arbitrarily high number to preserve adequate precision when rendering.
+                      // This is also the same value as the EXTENT we are using for our tile buffer pos coordinates,
+                      // so math for modifying either is consistent.
+                      v_pos0 = (((a_texture_pos / 8192.0) - 0.5) / u_buffer_scale ) + 0.5;
+                      v_pos1 = (v_pos0 * u_scale_parent) + u_tl_parent;
+                  }
+                  `;
+
+		// This fragment shader is similar to the default, but I do some extra calculations to give it a false color appearance.
+		const fragmentSource = `
+                    precision highp float;
+            
+                    uniform float u_falsecolor_start;
+                    uniform float u_falsecolor_end;
+            
+                    uniform float u_fade_t;
+                    uniform float u_opacity;
+                    uniform sampler2D u_image0;
+                    uniform sampler2D u_image1;
+                    varying vec2 v_pos0;
+                    varying vec2 v_pos1;
+            
+                    void main() {
+            
+                      // read and cross-fade colors from the main and parent tiles
+                      vec4 color0 = texture2D(u_image0, v_pos0);
+                      vec4 color1 = texture2D(u_image1, v_pos1);
+                      if (color0.a > 0.0) {
+                          color0.rgb = color0.rgb / color0.a;
+                      }
+                      if (color1.a > 0.0) {
+                          color1.rgb = color1.rgb / color1.a;
+                      }
+                      vec4 color = mix(color0, color1, u_fade_t);
+                      color.a *= u_opacity;
+                      
+                      
+                      // Here's the arbitrary recoloring that turns it from RGB to false color
+      
+                      float intensity = (2.0 * color.g - color.r - color.b) / (2.0 * color.g + color.r + color.b);
+                      float intensity_scaled = (intensity - u_falsecolor_start) / (u_falsecolor_end - u_falsecolor_start);
+                      intensity_scaled = clamp(intensity_scaled, -1.0, 1.0);
+                      
+                      // I should do this with Canvas and a texture, but this is less work
+                      float stop_vals[7];
+                      stop_vals[0] = -1.0;
+                      stop_vals[1] = -0.5;
+                      stop_vals[2] = -0.5;
+                      stop_vals[3] = 0.0;
+                      stop_vals[4] = 0.3;
+                      stop_vals[5] = 0.5;
+                      stop_vals[6] = 1.0;
+            
+                      vec3 stop_cols[7];
+                      stop_cols[0] = vec3(0,0,0);
+                      stop_cols[1] = vec3(0.0,0.0,0.5);
+                      stop_cols[2] = vec3(1,0,1);
+                      stop_cols[3] = vec3(1,0,0);
+                      stop_cols[4] = vec3(0.984, 1.0, 0.0);
+                      stop_cols[5] = vec3(0.0, 0.6667, 0.0);
+                      stop_cols[6] = vec3(0.0, 0.3333, 0.0);
+            
+                      for (int i = 0; i < 6; i++) {
+                        float interp = (intensity_scaled - stop_vals[i]) / (stop_vals[i+1] - stop_vals[i]);
+                        if (interp >= 0.0 && interp <= 1.0) {
+                          color.rgb = mix(stop_cols[i], stop_cols[i+1], interp);
+                        }
+                      }
+            
+                      gl_FragColor = color;
+            
+                      #ifdef OVERDRAW_INSPECTOR
+                        gl_FragColor = vec4(1.0);
+                      #endif
+                    
+                    }`;
+
+		const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+		gl.shaderSource(vertexShader, vertexSource);
+		gl.compileShader(vertexShader);
+
+		if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+			var info = gl.getShaderInfoLog(vertexShader);
+			throw 'Could not compile vertex program. \n\n' + info;
+		}
+
+		const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+		gl.shaderSource(fragmentShader, fragmentSource);
+		gl.compileShader(fragmentShader);
+
+		if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+			var info = gl.getShaderInfoLog(fragmentShader);
+			throw 'Could not compile fragment program. \n\n' + info;
+		}
+
+		this.program = gl.createProgram();
+		gl.attachShader(this.program, vertexShader);
+		gl.attachShader(this.program, fragmentShader);
+		gl.linkProgram(this.program);
+		gl.validateProgram(this.program);
+
+		if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+			var info = gl.getProgramInfoLog(this.program);
+			throw 'Could not compile WebGL program. \n\n' + info;
+		}
+
+		// Store any uniform and attribute locations
+
+		// The VertexBuffer assumes that 'this' looks like a Program, at least that it has attributes
+		this.attributes = {
+			a_pos: gl.getAttribLocation(this.program, 'a_pos'),
+			a_texture_pos: gl.getAttribLocation(this.program, 'a_texture_pos'),
+		};
+
+		// Here are all the uniforms needed either by default for the render, or for any of our visual effects
+		this.u_matrix = gl.getUniformLocation(this.program, 'u_matrix');
+		this.u_tl_parent = gl.getUniformLocation(this.program, 'u_tl_parent');
+		this.u_scale_parent = gl.getUniformLocation(this.program, 'u_scale_parent');
+		this.u_buffer_scale = gl.getUniformLocation(this.program, 'u_buffer_scale');
+		this.u_fade_t = gl.getUniformLocation(this.program, 'u_fade_t');
+		this.u_opacity = gl.getUniformLocation(this.program, 'u_opacity');
+		this.u_image0 = gl.getUniformLocation(this.program, 'u_image0');
+		this.u_image1 = gl.getUniformLocation(this.program, 'u_image1');
+
+		this.u_falsecolor_start = gl.getUniformLocation(this.program, 'u_falsecolor_start');
+		this.u_falsecolor_end = gl.getUniformLocation(this.program, 'u_falsecolor_end');
+
+		map.style._layers[this.id].source = this.sourceID;
+	}
+
+	render(gl, matrix) {
+		gl.useProgram(this.program);
+
+		// This is needed because there's a cache that cares about the layer id
+		const layerID = this.id;
+
+		const painter = this.map.painter;
+		// This is just the name of the source we're pulling from. On the satellite style, 'mapbox' is the satellite view.
+		const sourceCache = this.map.style._otherSourceCaches[this.sourceID];
+		const source = sourceCache.getSource();
+		const coords = sourceCache.getVisibleCoordinates().reverse();
+
+		const context = this.map.painter.context;
+
+		const minTileZ = coords.length && coords[0].overscaledZ;
+
+		for (const coord of coords) {
+			const tile = sourceCache.getTile(coord);
+
+			// These are normally whole objects, but I've simplified them down into raw json.
+			const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ, true, gl.LESS);
+			const stencilMode = {
+				test: { func: 0x0207, mask: 0 },
+				ref: 0,
+				mask: 0,
+				fail: 0x1e00,
+				depthFail: 0x1e00,
+				pass: 0x1e00,
+			};
+			const cullFaceMode = {
+				enable: false,
+				mode: 0x0405,
+				frontFace: 0x0901,
+			};
+			const colorMode = painter.colorModeForRenderPass();
+
+			const posMatrix = coord.projMatrix;
+			tile.registerFadeDuration(0.3); // Was stored in the paint properties, here is hardcoded
+
+			const parentTile = sourceCache.findLoadedParent(coord, 0),
+				fade = getFadeValues(tile, parentTile, sourceCache, painter.transform);
+
+			// Properties computed for the shader
+			let parentScaleBy, parentTL;
+
+			// Set up the two textures for this tile and its parent
+			const textureFilter = gl.LINEAR;
+			context.activeTexture.set(gl.TEXTURE0);
+			tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+
+			context.activeTexture.set(gl.TEXTURE1);
+			if (parentTile) {
+				parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+				parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
+				parentTL = [(tile.tileID.canonical.x * parentScaleBy) % 1, (tile.tileID.canonical.y * parentScaleBy) % 1];
+			} else {
+				tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+			}
+
+			// I'm assuming our source is an "ImageSource", though I don't really know what that means.
+			// I followed the implementation on that branch of the if to produce the following.
+			const layoutVertexBuffer = source.boundsBuffer || painter.mercatorBoundsBuffer;
+			const indexBuffer = painter.quadTriangleIndexBuffer;
+			const segments = source.boundsSegments || painter.mercatorBoundsSegments;
+			const drawMode = gl.TRIANGLES;
+
+			// Set GL properties
+			context.setDepthMode(depthMode);
+			context.setStencilMode(stencilMode);
+			context.setColorMode(colorMode);
+			context.setCullFace(cullFaceMode);
+
+			// Set uniforms
+			gl.uniformMatrix4fv(this.u_matrix, false, posMatrix);
+			gl.uniform2fv(this.u_tl_parent, parentTL || [0, 0]);
+			gl.uniform1f(this.u_scale_parent, parentScaleBy || 1);
+			gl.uniform1f(this.u_buffer_scale, 1);
+			gl.uniform1f(this.u_fade_t, fade.mix);
+			gl.uniform1f(this.u_opacity, fade.opacity);
+			gl.uniform1i(this.u_image0, 0);
+			gl.uniform1i(this.u_image1, 1);
+
+			gl.uniform1f(this.u_falsecolor_start, 0.2 /* falsecolor_start */);
+			gl.uniform1f(this.u_falsecolor_end, 0.5 /* falsecolor_end */);
+
+			// Our draw mode is fixed, but I figured I'd leave this in anyway?
+			const primitiveSize = {
+				[gl.LINES]: 2,
+				[gl.TRIANGLES]: 3,
+				[gl.LINE_STRIP]: 1,
+			}[drawMode];
+
+			// Stolen from the draw function
+			for (const segment of segments.get()) {
+				const vaos = segment.vaos || (segment.vaos = {});
+				const vao = vaos[layerID] || (vaos[layerID] = new VertexArrayObject());
+
+				vao.bind(context, this, layoutVertexBuffer, [], indexBuffer, segment.vertexOffset);
+
+				gl.drawElements(drawMode, segment.primitiveLength * primitiveSize, gl.UNSIGNED_SHORT, segment.primitiveOffset * primitiveSize * 2);
+			}
+		}
+	}
+}

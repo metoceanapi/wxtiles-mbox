@@ -49,6 +49,7 @@
 				center: [-74.0059, 40.7064],
 				style: 'mapbox://styles/mapbox/satellite-v9',
 				hash: true,
+				projection: { name: 'globe' },
 			}));
 
 			/* Any dynamic controls here */
@@ -259,7 +260,7 @@
 				constructor() {
 					this.id = 'custom-tileset';
 					this.type = 'custom';
-					this.renderingMode = '2d';
+					this.renderingMode = '3d';
 					this.opacity = 1;
 				}
 
