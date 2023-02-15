@@ -81,10 +81,11 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 		gl.bindBuffer(gl.ARRAY_BUFFER, layerProgram.vertexBuffer);
 		gl.enableVertexAttribArray(layerProgram.vertexPosition);
 		gl.vertexAttribPointer(layerProgram.vertexPosition, 2, gl.FLOAT, false, 0, 0);
-
+		const z = 0 + ~~this.map.getZoom();
 		for (let i = 0; i < tiles.length; ++i) {
 			const tile = tiles[i];
-			if (!tile.texture) return;
+			if (tile.tileID.overscaledZ !== z) continue;
+			if (!tile.texture) continue;
 
 			// model matrix
 			// gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.posMatrix);
