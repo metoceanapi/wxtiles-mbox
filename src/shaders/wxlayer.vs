@@ -23,7 +23,7 @@ void main() {
 
     vTexCoordC = (vertexPosition * tileSz + one) * tileSzExInv;
 
-    float shift = 2.0 * tileSzExInv / (zoom + 1.0);
+    float shift = 10.0 * tileSzExInv / (zoom + 1.0);
     vTexCoordR = vTexCoordC + vec2(shift, 0.0);
     vTexCoordD = vTexCoordC + vec2(0.0, shift);
 }

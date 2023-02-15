@@ -15,9 +15,12 @@ map.on('load', async () => {
 	try {
 		// get a workable URI (could be hardcoded, but tiles-DB is alive!)
 		const fetchJson = async (url) => (await fetch(url)).json(); // json loader helper
-		const dataServer = 'https://tiles.metoceanapi.com/demo/data/';
-		const dataSet = 'ecwmf.global/'; /* 'obs-radar.rain.nzl.national/' */
-		const variable = 'air.humidity.at-2m/'; /* 'reflectivity/' */
+		// const dataServer = 'https://tiles.metoceanapi.com/data/';
+		const dataServer = 'http://localhost:9191/data/';
+		const dataSet = 'obs-radar.rain.nzl.national/';
+		const variable = 'reflectivity/';
+		// const dataSet = 'ww3-ecmwf.global/'; /* 'obs-radar.rain.nzl.national/' */
+		// const variable = 'wave.height/'; /* 'reflectivity/' */
 		const instance = (await fetchJson(dataServer + dataSet + 'instances.json')).reverse()[0] + '/';
 		const { times } = await fetchJson(dataServer + dataSet + instance + 'meta.json');
 		const time = times.find((t) => new Date(t).getTime() >= Date.now()) || times[times.length - 1];

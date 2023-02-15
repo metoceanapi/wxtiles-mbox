@@ -6,6 +6,9 @@ import fsSource from './shaders/wxlayer.fs';
 // import mapboxgl from 'mapbox-gl';
 const mapboxgl = window.mapboxgl;
 
+/// NOTE: if I change mbox from 2.02 to 2.12, the code below will not work with error:
+// uncaught TypeError TypeError: Failed to execute 'uniformMatrix4fv' on 'WebGLRenderingContext': Overload resolution failed.
+
 interface MapEx extends mapboxgl.Map {
 	style: any;
 	painter: any;
@@ -34,61 +37,24 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 		this.map = map;
 		this.layerProgram = setupLayer(gl);
 
-		map.on('move', this.move.bind(this));
-		map.on('zoom', this.zoom.bind(this));
-
 		map.addSource(this.sourceID, {
 			type: 'raster',
 			tiles: [this.URI],
-			maxzoom: 4,
+			maxzoom: 10,
 			minzoom: 0,
 			tileSize: 256,
 			attribution: 'WxTiles',
 		});
 
-		const tileSource = map.getSource(this.sourceID) as mapboxgl.AnySourceImpl & { on: any };
-		tileSource.on('data', this.onData.bind(this));
-
-		this.sourceCache = map.style._otherSourceCaches[this.sourceID];
 		// !IMPORTANT! hack to make mapbox mark the sourceCache as 'used' so it will initialise tiles.
 		map.style._layers[this.id].source = this.sourceID;
 
-		// SERG: mindblowing!! I have to add a 'mock' layer to make MapBox load two sourses
-		// map.addLayer({
-		//   id: this.id + "mock",
-		//   type: "custom",
-		//   source: this.id + "Source2",
-		//   render: () => {},
-		// });
+		this.sourceCache = map.style._otherSourceCaches[this.sourceID];
 	}
-
-	move(/* e */) {
-		this.updateTiles();
-	}
-
-	zoom(/* e */) {}
-
-	onData(e: { sourceDataType: string }) {
-		if (e.sourceDataType == 'content') {
-			this.updateTiles();
-		}
-	}
-
-	updateTiles() {
-		//this.sourceCache.update(this.map.painter.transform);
-	}
-
-	// prerender(gl: WebGLRenderingContext, matrix: Array<number>) {
-	// 	if (this.preRenderCallback)
-	// 		this.preRenderCallback(
-	// 			gl,
-	// 			matrix,
-	// 			this.sourceCache.getVisibleCoordinates().map((tileid) => this.sourceCache.getTile(tileid))
-	// 		);
-	// }
 
 	render(gl: WebGLRenderingContext, matrix: Array<number>) {
 		const coords = this.sourceCache.getVisibleCoordinates();
+
 		const tiles = coords.map((tileid: any) => this.sourceCache.getTile(tileid));
 		if (tiles.length === 0) return;
 		const { layerProgram } = this;
@@ -121,7 +87,8 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 			if (!tile.texture) return;
 
 			// model matrix
-			gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.posMatrix);
+			// gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.posMatrix);
+			gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.projMatrix); // changed in some fresh version of mapbox
 
 			// data texture (0)
 			gl.activeTexture(gl.TEXTURE0);
