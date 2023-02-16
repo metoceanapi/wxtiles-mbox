@@ -1,7 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 
-import vsSource from './shaders/wxlayer.vs';
-import fsSource from './shaders/wxlayer.fs';
+import vsSource from './oldshaders/wxlayer.vs';
+import fsSource from './oldshaders/wxlayer.fs';
 
 interface LayerProgram {
 	program: WebGLProgram;
@@ -93,7 +93,7 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 
 	render(gl: WebGLRenderingContext, matrix: Array<number>) {
 		const coords = this.sourceCache.getVisibleCoordinates();
-		const tiles = coords.map((tileid: any) => this.sourceCache.getTile(tileid));
+		const tiles = coords.map((coord: any) => this.sourceCache.getTile(coord));
 		render(gl, matrix, this.layerProgram, tiles);
 	}
 }
@@ -114,8 +114,7 @@ function render(gl: WebGLRenderingContext, matrix: Array<number>, layerProgram: 
 		gl.enableVertexAttribArray(layerProgram.aPos);
 		gl.vertexAttribPointer(layerProgram.aPos, 2, gl.FLOAT, false, 0, 0);
 
-		// gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.posMatrix);
-        // gl.uniformMatrix4fv()
+		gl.uniformMatrix4fv(layerProgram.uMatrix, false, tile.tileID.projMatrix);
 		gl.uniform1i(layerProgram.uTexture, 0);
 		// gl.depthFunc(gl.LESS);
 		//gl.enable(gl.BLEND);

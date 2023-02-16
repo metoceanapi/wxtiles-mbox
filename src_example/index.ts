@@ -1,4 +1,5 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
+import mapboxgl from 'mapbox-gl';
 
 import { start } from './start';
 // start();
@@ -24,8 +25,8 @@ async function simpleDemo() {
 	WxTilesLogging(true); // If needed
 	const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit });
 	// Create a dataset manager (may be used for many layers from this dataset)
-	const wxdatasetManager = await wxapi.createDatasetManager('ww3-ecmwf.global');
-	const variable = 'wave.height'; // Scalar example
+	const wxdatasetManager = await wxapi.createDatasetManager('obs-radar.rain.nzl.national');
+	const variable = 'reflectivity'; // Scalar example
 	// const variable = 'wind.speed.eastward.at-10m'; // Vector example
 	// create a source layer
 	const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
@@ -41,8 +42,8 @@ async function simpleDemo() {
 	// await id: 'wxlayer' is loaded
 	await new Promise((resolve) => map.once('idle', resolve));
 
-	map.addLayer(new WxTileLayer(wxsource.id));
-	// map.addLayer(new CustomTilesetLayer(wxsource.id));
+	// map.addLayer(new WxTileLayer(wxsource.id));
+	map.addLayer(new CustomTilesetLayer('wxlayerC1', wxsource.id));
 
 	// // await 2 seconds
 	// await new Promise((resolve) => setTimeout(resolve, 2000));
