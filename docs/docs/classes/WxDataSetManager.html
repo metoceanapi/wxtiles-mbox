@@ -18,7 +18,7 @@
 <section class="tsd-panel tsd-comment">
 <div class="tsd-comment tsd-typography"><p>Class for managing WX datasets.</p>
 
-<h3>Example</h3><pre><code class="language-ts"><span class="hl-1">    </span><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">wxdatasetManager</span><span class="hl-1"> = </span><span class="hl-0">await</span><span class="hl-1"> </span><span class="hl-3">wxapi</span><span class="hl-1">.</span><span class="hl-4">createDatasetManager</span><span class="hl-1">(</span><span class="hl-2">&#39;gfs.global&#39;</span><span class="hl-1">);</span>
+<h3>Example</h3><pre><code class="language-ts"><span class="hl-1">    </span><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-8">wxdatasetManager</span><span class="hl-1"> = </span><span class="hl-0">await</span><span class="hl-1"> </span><span class="hl-3">wxapi</span><span class="hl-1">.</span><span class="hl-4">createDatasetManager</span><span class="hl-1">(</span><span class="hl-2">&#39;gfs.global&#39;</span><span class="hl-1">);</span>
 </code></pre>
 </div></section>
 <section class="tsd-panel tsd-hierarchy">
@@ -53,6 +53,7 @@
 <a href="WxDataSetManager.html#createURI" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>createURI</span></a>
 <a href="WxDataSetManager.html#getBoundaries" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>get<wbr/>Boundaries</span></a>
 <a href="WxDataSetManager.html#getBoundaries180" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>get<wbr/>Boundaries180</span></a>
+<a href="WxDataSetManager.html#getCenterAndFitZoom" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>get<wbr/>Center<wbr/>And<wbr/>Fit<wbr/>Zoom</span></a>
 <a href="WxDataSetManager.html#getDatasetInstance" class="tsd-index-link tsd-kind-method tsd-parent-kind-class tsd-is-protected"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>get<wbr/>Dataset<wbr/>Instance</span></a>
 <a href="WxDataSetManager.html#getDatasetInstances" class="tsd-index-link tsd-kind-method tsd-parent-kind-class tsd-is-protected"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>get<wbr/>Dataset<wbr/>Instances</span></a>
 <a href="WxDataSetManager.html#getMaxZoom" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>get<wbr/>Max<wbr/>Zoom</span></a>
@@ -137,7 +138,7 @@
 <h5>variable: <span class="tsd-signature-type">string</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="../types/WxVars.html" class="tsd-signature-type" data-tsd-kind="Type alias">WxVars</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L191">wxAPI/WxDataSetManager.ts:191</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L209">wxAPI/WxDataSetManager.ts:209</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="checkDatasetOutdated" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>check<wbr/>Dataset<wbr/>Outdated</span><a href="#checkDatasetOutdated" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -151,7 +152,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L213">wxAPI/WxDataSetManager.ts:213</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L231">wxAPI/WxDataSetManager.ts:231</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="checkVariableValid" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>check<wbr/>Variable<wbr/>Valid</span><a href="#checkVariableValid" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -172,7 +173,7 @@
 <h5>variable: <span class="tsd-signature-type">string</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L181">wxAPI/WxDataSetManager.ts:181</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L199">wxAPI/WxDataSetManager.ts:199</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="createSourceLayer" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>create<wbr/>Source<wbr/>Layer</span><a href="#createSourceLayer" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -187,7 +188,7 @@
 <h5>frwOptions: <a href="../interfaces/FrameworkOptions.html" class="tsd-signature-type" data-tsd-kind="Interface">FrameworkOptions</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="WxTileSource.html" class="tsd-signature-type" data-tsd-kind="Class">WxTileSource</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L198">wxAPI/WxDataSetManager.ts:198</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L216">wxAPI/WxDataSetManager.ts:216</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="createURI" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>createURI</span><a href="#createURI" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -216,11 +217,11 @@
 <h5>ext: <span class="tsd-signature-type">&quot;png&quot;</span><span class="tsd-signature-symbol"> = &#39;png&#39;</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L168">wxAPI/WxDataSetManager.ts:168</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L186">wxAPI/WxDataSetManager.ts:186</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getBoundaries" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Boundaries</span><a href="#getBoundaries" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="getBoundaries.getBoundaries-1">get<wbr/>Boundaries<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/WxAllBoundariesMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxAllBoundariesMeta</a><a href="#getBoundaries.getBoundaries-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="getBoundaries.getBoundaries-1">get<wbr/>Boundaries<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/WxAllBoundariesMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxAllBoundariesMeta</a><a href="#getBoundaries.getBoundaries-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Get dataset&#39;s boundaries.</p>
 
@@ -228,7 +229,7 @@
 <li>dataset&#39;s boundaries</li>
 </ul>
 </div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/WxAllBoundariesMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxAllBoundariesMeta</a></h4><aside class="tsd-sources">
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/WxAllBoundariesMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxAllBoundariesMeta</a></h4><aside class="tsd-sources">
 <ul>
 <li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L157">wxAPI/WxDataSetManager.ts:157</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getBoundaries180" class="tsd-anchor"></a>
@@ -245,6 +246,28 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">]</span></h4><aside class="tsd-sources">
 <ul>
 <li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L146">wxAPI/WxDataSetManager.ts:146</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getCenterAndFitZoom" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>get<wbr/>Center<wbr/>And<wbr/>Fit<wbr/>Zoom</span><a href="#getCenterAndFitZoom" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+<li class="tsd-signature tsd-anchor-link" id="getCenterAndFitZoom.getCenterAndFitZoom-1">get<wbr/>Center<wbr/>And<wbr/>Fit<wbr/>Zoom<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span>lat<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>lon<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>zoom<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><a href="#getCenterAndFitZoom.getCenterAndFitZoom-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Get zoom level and center coordinates to fit the dataset&#39;s boundaries on the map.
+usefull with WxMap.flyTo</p>
+
+<h3>Example</h3><pre><code class="language-ts"><span class="hl-6">const</span><span class="hl-1"> { </span><span class="hl-8">zoom</span><span class="hl-1">, </span><span class="hl-8">lon</span><span class="hl-1">, </span><span class="hl-8">lat</span><span class="hl-1"> } = </span><span class="hl-3">wxdatasetManager</span><span class="hl-1">.</span><span class="hl-4">getCenterAndFitZoom</span><span class="hl-1">();</span><br/><span class="hl-3">map</span><span class="hl-1">.</span><span class="hl-4">flyTo</span><span class="hl-1">({ </span><span class="hl-3">zoom</span><span class="hl-1">, </span><span class="hl-3">center:</span><span class="hl-1"> [</span><span class="hl-3">lon</span><span class="hl-1">, </span><span class="hl-3">lat</span><span class="hl-1">], </span><span class="hl-3">bearing:</span><span class="hl-7">0</span><span class="hl-1">, </span><span class="hl-3">pitch:</span><span class="hl-7">0</span><span class="hl-1"> });</span>
+</code></pre>
+
+<h3>Returns</h3></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">{ </span><br/><span>    </span>lat<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>lon<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>zoom<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5>lat<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5></li>
+<li class="tsd-parameter">
+<h5>lon<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5></li>
+<li class="tsd-parameter">
+<h5>zoom<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5></li></ul><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L171">wxAPI/WxDataSetManager.ts:171</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="getDatasetInstance" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>get<wbr/>Dataset<wbr/>Instance</span><a href="#getDatasetInstance" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
@@ -258,7 +281,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L223">wxAPI/WxDataSetManager.ts:223</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L241">wxAPI/WxDataSetManager.ts:241</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="getDatasetInstances" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>get<wbr/>Dataset<wbr/>Instances</span><a href="#getDatasetInstances" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
@@ -272,7 +295,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L233">wxAPI/WxDataSetManager.ts:233</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxAPI/WxDataSetManager.ts#L251">wxAPI/WxDataSetManager.ts:251</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getMaxZoom" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Max<wbr/>Zoom</span><a href="#getMaxZoom" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -394,6 +417,7 @@
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="WxDataSetManager.html#createURI" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>createURI</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="WxDataSetManager.html#getBoundaries" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>get<wbr/>Boundaries</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="WxDataSetManager.html#getBoundaries180" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>get<wbr/>Boundaries180</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="WxDataSetManager.html#getCenterAndFitZoom" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>get<wbr/>Center<wbr/>And<wbr/>Fit<wbr/>Zoom</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="WxDataSetManager.html#getDatasetInstance" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>get<wbr/>Dataset<wbr/>Instance</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="WxDataSetManager.html#getDatasetInstances" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>get<wbr/>Dataset<wbr/>Instances</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="WxDataSetManager.html#getMaxZoom" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>get<wbr/>Max<wbr/>Zoom</a></li>
