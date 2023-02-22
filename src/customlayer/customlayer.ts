@@ -168,8 +168,8 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 	attributes!: { a_pos: any; a_texture_pos: any };
 	uniforms: CustomTilesetLayerUniforms = new CustomTilesetLayerUniforms();
 
-	constructor(public id: string, public sourceID: string) {
-		this.opacity = 1.0;
+	constructor(public id: string, public sourceID: string, opacity?: number) {
+		this.opacity = opacity || 1.0;
 	}
 
 	onAdd(map, gl: WebGLRenderingContext) {

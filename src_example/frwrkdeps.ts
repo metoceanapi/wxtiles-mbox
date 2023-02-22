@@ -127,7 +127,7 @@ export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: stri
 
 export async function addLayer(map: mapboxgl.Map, idS: string, idL: string, source?: any) {
 	map.addSource(idS, source);
-	map.addLayer(new CustomTilesetLayer(idL, idS));
+	map.addLayer(new CustomTilesetLayer(idL, idS, OPACITY));
 	/*
 	map.addLayer(
 		{
@@ -140,5 +140,5 @@ export async function addLayer(map: mapboxgl.Map, idS: string, idL: string, sour
 			},
 		},
 		'baseL'
-	);*/
+	); //*/
 }
