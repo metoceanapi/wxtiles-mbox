@@ -1,5 +1,5 @@
 import { type WxColorStyleWeak, WxGetColorStyles, type XYZ, type WxColorStyleStrict, WXLOG } from '../utils/wxtools';
-import { type WxRequestInit, type WxDate, WxLayer, type WxVars, type WxLayerOptions, WxLngLat, WxTileInfo } from './wxlayer';
+import { type WxRequestInit, type WxDate, WxLayer, type WxVars, type WxLayerOptions, WxLngLat, WxTileInfo, type TilesCache } from './wxlayer';
 import { WxVariableMeta } from '../wxAPI/wxAPI';
 import { FrameworkParentClass, FrameworkOptions } from '../wxsource/wxsourcetypes';
 import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
@@ -115,6 +115,10 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	clearCache(): void {
 		WXLOG(`WxLayerBaseImplementation.clearCache (${this.id})`);
 		this.layer.clearCache();
+	}
+
+	getCache(): TilesCache {
+		return this.layer.tilesCache;
 	}
 
 	/**

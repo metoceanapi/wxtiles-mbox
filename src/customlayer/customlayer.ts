@@ -1,57 +1,9 @@
 import vertexSource from './customsahders/custom.vs';
 import fragmentSource from './customsahders/custom.fs';
-// Stolen from mapbox, handles automatic fades
-function getFadeValues(tile, parentTile, sourceCache, transform) {
-	const fadeDuration = 0.3;
-
-	function clamp(n, min, max) {
-		return Math.min(max, Math.max(min, n));
-	}
-
-	if (fadeDuration > 0) {
-		const nowFunc = window.performance && window.performance.now ? window.performance.now.bind(window.performance) : Date.now.bind(Date);
-		const now = nowFunc();
-
-		const sinceTile = (now - tile.timeAdded) / fadeDuration;
-		const sinceParent = parentTile ? (now - parentTile.timeAdded) / fadeDuration : -1;
-
-		const source = sourceCache.getSource();
-		const idealZ = transform.coveringZoomLevel({
-			tileSize: source.tileSize,
-			roundZoom: source.roundZoom,
-		});
-
-		// if no parent or parent is older, fade in; if parent is younger, fade out
-		const fadeIn = !parentTile || Math.abs(parentTile.tileID.overscaledZ - idealZ) > Math.abs(tile.tileID.overscaledZ - idealZ);
-
-		const childOpacity = fadeIn && tile.refreshedUponExpiration ? 1 : clamp(fadeIn ? sinceTile : 1 - sinceParent, 0, 1);
-
-		// we don't crossfade tiles that were just refreshed upon expiring:
-		// once they're old enough to pass the crossfading threshold
-		// (fadeDuration), unset the `refreshedUponExpiration` flag so we don't
-		// incorrectly fail to crossfade them when zooming
-		if (tile.refreshedUponExpiration && sinceTile >= 1) tile.refreshedUponExpiration = false;
-
-		if (parentTile) {
-			return {
-				opacity: 1,
-				mix: 1 - childOpacity,
-			};
-		} else {
-			return {
-				opacity: childOpacity,
-				mix: 0,
-			};
-		}
-	} else {
-		return {
-			opacity: 1,
-			mix: 0,
-		};
-	}
-}
-
-// Stolen from mapbox, handles binding vertex/index buffers in a way I haven't bothered to figure out
+import { WxTileSource } from '../wxsource/wxsource';
+import { HashXYZ } from '../utils/wxtools';
+import { WxRasterData } from '../wxlayer/painter';
+import mapboxgl from 'mapbox-gl';
 class VertexArrayObject {
 	boundProgram: any;
 	boundLayoutVertexBuffer: any;
@@ -177,25 +129,33 @@ class VertexArrayObject {
 	}
 }
 
-class Uniforms {
+class UniformsManager {
 	fill(gl: WebGLRenderingContext, program: WebGLProgram) {
 		for (const d in this) {
 			if (!d.startsWith('u_')) continue;
-			if (!(this[d] = gl.getUniformLocation(program, d) as any)) throw new Error('uniform not found: ' + d);
+			const loc = gl.getUniformLocation(program, d);
+			if (loc) this[d] = loc as any;
+			else console.log('uniform not found: ' + d);
 		}
 	}
 }
-class CustomTilesetLayerUniforms extends Uniforms {
+
+class CustomTilesetLayerUniforms extends UniformsManager {
 	u_matrix: WebGLUniformLocation = {};
-	u_tl_parent: WebGLUniformLocation = {};
-	u_scale_parent: WebGLUniformLocation = {};
-	u_buffer_scale: WebGLUniformLocation = {};
-	u_fade_t: WebGLUniformLocation = {};
 	u_opacity: WebGLUniformLocation = {};
-	u_image0: WebGLUniformLocation = {};
-	u_image1: WebGLUniformLocation = {};
-	// u_falsecolor_start: WebGLUniformLocation = {};
-	// u_falsecolor_end: WebGLUniformLocation = {};
+	u_tileTexture: WebGLUniformLocation = {};
+
+	u_animationTime: WebGLUniformLocation = {};
+	u_animationSpeed: WebGLUniformLocation = {};
+	u_Lmax: WebGLUniformLocation = {};
+	u_U: WebGLUniformLocation = {};
+	u_Umul: WebGLUniformLocation = {};
+	u_Umin: WebGLUniformLocation = {};
+	u_V: WebGLUniformLocation = {};
+	u_Vmul: WebGLUniformLocation = {};
+	u_Vmin: WebGLUniformLocation = {};
+
+	// u_image1: WebGLUniformLocation = {};
 }
 
 // Our custom tileset renderer!
@@ -209,7 +169,7 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 	uniforms: CustomTilesetLayerUniforms = new CustomTilesetLayerUniforms();
 
 	constructor(public id: string, public sourceID: string) {
-		this.opacity = 0.5;
+		this.opacity = 1.0;
 	}
 
 	onAdd(map, gl: WebGLRenderingContext) {
@@ -233,17 +193,19 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 
 	render(gl: WebGLRenderingContext /* , matrix */): void {
 		if (!this.program) return;
+		const sourceCache = this.map.style._otherSourceCaches[this.sourceID];
+		const coords = (sourceCache.getVisibleCoordinates() as Array<any>).reverse();
+		if (!coords.length) return;
 		gl.useProgram(this.program);
 
 		// This is needed because there's a cache that cares about the layer id
 		const layerID = this.id;
 
 		const painter = this.map.painter;
-		const sourceCache = this.map.style._otherSourceCaches[this.sourceID];
-		const source = sourceCache.getSource();
-		const coords = (sourceCache.getVisibleCoordinates() as Array<any>).reverse();
+		const wxsource: WxTileSource = sourceCache.getSource()._implementation;
+		const tilesCache = wxsource.getCache();
 
-		const context = this.map.painter.context;
+		const context = painter.context;
 
 		const minTileZ = coords.length && coords[0].overscaledZ;
 
@@ -261,41 +223,17 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 			frontFace: 0x0901,
 		};
 
+		const z = Math.round(this.map.getZoom());
 		for (let coord of coords) {
 			const tile = sourceCache.getTile(coord);
+			const wxtile = tilesCache.get(HashXYZ(coord.canonical));
+			if (!tile || !wxtile || Math.abs(coord.overscaledZ - z) > 1) continue;
 
 			// These are normally whole objects, but I've simplified them down into raw json.
 			const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ, true, gl.LESS);
 			const colorMode = painter.colorModeForRenderPass();
 
-			const posMatrix = coord.projMatrix;
-			tile.registerFadeDuration(0.3); // Was stored in the paint properties, here is hardcoded
-
-			const parentTile = sourceCache.findLoadedParent(coord, 0),
-				fade = getFadeValues(tile, parentTile, sourceCache, painter.transform);
-
-			// Properties computed for the shader
-			let parentScaleBy, parentTL;
-
-			// Set up the two textures for this tile and its parent
-			const textureFilter = gl.LINEAR;
-			context.activeTexture.set(gl.TEXTURE0);
-			tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-
-			context.activeTexture.set(gl.TEXTURE1);
-			if (parentTile) {
-				parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-				parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
-				parentTL = [(tile.tileID.canonical.x * parentScaleBy) % 1, (tile.tileID.canonical.y * parentScaleBy) % 1];
-			} else {
-				tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-			}
-
-			// I'm assuming our source is an "ImageSource", though I don't really know what that means.
-			// I followed the implementation on that branch of the if to produce the following.
-			const layoutVertexBuffer = source.boundsBuffer || painter.mercatorBoundsBuffer;
-			const indexBuffer = painter.quadTriangleIndexBuffer;
-			const segments = source.boundsSegments || painter.mercatorBoundsSegments;
+			tile.registerFadeDuration(0.0 /* 0.3 */); // Was stored in the paint properties, here is hardcoded
 
 			// Set GL properties
 			context.setDepthMode(depthMode);
@@ -304,31 +242,61 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 			context.setCullFace(cullFaceMode);
 
 			// Set uniforms
-			gl.uniformMatrix4fv(this.uniforms.u_matrix, false, posMatrix);
-			gl.uniform2fv(this.uniforms.u_tl_parent, parentTL || [0, 0]);
-			gl.uniform1f(this.uniforms.u_scale_parent, parentScaleBy || 1);
-			gl.uniform1f(this.uniforms.u_buffer_scale, 1);
-			gl.uniform1f(this.uniforms.u_fade_t, fade.mix);
-			gl.uniform1f(this.uniforms.u_opacity, fade.opacity * this.opacity);
-			gl.uniform1i(this.uniforms.u_image0, 0);
-			gl.uniform1i(this.uniforms.u_image1, 1);
-			// gl.uniform1f(this.uniforms.u_falsecolor_start, 0.0 /* falsecolor_start */);
-			// gl.uniform1f(this.uniforms.u_falsecolor_end, 0.99 /* falsecolor_end */);
+			gl.uniformMatrix4fv(this.uniforms.u_matrix, false, coord.projMatrix);
+			gl.uniform1i(this.uniforms.u_tileTexture, 0); // Texture unit 0 (layer 0)
+			gl.uniform1f(this.uniforms.u_opacity, this.opacity);
 
-			const primitiveSize = 3; // triangles
+			if (wxtile.data.data.length === 3) {
+				// vector data. Let's render winds and currents
+				if (!wxtile.rd) {
+					// create a texture from wxtile
+					const vectorTextureU = CreateTexureUV(gl, gl.TEXTURE1, wxtile.data.data[1].raw);
+					const vectorTextureV = CreateTexureUV(gl, gl.TEXTURE2, wxtile.data.data[2].raw);
+					wxtile.rd = { vectorTextureU, vectorTextureV, gl };
+				}
+
+				gl.uniform1f(this.uniforms.u_Lmax, wxtile.data.data[0].dmax);
+
+				context.activeTexture.set(gl.TEXTURE1);
+				gl.bindTexture(gl.TEXTURE_2D, wxtile.rd.vectorTextureU);
+				gl.uniform1i(this.uniforms.u_U, 1); // Texture unit 1 (layer 1)
+				gl.uniform1f(this.uniforms.u_Umin, wxtile.data.data[1].dmin);
+				gl.uniform1f(this.uniforms.u_Umul, wxtile.data.data[1].dmul * 255);
+
+				context.activeTexture.set(gl.TEXTURE2);
+				gl.bindTexture(gl.TEXTURE_2D, wxtile.rd.vectorTextureV);
+				gl.uniform1i(this.uniforms.u_V, 2); // Texture unit 2 (layer 2)
+				gl.uniform1f(this.uniforms.u_Vmin, wxtile.data.data[2].dmin);
+				gl.uniform1f(this.uniforms.u_Vmul, wxtile.data.data[2].dmul * 255);
+
+				const t = (Date.now() % 1000) / 500 - 1;
+				gl.uniform1f(this.uniforms.u_animationTime, t);
+				gl.uniform1f(this.uniforms.u_animationSpeed, 1);
+			}
+
+			// Set up the textures for this tile
+			context.activeTexture.set(gl.TEXTURE0);
+			tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+
+			// I'm assuming our source is an "ImageSource", though I don't really know what that means.
+			// I followed the implementation on that branch of the if to produce the following.
+			const mercatorBoundsBuffer = painter.mercatorBoundsBuffer;
+			const quadTriangleIndexBuffer = painter.quadTriangleIndexBuffer;
+			const mercatorBoundsSegments = painter.mercatorBoundsSegments;
+			const primitiveSize = 3; // ибо triangles
 
 			// Stolen from the draw function
-			for (const segment of segments.get()) {
+			for (const segment of mercatorBoundsSegments.get()) {
 				const vaos = segment.vaos || (segment.vaos = {});
 				const vao: VertexArrayObject = vaos[layerID] || (vaos[layerID] = new VertexArrayObject());
 
 				vao.bind(
 					context,
 					this, // program attributes
-					layoutVertexBuffer,
+					mercatorBoundsBuffer, // layoutVertexBuffer
 					[], // paintVertexBuffers
-					indexBuffer,
-					segment.vertexOffset,
+					quadTriangleIndexBuffer, // indexBuffer
+					segment.vertexOffset, // vertexOffset
 					null, // dynamicVertexBuffer
 					null // dynamicVertexBuffer2
 				);
@@ -341,18 +309,48 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 				);
 			}
 		}
+
+		this.map.triggerRepaint();
 	}
+}
+
+function CreateTexureUV(gl: WebGLRenderingContext, texLayer: number, raw: Uint16Array) {
+	const texture = gl.createTexture();
+	if (!texture) throw new Error('Unable to create texture');
+	gl.activeTexture(texLayer);
+	gl.bindTexture(gl.TEXTURE_2D, texture);
+
+	// gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 258, 258, 0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, raw);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE_ALPHA, 258, 258, 0, gl.LUMINANCE_ALPHA, gl.UNSIGNED_BYTE, new Uint8Array(raw.buffer));
+	let t: number;
+	if ((t = gl.getError())) throw new Error('GL error: ' + t);
+	// gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 256, 256, 0, gl.RGB, gl.UNSIGNED_BYTE, raw256);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	if ((t = gl.getError())) throw new Error('GL error: ' + t);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+	if ((t = gl.getError())) throw new Error('GL error: ' + t);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	if ((t = gl.getError())) throw new Error('GL error: ' + t);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	if ((t = gl.getError())) throw new Error('GL error: ' + t);
+
+	return texture;
 }
 
 function createShader(gl: WebGLRenderingContext, shaderSource: string, type: number): WebGLShader {
 	const shader = gl.createShader(type);
 	if (!shader) throw new Error('Could not create shader: GlError=' + gl.getError());
 	gl.shaderSource(shader, shaderSource);
+	let err: number;
+	if ((err = gl.getError())) throw new Error('Could not set shader source: GlError=' + err);
 	gl.compileShader(shader);
+	if ((err = gl.getError())) throw new Error('Could not compile shader: GlError=' + err);
 
+	console.log('Shader STATUS:', gl.getShaderParameter(shader, gl.COMPILE_STATUS));
 	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
 		throw new Error('Could not compile vertex program: ' + gl.getShaderInfoLog(shader));
 	}
+	console.log('Shader compiled:', gl.getShaderInfoLog(shader));
 
 	return shader;
 }

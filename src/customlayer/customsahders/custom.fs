@@ -2,65 +2,76 @@
 // This fragment shader is similar to the default, but I do some extra calculations to give it a false color appearance.
 precision highp float;
 
-uniform float u_falsecolor_start;
-uniform float u_falsecolor_end;
-
-uniform float u_fade_t;
+uniform sampler2D u_tileTexture;
 uniform float u_opacity;
-uniform sampler2D u_image0;
-uniform sampler2D u_image1;
+
+uniform float u_Lmax;
+
+uniform sampler2D u_V;
+uniform float u_Vmul;
+uniform float u_Vmin;
+
+uniform sampler2D u_U;
+uniform float u_Umul;
+uniform float u_Umin;
+
+uniform float u_animationSpeed;
+uniform float u_animationTime;
+
+#define PI 3.1415926538
+
 varying vec2 v_pos0;
-varying vec2 v_pos1;
+varying vec2 v_posV;
+
+float getNoise(vec2 pos, vec2 vec, float w, float t) {
+	// vec4 color = texture2D(u_tileTexture, p);
+	// return length(color);
+	vec2 p = sin(pos * w * PI + vec * t);
+	return length(p) / 3.0;//p.x * p.y * 0.5;
+}
 
 void main() {
+	// read and cross-fade colors from the main and parent tiles
+	vec4 color = texture2D(u_tileTexture, v_pos0);
+	if(color.a < 0.01) {
+		discard;
+	}
 
-				  // read and cross-fade colors from the main and parent tiles
-    vec4 color0 = texture2D(u_image0, v_pos0);
-    vec4 color1 = texture2D(u_image1, v_pos1);
-    if(color0.a > 0.0) {
-        color0.rgb = color0.rgb / color0.a;
-    }
-    if(color1.a > 0.0) {
-        color1.rgb = color1.rgb / color1.a;
-    }
-    vec4 color = mix(color0, color1, u_fade_t);
-    color.a *= u_opacity;
+	color = color * (color.a * u_opacity);
 
-				//   // Here's the arbitrary recoloring that turns it from RGB to false color
+	if(u_animationSpeed < 0.000001) {
+		gl_FragColor = color;
+		return;
+	}
 
-				//   float intensity = (2.0 * color.g - color.r - color.b) / (2.0 * color.g + color.r + color.b);
-				//   float intensity_scaled = (intensity - u_falsecolor_start) / (u_falsecolor_end - u_falsecolor_start);
-				//   intensity_scaled = clamp(intensity_scaled, -1.0, 1.0);
+	vec4 U = texture2D(u_U, v_posV);
+	vec4 V = texture2D(u_V, v_posV);
 
-				//   // I should do this with Canvas and a texture, but this is less work
-				//   float stop_vals[7];
-				//   stop_vals[0] = -1.0;
-				//   stop_vals[1] = -0.5;
-				//   stop_vals[2] = -0.5;
-				//   stop_vals[3] = 0.0;
-				//   stop_vals[4] = 0.3;
-				//   stop_vals[5] = 0.5;
-				//   stop_vals[6] = 1.0;
+	vec2 Lvec = vec2( // 
+	((U.a * 255.0 + U.r) * u_Umul + u_Umin) * -1.0, // 
+	(V.a * 255.0 + V.r) * u_Vmul + u_Vmin) * u_animationSpeed / u_Lmax * 25.0;
 
-				//   vec3 stop_cols[7];
-				//   stop_cols[0] = vec3(0,0,0);
-				//   stop_cols[1] = vec3(0.0,0.0,0.5);
-				//   stop_cols[2] = vec3(1,0,1);
-				//   stop_cols[3] = vec3(1,0,0);
-				//   stop_cols[4] = vec3(0.984, 1.0, 0.0);
-				//   stop_cols[5] = vec3(0.0, 0.6667, 0.0);
-				//   stop_cols[6] = vec3(0.0, 0.3333, 0.0);
+	float L = length(Lvec);
 
-				//   for (int i = 0; i < 6; i++) {
-				//     float interp = (intensity_scaled - stop_vals[i]) / (stop_vals[i+1] - stop_vals[i]);
-				//     if (interp >= 0.0 && interp <= 1.0) {
-				//       color.rgb = mix(stop_cols[i], stop_cols[i+1], interp);
-				//     }
-				//   }
+	float t1 = u_animationTime - 1.0;
+	if(t1 < -1.0) {
+		t1 += 2.0;
+	}
 
-    gl_FragColor = color;
+	float n1 = getNoise(v_pos0, Lvec, 15.0, u_animationTime) * (1.0 - abs(u_animationTime));
+	float n1_1 = getNoise(v_pos0, Lvec, 45.0, u_animationTime) * (1.0 - abs(u_animationTime));
+	float n2 = getNoise(v_pos0, Lvec, 15.0, t1) * (1.0 - abs(t1));
+	float n2_2 = getNoise(v_pos0, Lvec, 45.0, t1) * (1.0 - abs(t1));
 
-#ifdef OVERDRAW_INSPECTOR
-    gl_FragColor = vec4(1.0);
-#endif
+	float n = n1 + n2 + n1_1 + n2_2;
+	// color.xyz = mix(color.xyz, vec3(t), t);
+	color.xyz += color.xyz * n / 5.0;
+
+	gl_FragColor = color * color.a * u_opacity * 1.000000001 +
+		vec4(n, n, n, 0.0) * 0.000000001 +
+		vec4(L, L, L, 1.0) * 0.000000001;
+
+	// gl_FragColor = mix(gl_FragColor, color, u_opacity);
+
+	// gl_FragColor = color;
 }

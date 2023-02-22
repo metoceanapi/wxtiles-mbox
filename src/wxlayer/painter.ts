@@ -34,6 +34,12 @@ export interface WxRasterData {
 	 * {@link WxData} data object for this tile
 	 * */
 	data: WxData;
+
+	rd?: {
+		vectorTextureU: WebGLTexture;
+		vectorTextureV: WebGLTexture;
+		gl: WebGLRenderingContext;
+	};
 }
 
 /**

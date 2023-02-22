@@ -7,7 +7,7 @@ import { start } from './start';
 // /*
 import { WxTilesLogging } from '../src/utils/wxtools';
 import { WxAPI } from '../src/wxAPI/wxAPI';
-import { initFrameWork } from './frwrkdeps';
+import { flyTo, initFrameWork } from './frwrkdeps';
 import { CustomTilesetLayer } from '../src/customlayer/customlayer';
 import { WxTileLayer } from '../src/customlayer/oldcustlay';
 simpleDemo();
@@ -25,8 +25,8 @@ async function simpleDemo() {
 	WxTilesLogging(true); // If needed
 	const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit });
 	// Create a dataset manager (may be used for many layers from this dataset)
-	const wxdatasetManager = await wxapi.createDatasetManager('obs-radar.rain.nzl.national');
-	const variable = 'reflectivity'; // Scalar example
+	const wxdatasetManager = await wxapi.createDatasetManager('wrf-ecmwf.gbr.national');
+	const variable = 'wind.speed.northward.at-10m'; // Scalar example
 	// const variable = 'wind.speed.eastward.at-10m'; // Vector example
 	// create a source layer
 	const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
@@ -44,6 +44,10 @@ async function simpleDemo() {
 
 	// map.addLayer(new WxTileLayer(wxsource.id));
 	map.addLayer(new CustomTilesetLayer('wxlayerC1', wxsource.id));
+	const { zoom, lon, lat } = wxdatasetManager.getCenterAndFitZoom();
+	flyTo(map, zoom, lon, lat, 0, 0);
+	// const { east, north, south, west } = wxdatasetManager.getBoundaries().boundariesnorm;
+	// map.fitBounds([west, south, east, north]);
 
 	// // await 2 seconds
 	// await new Promise((resolve) => setTimeout(resolve, 2000));

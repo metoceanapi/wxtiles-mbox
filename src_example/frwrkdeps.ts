@@ -2,6 +2,7 @@ import { IControl } from 'mapbox-gl';
 import mapboxgl from 'mapbox-gl';
 import { WxGetColorStyles } from '../src/utils/wxtools';
 import { OPACITY } from './start';
+import { CustomTilesetLayer } from '../src/customlayer/customlayer';
 
 export function flyTo(map: mapboxgl.Map, zoom: number, lng: number, lat: number, bearing: number, pitch: number) {
 	map.flyTo({ zoom, center: [lng, lat], bearing, pitch });
@@ -126,6 +127,8 @@ export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: stri
 
 export async function addLayer(map: mapboxgl.Map, idS: string, idL: string, source?: any) {
 	map.addSource(idS, source);
+	map.addLayer(new CustomTilesetLayer(idL, idS));
+	/*
 	map.addLayer(
 		{
 			id: idL,
@@ -137,5 +140,5 @@ export async function addLayer(map: mapboxgl.Map, idS: string, idL: string, sour
 			},
 		},
 		'baseL'
-	);
+	);*/
 }

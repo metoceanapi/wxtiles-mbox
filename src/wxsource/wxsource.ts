@@ -117,5 +117,6 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	onRemove(map: any): void {
 		WXLOG(`WxTileSource onRemove (${this.id})`);
 		this.animation = false;
+		this.clearCache();
 	} // onRemove
 }

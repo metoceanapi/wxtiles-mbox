@@ -144,8 +144,8 @@ export class WxDataSetManager {
 	 * @returns {[west, north, east, south] | undefined} - dataset's boundaries
 	 * */
 	getBoundaries180(): [number, number, number, number] | undefined {
-		const b180a = this.meta.boundaries?.boundaries180;
-		if (!(b180a?.length === 1)) return; // TODO can't make lon = [170 to 190] as mapBox uses -180 to 180, so need to check for that in loader
+		const b180a = this.meta.boundaries.boundaries180;
+		if (b180a.length !== 1) return; // TODO can't make lon = [170 to 190] as mapBox uses -180 to 180, so need to check for that in loader
 		const b180 = b180a[0]; // else let mapbox manage boundaries
 		return [b180.west, b180.south, b180.east, b180.north];
 	}
@@ -154,8 +154,26 @@ export class WxDataSetManager {
 	 * Get dataset's boundaries.
 	 * @returns {WxAllBoundariesMeta | undefined} - dataset's boundaries
 	 * */
-	getBoundaries(): WxAllBoundariesMeta | undefined {
+	getBoundaries(): WxAllBoundariesMeta {
 		return this.meta.boundaries;
+	}
+
+	/**
+	 * Get zoom level and center coordinates to fit the dataset's boundaries on the map.
+	 * usefull with {@link WxMap.flyTo}
+	 * @example
+	 * ```ts
+	 * const { zoom, lon, lat } = wxdatasetManager.getCenterAndFitZoom();
+	 * map.flyTo({ zoom, center: [lon, lat], bearing:0, pitch:0 });
+	 * ```
+	 * @returns { fitZoom: number; lon: number; lat: number }
+	 */
+	getCenterAndFitZoom(): { zoom: number; lon: number; lat: number } {
+		const { east, west, north, south } = this.meta.boundaries.boundariesnorm;
+		const lon = (east + west) / 2;
+		const lat = (north + south) / 2;
+		const zoom = Math.round(Math.log(360 / ((east - west + 360) % 360)) / Math.LN2); // from https://stackoverflow.com/questions/6048975/google-maps-v3-how-to-calculate-the-zoom-level-for-a-given-bounds
+		return { zoom, lon, lat };
 	}
 
 	/**

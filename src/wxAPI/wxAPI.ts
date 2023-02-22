@@ -97,7 +97,7 @@ export interface WxDatasetMeta {
 
 	/**
 	 * boundaries of a dataset */
-	boundaries?: WxAllBoundariesMeta;
+	boundaries: WxAllBoundariesMeta;
 
 	/**
 	 * source of the dataset */
