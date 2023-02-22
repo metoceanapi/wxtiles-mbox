@@ -5,7 +5,7 @@ import { type WxRequestInit, type WxTileInfo, type WxLngLat, WxLayerOptions } fr
 import { WxLayerBaseImplementation, type WxLayerAPI } from '../wxlayer/WxImplementation';
 import { FrameworkOptions } from './wxsourcetypes';
 import { type WxRasterData } from '../wxlayer/painter';
-import type { WxDataSetManager, WxSourceLayerOptions } from '../wxAPI/WxDataSetManager';
+import { WxDataSetManager, WxSourceLayerOptions } from '../wxAPI/WxDataSetManager';
 
 /**
  * A custom layer source implementation

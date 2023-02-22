@@ -283,6 +283,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	/**
 	 * @ignore
 	 * A dummy function to be replaced by ancestor classes.
+	 * Force reload and redraw all tiles.
 	 */
 	protected update() {}
 }
