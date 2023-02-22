@@ -246,7 +246,9 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 			gl.uniform1i(this.uniforms.u_tileTexture, 0); // Texture unit 0 (layer 0)
 			gl.uniform1f(this.uniforms.u_opacity, this.opacity);
 
-			if (wxtile.data.data.length === 3) {
+			const wxstyle = wxsource.getCurrentStyleObjectCopy();
+
+			if (wxtile.data.data.length === 3 && wxstyle.streamLineSpeedFactor > 0.2) {
 				// vector data. Let's render winds and currents
 				if (!wxtile.rd) {
 					// create a texture from wxtile
@@ -271,7 +273,9 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 
 				const t = (Date.now() % 1000) / 500 - 1;
 				gl.uniform1f(this.uniforms.u_animationTime, t);
-				gl.uniform1f(this.uniforms.u_animationSpeed, 1);
+				gl.uniform1f(this.uniforms.u_animationSpeed, wxsource.getCurrentStyleObjectCopy().streamLineSpeedFactor);
+			} else {
+				gl.uniform1f(this.uniforms.u_animationSpeed, 0); // no glsl animation
 			}
 
 			// Set up the textures for this tile

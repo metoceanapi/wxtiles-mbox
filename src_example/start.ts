@@ -32,8 +32,8 @@ export async function start() {
 	// let variable = 'air.temperature.at-2m';
 	// let variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
 
-	let datasetName = 'ww3-ecmwf.global';
-	let variable = 'wave.direction.mean';
+	let datasetName = 'gfs.global';
+	let variable = 'wind.speed.northward.at-10m';
 
 	// let datasetName = 'obs-radar.rain.nzl.national';
 	// let variables: WxVars = ['reflectivity'];
@@ -101,6 +101,7 @@ export async function start() {
 		} else {
 			wxsource = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: sth.style }, frameworkOptions);
 			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
+			wxsource.startAnimation();
 			const styleCopy = wxsource.getCurrentStyleObjectCopy();
 			legendControl.drawLegend(styleCopy); // first draw legend with current style
 			styleCopy.levels = sth.style?.levels; // no need to show defaults it in the editor and URL

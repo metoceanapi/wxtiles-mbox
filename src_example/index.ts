@@ -2,7 +2,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl';
 
 import { start } from './start';
-// start();
+start();
 
 // /*
 import { WxTilesLogging } from '../src/utils/wxtools';
@@ -10,7 +10,7 @@ import { WxAPI } from '../src/wxAPI/wxAPI';
 import { flyTo, initFrameWork } from './frwrkdeps';
 import { CustomTilesetLayer } from '../src/customlayer/customlayer';
 import { WxTileLayer } from '../src/customlayer/oldcustlay';
-simpleDemo();
+// simpleDemo();
 
 async function simpleDemo() {
 	const map = await initFrameWork();
