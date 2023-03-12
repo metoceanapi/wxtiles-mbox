@@ -144,6 +144,7 @@ class CustomTilesetLayerUniforms extends UniformsManager {
 	u_matrix: WebGLUniformLocation = {};
 	u_opacity: WebGLUniformLocation = {};
 	u_tileTexture: WebGLUniformLocation = {};
+	u_noiseTexture: WebGLUniformLocation = {};
 
 	u_animationTime: WebGLUniformLocation = {};
 	u_animationSpeed: WebGLUniformLocation = {};
@@ -168,11 +169,31 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 	attributes!: { a_pos: any; a_texture_pos: any };
 	uniforms: CustomTilesetLayerUniforms = new CustomTilesetLayerUniforms();
 
+	noiseTexture: WebGLTexture | null = null;
+
 	constructor(public id: string, public sourceID: string, opacity?: number) {
 		this.opacity = opacity || 1.0;
 	}
 
 	onAdd(map, gl: WebGLRenderingContext) {
+		// create RGB noise data 256x256 in noiseTextureData
+		const texDim = 128;
+		const noiseTextureData = new Uint8Array(texDim * texDim);
+		for (let i = 0; i < texDim * texDim; i++) {
+			noiseTextureData[i] = Math.floor(Math.random() * 256);
+		}
+
+		// create a noise texture
+		this.noiseTexture = gl.createTexture();
+		if (!this.noiseTexture) throw new Error('Unable to create texture');
+		gl.activeTexture(gl.TEXTURE1);
+		gl.bindTexture(gl.TEXTURE_2D, this.noiseTexture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, texDim, texDim, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, new Uint8Array(noiseTextureData));
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
 		this.map = map;
 
 		this.program = createShaderProgram(gl);
@@ -194,7 +215,9 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 	render(gl: WebGLRenderingContext /* , matrix */): void {
 		if (!this.program) return;
 		const sourceCache = this.map.style._otherSourceCaches[this.sourceID];
-		const coords = (sourceCache.getVisibleCoordinates() as Array<any>).reverse();
+		const wxsource: WxTileSource = sourceCache.getSource()._implementation;
+		// const coords = (sourceCache.getVisibleCoordinates() as Array<any>).reverse();
+		const coords = wxsource.coveringTiles();
 		if (!coords.length) return;
 		gl.useProgram(this.program);
 
@@ -202,12 +225,12 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 		const layerID = this.id;
 
 		const painter = this.map.painter;
-		const wxsource: WxTileSource = sourceCache.getSource()._implementation;
 		const tilesCache = wxsource.getCache();
 
 		const context = painter.context;
 
-		const minTileZ = coords.length && coords[0].overscaledZ;
+		const minTileZ = coords.length && coords[0].z;
+		// const minTileZ = coords.length && coords[0].overscaledZ;
 
 		const stencilMode = {
 			test: { func: 0x0207, mask: 0 },
@@ -226,14 +249,15 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 		const z = Math.round(this.map.getZoom());
 		for (let coord of coords) {
 			const tile = sourceCache.getTile(coord);
-			const wxtile = tilesCache.get(HashXYZ(coord.canonical));
-			if (!tile || !wxtile || Math.abs(coord.overscaledZ - z) > 1) continue;
+			const wxtile = tilesCache.get(HashXYZ(coord));
+			if (!tile || !wxtile) continue;
+			// if (!tile || !wxtile || Math.abs(coord.overscaledZ - z) > 1) continue;
 
 			// These are normally whole objects, but I've simplified them down into raw json.
-			const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ, true, gl.LESS);
+			const depthMode = painter.depthModeForSublayer(coord.z - minTileZ, true, gl.LESS);
 			const colorMode = painter.colorModeForRenderPass();
 
-			tile.registerFadeDuration(0.0 /* 0.3 */); // Was stored in the paint properties, here is hardcoded
+			tile.registerFadeDuration(0.3); // Was stored in the paint properties, here is hardcoded
 
 			// Set GL properties
 			context.setDepthMode(depthMode);
@@ -263,17 +287,22 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 				gl.bindTexture(gl.TEXTURE_2D, wxtile.rd.vectorTextureU);
 				gl.uniform1i(this.uniforms.u_U, 1); // Texture unit 1 (layer 1)
 				gl.uniform1f(this.uniforms.u_Umin, wxtile.data.data[1].dmin);
-				gl.uniform1f(this.uniforms.u_Umul, wxtile.data.data[1].dmul * 255);
+				gl.uniform1f(this.uniforms.u_Umul, wxtile.data.data[1].dmul * 65535);
 
 				context.activeTexture.set(gl.TEXTURE2);
 				gl.bindTexture(gl.TEXTURE_2D, wxtile.rd.vectorTextureV);
 				gl.uniform1i(this.uniforms.u_V, 2); // Texture unit 2 (layer 2)
 				gl.uniform1f(this.uniforms.u_Vmin, wxtile.data.data[2].dmin);
-				gl.uniform1f(this.uniforms.u_Vmul, wxtile.data.data[2].dmul * 255);
+				gl.uniform1f(this.uniforms.u_Vmul, wxtile.data.data[2].dmul * 65535);
 
-				const t = (Date.now() % 1000) / 500 - 1;
+				const t = (Date.now() % 10000) / 10000.0;
 				gl.uniform1f(this.uniforms.u_animationTime, t);
 				gl.uniform1f(this.uniforms.u_animationSpeed, wxsource.getCurrentStyleObjectCopy().streamLineSpeedFactor);
+
+				// Set up the noise textures
+				context.activeTexture.set(gl.TEXTURE3);
+				gl.bindTexture(gl.TEXTURE_2D, this.noiseTexture);
+				gl.uniform1i(this.uniforms.u_noiseTexture, 3); // Texture unit 3 (layer 3)
 			} else {
 				gl.uniform1f(this.uniforms.u_animationSpeed, 0); // no glsl animation
 			}

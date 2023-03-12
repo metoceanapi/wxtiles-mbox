@@ -16,7 +16,7 @@ export async function start() {
 	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	WxTilesLogging(false);
 	// const dataServerURL = 'http://localhost:9191/data/';
-	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
@@ -28,12 +28,12 @@ export async function start() {
 		requestInit: { headers: myHeaders },
 	});
 
-	// let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// let variable = 'air.temperature.at-2m';
-	// let variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
+	let variable = 'wind.speed.eastward.at-10m';
 
-	let datasetName = 'gfs.global';
-	let variable = 'wind.speed.northward.at-10m';
+	// let datasetName = 'wrf-ecmwf.gbr.national';
+	// let variable = 'wind.speed.northward.at-10m';
 
 	// let datasetName = 'obs-radar.rain.nzl.national';
 	// let variables: WxVars = ['reflectivity'];
@@ -61,7 +61,7 @@ export async function start() {
 		console.log(e);
 	}
 
-	flyTo(map, zoom, lng, lat, bearing, pitch);
+	// flyTo(map, zoom, lng, lat, bearing, pitch);
 
 	// const sth = { style: {} };
 	map.on('zoom', () => setURL(map, time, datasetName, variable, sth.style));
@@ -77,18 +77,18 @@ export async function start() {
 	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: 'WxTiles' };
 	const apiControl = new WxAPIControl(wxapi, datasetName, variable);
 	addControl(map, apiControl, 'top-left');
-	apiControl.onchange = async (datasetName_, variable_, nonnativecall): Promise<void> => {
+	apiControl.onchange = async (datasetName_, variable_, resetStyleAndFlyTo = true): Promise<void> => {
 		WXLOG('apiControl.onchange datasetName=', datasetName_, 'variable=', variable_);
 		// remove existing source and layer
 		removeLayer(map, frameworkOptions.id, wxsource);
 		//
-		nonnativecall || (sth.style = {}); // reset style if change dataset/variable
+		resetStyleAndFlyTo && (sth.style = {}); // reset style if change dataset/variable
 		wxsource = undefined;
 		datasetName = datasetName_;
 		variable = variable_;
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 		const boundaries = wxdatasetManager.getBoundaries();
-		if (boundaries && !nonnativecall) {
+		if (boundaries && resetStyleAndFlyTo) {
 			const { east, west, north, south } = boundaries.boundariesnorm;
 			const zoom = Math.round(Math.log((360 * 360) / Math.max((east - west + 360) % 360, north - south) / 360) / Math.LN2); // from https://stackoverflow.com/questions/6048975/google-maps-v3-how-to-calculate-the-zoom-level-for-a-given-bounds
 			flyTo(map, zoom, (east + west) / 2, (north + south) / 2, 0, 0);
@@ -101,7 +101,7 @@ export async function start() {
 		} else {
 			wxsource = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: sth.style }, frameworkOptions);
 			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
-			wxsource.startAnimation();
+			// wxsource.startAnimation();
 			const styleCopy = wxsource.getCurrentStyleObjectCopy();
 			legendControl.drawLegend(styleCopy); // first draw legend with current style
 			styleCopy.levels = sth.style?.levels; // no need to show defaults it in the editor and URL

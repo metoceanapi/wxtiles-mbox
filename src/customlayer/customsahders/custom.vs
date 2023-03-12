@@ -1,3 +1,4 @@
+#version 100
 // This vertex shader is verbatim the same as the raster vertex shader
 uniform mat4 u_matrix;
 

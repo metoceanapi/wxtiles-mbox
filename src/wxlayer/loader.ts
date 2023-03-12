@@ -124,6 +124,33 @@ export class Loader {
 		if (data.length === 1) return; // no need to process
 		data.unshift({ raw: new Uint16Array(258 * 258), dmin: 0, dmax: 0, dmul: 0 });
 		const [l, u, v] = data; // length, u, v components
+
+		/*/ create test data for vector field
+		// The Vortex
+		const r = 30;
+		u.dmin = -r;
+		u.dmax = r;
+		u.dmul = 1 / 65535;
+		u.dmul = (u.dmax - u.dmin) / 65535;
+
+		v.dmin = -r;
+		v.dmax = r;
+		v.dmul = (v.dmax - v.dmin) / 65535;
+
+		for (let y = 0; y < 258; ++y) {
+			const ny = (2 * y) / 257 - 1; // nx, ny = [-1; 1]
+			const nyy = ny * ny;
+			for (let x = 0; x < 258; ++x) {
+				const nx = (2 * x) / 257 - 1;
+				const nxx = nx * nx;
+				const vl = Math.sqrt(nxx + nyy) + 0.0001;
+				const uu = (ny / vl) * Math.sin(vl * Math.PI) * r;
+				const vv = (nx / vl) * Math.sin(vl * Math.PI) * r;
+				u.raw[x + y * 258] = (uu - u.dmin) / u.dmul;
+				v.raw[x + y * 258] = (vv - v.dmin) / v.dmul;
+			}
+		} //*/
+
 		l.dmax = 1.42 * Math.max(-u.dmin, u.dmax, -v.dmin, v.dmax);
 		l.dmul = (l.dmax - l.dmin) / 65535;
 		for (let i = 0; i < 258 * 258; ++i) {
