@@ -140,7 +140,7 @@ class UniformsManager {
 	}
 }
 
-class CustomTilesetLayerUniforms extends UniformsManager {
+class CustomWxTilesLayerUniforms extends UniformsManager {
 	u_matrix: WebGLUniformLocation = {};
 	u_opacity: WebGLUniformLocation = {};
 	u_tileTexture: WebGLUniformLocation = {};
@@ -162,14 +162,14 @@ class CustomTilesetLayerUniforms extends UniformsManager {
 }
 
 // Our custom tileset renderer!
-export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
+export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 	type: 'custom' = 'custom';
 	renderingMode: '2d' | '3d' = '2d';
 	opacity: number;
 	map: any;
 	program!: WebGLProgram;
 	attributes!: { a_pos: any; a_texture_pos: any };
-	uniforms: CustomTilesetLayerUniforms = new CustomTilesetLayerUniforms();
+	uniforms: CustomWxTilesLayerUniforms = new CustomWxTilesLayerUniforms();
 
 	noiseTexture: WebGLTexture | null = null;
 

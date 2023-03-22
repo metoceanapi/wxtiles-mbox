@@ -315,17 +315,16 @@ export type UriLoaderPromiseFunc<T> = (url: string, ...props: any) => Promise<T>
 
 /** Makes a cachable function that loads image from URL, with additional properties */
 export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): UriLoaderPromiseFunc<T> {
+	//return fn;
 	const cache = new Map<string, Promise<T>>();
-	return (url, ...props) => {
+	return (url, ...props): Promise<T> => {
 		const cached = cache.get(url);
 		if (cached) return cached;
 		const promise = fn(url, ...props);
 		// cache any result (even falures)
 		cache.set(url, promise);
 		// except aborted (images), so they could be reloaded
-		promise.catch((e) => {
-			e.name === 'AbortError' && cache.delete(url);
-		});
+		promise.catch((e) => e.name === 'AbortError' && cache.delete(url));
 		return promise;
 	};
 }
