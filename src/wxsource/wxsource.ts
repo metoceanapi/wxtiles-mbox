@@ -34,7 +34,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	 */
 	constructor(wxLayerOptions: WxLayerOptions, frwOptions: FrameworkOptions) {
 		WXLOG(`WxTileSource.constructor (id=${frwOptions.id})`);
-		frwOptions.bounds = frwOptions.bounds || wxLayerOptions.wxdatasetManager.getBoundaries180(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
+		//frwOptions.bounds = frwOptions.bounds || wxLayerOptions.wxdatasetManager.getBoundaries180(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
 		super(wxLayerOptions, frwOptions);
 	} // constructor
 
