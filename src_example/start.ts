@@ -28,7 +28,9 @@ export async function start() {
 		requestInit: { headers: myHeaders },
 	});
 
-	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	// TODO: borders issue when the first dataset is not global
+	// let datasetName = 'wrf-gfs.nzl.national-8km'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	let datasetName = 'ecmwf.global'; /* 'obs-radar.rain.nzl.national/'; */
 	// let variable = 'air.temperature.at-2m';
 	let variable = 'wind.speed.eastward.at-10m';
 
@@ -69,7 +71,7 @@ export async function start() {
 	map.on('rotate', () => setURL(map, time, datasetName, variable, sth.style));
 	map.on('pitch', () => setURL(map, time, datasetName, variable, sth.style));
 
-	let wxsource: WxTileSource | undefined;
+	let wxsourceLayer: WxTileSource | undefined;
 
 	const legendControl = new WxLegendControl();
 	addControl(map, legendControl, 'top-right');
@@ -80,10 +82,10 @@ export async function start() {
 	apiControl.onchange = async (datasetName_, variable_, resetStyleAndFlyTo = true): Promise<void> => {
 		WXLOG('apiControl.onchange datasetName=', datasetName_, 'variable=', variable_);
 		// remove existing source and layer
-		removeLayer(map, frameworkOptions.id, wxsource);
+		removeLayer(map, frameworkOptions.id, wxsourceLayer);
 		//
 		resetStyleAndFlyTo && (sth.style = {}); // reset style if change dataset/variable
-		wxsource = undefined;
+		wxsourceLayer = undefined;
 		datasetName = datasetName_;
 		variable = variable_;
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
@@ -99,17 +101,17 @@ export async function start() {
 			timeControl.setTimes(wxdatasetManager.getTimes());
 			legendControl.clear();
 		} else {
-			wxsource = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: sth.style }, frameworkOptions);
-			await addLayer(map, frameworkOptions.id, 'wxtiles', wxsource);
+			wxsourceLayer = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: sth.style }, frameworkOptions);
+			await addLayer(map, 'wxtiles', wxsourceLayer);
 			// wxsource.startAnimation();
-			const styleCopy = wxsource.getCurrentStyleObjectCopy();
+			const styleCopy = wxsourceLayer.getCurrentStyleObjectCopy();
 			legendControl.drawLegend(styleCopy); // first draw legend with current style
 			styleCopy.levels = sth.style?.levels; // no need to show defaults it in the editor and URL
 			styleCopy.colors = sth.style?.colors; // no need to show defaults it in the editor and URL
 			await customStyleEditorControl.onchange?.(styleCopy, true);
 		}
 
-		timeControl.updateSource(wxsource);
+		timeControl.updateSource(wxsourceLayer);
 	};
 
 	const timeControl = new WxTimeControl(50);
@@ -122,9 +124,9 @@ export async function start() {
 	addControl(map, customStyleEditorControl, 'top-right');
 	customStyleEditorControl.onchange = async (style, nonnativecall) => {
 		WXLOG('customStyleEditorControl.onchange');
-		if (!wxsource) return;
-		nonnativecall || (await wxsource.updateCurrentStyleObject(style)); // if called manually, do not update wxsource's style
-		const nstyle = wxsource.getCurrentStyleObjectCopy();
+		if (!wxsourceLayer) return;
+		nonnativecall || (await wxsourceLayer.updateCurrentStyleObject(style)); // if called manually, do not update wxsource's style
+		const nstyle = wxsourceLayer.getCurrentStyleObjectCopy();
 		legendControl.drawLegend(nstyle);
 		nstyle.levels = style?.levels; // keep levels empty if they are not defined
 		nstyle.colors = style?.colors; // keep colors empty if they are not defined
@@ -135,7 +137,7 @@ export async function start() {
 
 	const infoControl = new WxInfoControl();
 	addControl(map, infoControl, 'bottom-left');
-	map.on('mousemove', (e) => infoControl.update(wxsource, map, position(e)));
+	map.on('mousemove', (e) => infoControl.update(wxsourceLayer, map, position(e)));
 
 	await apiControl.onchange(datasetName, variable, true); // initial load
 

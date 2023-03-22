@@ -35,7 +35,7 @@ export async function initFrameWork() {
 	});
 
 	map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-	// map.showTileBoundaries = true;e
+	// map.showTileBoundaries = true;
 	await map.once('load');
 
 	// addSkyAndTerrain(map);
@@ -104,9 +104,12 @@ export function addControl(map: mapboxgl.Map, control: IControl, position: 'top-
 	map.addControl(control, position);
 }
 
-export function removeLayer(map: mapboxgl.Map, layerId: string, source?: any) {
-	map.getLayer('wxtiles') && map.removeLayer('wxtiles');
-	map.getSource(layerId) && map.removeSource(layerId);
+export function removeLayer(map: mapboxgl.Map, idS: string, source?: any) {
+	const layer = map.getLayer('wxtiles');
+	layer && map.removeLayer('wxtiles');
+	const mbsource = map.getSource(idS);
+	mbsource && map.removeSource(idS);
+	console.log('removeLayer', idS, source);
 }
 
 export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: string, maxZoom: number) {
@@ -126,15 +129,16 @@ export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: stri
 	);
 }
 
-export async function addLayer(map: mapboxgl.Map, idS: string, idL: string, source?: any) {
-	map.addSource(idS, source);
-	map.addLayer(new CustomTilesetLayer(idL, idS, OPACITY));
+export async function addLayer(map: mapboxgl.Map, idL: string, source: any) {
+	map.addSource(source.id, source);
+	map.addLayer(new CustomTilesetLayer(idL, source.id, OPACITY));
+	console.log('addLayer', idL, source.id);
 	/*
 	map.addLayer(
 		{
 			id: idL,
 			type: 'raster',
-			source: idS,
+			source: source.id,
 			paint: {
 				'raster-fade-duration': 0, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
 				'raster-opacity': OPACITY,
