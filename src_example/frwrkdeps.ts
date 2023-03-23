@@ -2,7 +2,7 @@ import { IControl } from 'mapbox-gl';
 import mapboxgl from 'mapbox-gl';
 import { WxGetColorStyles } from '../src/utils/wxtools';
 import { OPACITY } from './start';
-import { CustomTilesetLayer } from '../src/customlayer/customlayer';
+import { CustomWxTilesLayer } from '../src/customlayer/customlayer';
 
 export function flyTo(map: mapboxgl.Map, zoom: number, lng: number, lat: number, bearing: number, pitch: number) {
 	map.flyTo({ zoom, center: [lng, lat], bearing, pitch });
@@ -25,16 +25,17 @@ export async function initFrameWork() {
 	mapboxgl.accessToken = 'pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A';
 	const map = new mapboxgl.Map({
 		container: 'map',
-		style: 'mapbox://styles/mapbox/light-v10',
+		// style: 'mapbox://styles/mapbox/light-v10',
 		// style: 'mapbox://styles/mapbox/satellite-v9',
-		// style: { version: 8, name: 'Empty', sources: {}, layers: [] },
-		center: [174.5, -40.75],
-		zoom: 3,
+		style: { version: 8, name: 'Empty', sources: {}, layers: [] },
+		center: [0, 80.75],
+		// center: [174.5, -40.75],
+		// zoom: 3,
 		// projection: { name: 'globe' },
 	});
 
 	map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-	map.showTileBoundaries = true;
+	// map.showTileBoundaries = true;
 	await map.once('load');
 
 	// addSkyAndTerrain(map);
@@ -103,9 +104,12 @@ export function addControl(map: mapboxgl.Map, control: IControl, position: 'top-
 	map.addControl(control, position);
 }
 
-export function removeLayer(map: mapboxgl.Map, layerId: string, source?: any) {
-	map.getLayer('wxtiles') && map.removeLayer('wxtiles');
-	map.getSource(layerId) && map.removeSource(layerId);
+export function removeLayer(map: mapboxgl.Map, idS: string, source?: any) {
+	const layer = map.getLayer('wxtiles');
+	layer && map.removeLayer('wxtiles');
+	const mbsource = map.getSource(idS);
+	mbsource && map.removeSource(idS);
+	console.log('removeLayer', idS, source);
 }
 
 export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: string, maxZoom: number) {
@@ -125,20 +129,21 @@ export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: stri
 	);
 }
 
-export async function addLayer(map: mapboxgl.Map, idS: string, idL: string, source?: any) {
-	map.addSource(idS, source);
-	map.addLayer(new CustomTilesetLayer(idL, idS));
+export async function addLayer(map: mapboxgl.Map, idL: string, source: any) {
+	map.addSource(source.id, source);
+	map.addLayer(new CustomWxTilesLayer(idL, source.id, OPACITY));
+	console.log('addLayer', idL, source.id);
 	/*
 	map.addLayer(
 		{
 			id: idL,
 			type: 'raster',
-			source: idS,
+			source: source.id,
 			paint: {
 				'raster-fade-duration': 0, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
 				'raster-opacity': OPACITY,
 			},
 		},
 		'baseL'
-	);*/
+	); //*/
 }

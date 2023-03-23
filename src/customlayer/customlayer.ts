@@ -140,13 +140,16 @@ class UniformsManager {
 	}
 }
 
-class CustomTilesetLayerUniforms extends UniformsManager {
+class CustomWxTilesLayerUniforms extends UniformsManager {
 	u_matrix: WebGLUniformLocation = {};
 	u_opacity: WebGLUniformLocation = {};
 	u_tileTexture: WebGLUniformLocation = {};
+	u_noiseTexture: WebGLUniformLocation = {};
 
-	u_animationTime: WebGLUniformLocation = {};
-	u_animationSpeed: WebGLUniformLocation = {};
+	u_animationTimePosition: WebGLUniformLocation = {};
+	u_vectorFieldFactor: WebGLUniformLocation = {};
+	u_animationIntensity: WebGLUniformLocation = {};
+	u_wavesCount: WebGLUniformLocation = {};
 	u_Lmax: WebGLUniformLocation = {};
 	u_U: WebGLUniformLocation = {};
 	u_Umul: WebGLUniformLocation = {};
@@ -159,26 +162,32 @@ class CustomTilesetLayerUniforms extends UniformsManager {
 }
 
 // Our custom tileset renderer!
-export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
+export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 	type: 'custom' = 'custom';
-	renderingMode: '2d' | '3d' = '3d';
+	renderingMode: '2d' | '3d' = '2d';
 	opacity: number;
 	map: any;
 	program!: WebGLProgram;
 	attributes!: { a_pos: any; a_texture_pos: any };
-	uniforms: CustomTilesetLayerUniforms = new CustomTilesetLayerUniforms();
+	uniforms: CustomWxTilesLayerUniforms = new CustomWxTilesLayerUniforms();
 
-	constructor(public id: string, public sourceID: string) {
-		this.opacity = 1.0;
+	noiseTexture: WebGLTexture | null = null;
+
+	constructor(public id: string, public sourceID: string, opacity?: number) {
+		this.opacity = opacity || 1.0;
+	}
+	onRemove(map: any, gl: WebGLRenderingContext): void {
+		// map.style._layers[this.id].source = undefined;
+
+		// delete gl resources
+		gl.deleteTexture(this.noiseTexture);
+		gl.deleteProgram(this.program);
 	}
 
 	onAdd(map, gl: WebGLRenderingContext) {
 		this.map = map;
-
+		this.noiseTexture = createNoiseTexture(gl);
 		this.program = createShaderProgram(gl);
-
-		// Store any uniform and attribute locations
-
 		// The VertexBuffer assumes that 'this' looks like a Program, at least that it has attributes
 		this.attributes = {
 			a_pos: gl.getAttribLocation(this.program, 'a_pos'),
@@ -194,7 +203,9 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 	render(gl: WebGLRenderingContext /* , matrix */): void {
 		if (!this.program) return;
 		const sourceCache = this.map.style._otherSourceCaches[this.sourceID];
+		const wxsource: WxTileSource = sourceCache.getSource()._implementation;
 		const coords = (sourceCache.getVisibleCoordinates() as Array<any>).reverse();
+		const coordsCovering = wxsource.coveringTiles();
 		if (!coords.length) return;
 		gl.useProgram(this.program);
 
@@ -202,11 +213,11 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 		const layerID = this.id;
 
 		const painter = this.map.painter;
-		const wxsource: WxTileSource = sourceCache.getSource()._implementation;
 		const tilesCache = wxsource.getCache();
 
 		const context = painter.context;
 
+		// const minTileZ = coords.length && coords[0].z;
 		const minTileZ = coords.length && coords[0].overscaledZ;
 
 		const stencilMode = {
@@ -227,13 +238,16 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 		for (let coord of coords) {
 			const tile = sourceCache.getTile(coord);
 			const wxtile = tilesCache.get(HashXYZ(coord.canonical));
-			if (!tile || !wxtile || Math.abs(coord.overscaledZ - z) > 1) continue;
+			if (!tile || !wxtile) continue;
+			// if (!tile || !wxtile || Math.abs(coord.overscaledZ - z) > 1) continue;
+			const parentTile = sourceCache.findLoadedParent(coord, 0);
+			const wxparentTile = parentTile?.coord?.canonical && tilesCache.get(HashXYZ(parentTile.coord.canonical));
 
 			// These are normally whole objects, but I've simplified them down into raw json.
-			const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ, true, gl.LESS);
+			const depthMode = painter.depthModeForSublayer(coord.z - minTileZ, true, gl.LESS);
 			const colorMode = painter.colorModeForRenderPass();
 
-			tile.registerFadeDuration(0.0 /* 0.3 */); // Was stored in the paint properties, here is hardcoded
+			tile.registerFadeDuration(0.3); // Was stored in the paint properties, here is hardcoded
 
 			// Set GL properties
 			context.setDepthMode(depthMode);
@@ -263,19 +277,27 @@ export class CustomTilesetLayer implements mapboxgl.CustomLayerInterface {
 				gl.bindTexture(gl.TEXTURE_2D, wxtile.rd.vectorTextureU);
 				gl.uniform1i(this.uniforms.u_U, 1); // Texture unit 1 (layer 1)
 				gl.uniform1f(this.uniforms.u_Umin, wxtile.data.data[1].dmin);
-				gl.uniform1f(this.uniforms.u_Umul, wxtile.data.data[1].dmul * 255);
+				gl.uniform1f(this.uniforms.u_Umul, wxtile.data.data[1].dmul * 65535);
 
 				context.activeTexture.set(gl.TEXTURE2);
 				gl.bindTexture(gl.TEXTURE_2D, wxtile.rd.vectorTextureV);
 				gl.uniform1i(this.uniforms.u_V, 2); // Texture unit 2 (layer 2)
 				gl.uniform1f(this.uniforms.u_Vmin, wxtile.data.data[2].dmin);
-				gl.uniform1f(this.uniforms.u_Vmul, wxtile.data.data[2].dmul * 255);
+				gl.uniform1f(this.uniforms.u_Vmul, wxtile.data.data[2].dmul * 65535);
 
-				const t = (Date.now() % 1000) / 500 - 1;
-				gl.uniform1f(this.uniforms.u_animationTime, t);
-				gl.uniform1f(this.uniforms.u_animationSpeed, wxsource.getCurrentStyleObjectCopy().streamLineSpeedFactor);
+				const speedFactor = wxsource.getCurrentStyleObjectCopy().streamLineSpeedFactor;
+				const animationTimePosition = ((Date.now() % 10000) / 5000) * speedFactor;
+				gl.uniform1f(this.uniforms.u_animationTimePosition, animationTimePosition);
+				gl.uniform1f(this.uniforms.u_vectorFieldFactor, 1); // Let it be  for now
+				gl.uniform1f(this.uniforms.u_animationIntensity, 5); // Let it be  for now
+				gl.uniform1f(this.uniforms.u_wavesCount, 4); // Let it be  for now
+
+				// Set up the noise textures
+				context.activeTexture.set(gl.TEXTURE3);
+				gl.bindTexture(gl.TEXTURE_2D, this.noiseTexture);
+				gl.uniform1i(this.uniforms.u_noiseTexture, 3); // Texture unit 3 (layer 3)
 			} else {
-				gl.uniform1f(this.uniforms.u_animationSpeed, 0); // no glsl animation
+				gl.uniform1f(this.uniforms.u_vectorFieldFactor, 0); // no glsl animation
 			}
 
 			// Set up the textures for this tile
@@ -373,4 +395,22 @@ function createShaderProgram(gl: WebGLRenderingContext): WebGLProgram {
 	}
 
 	return program;
+}
+
+function createNoiseTexture(gl: WebGLRenderingContext): WebGLTexture {
+	// create RGB noise data texDim x texDim in noiseTextureData
+	const texDim = 64;
+	const noiseTextureData = Uint8Array.from({ length: texDim * texDim }, () => Math.random() * 256);
+
+	// create a noise texture
+	const noiseTexture = gl.createTexture();
+	if (!noiseTexture) throw new Error('Could not create noise texture: GlError=' + gl.getError());
+	gl.activeTexture(gl.TEXTURE3);
+	gl.bindTexture(gl.TEXTURE_2D, noiseTexture);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, texDim, texDim, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, new Uint8Array(noiseTextureData));
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	return noiseTexture;
 }

@@ -5,7 +5,7 @@ import { type WxRequestInit, type WxTileInfo, type WxLngLat, WxLayerOptions } fr
 import { WxLayerBaseImplementation, type WxLayerAPI } from '../wxlayer/WxImplementation';
 import { FrameworkOptions } from './wxsourcetypes';
 import { type WxRasterData } from '../wxlayer/painter';
-import type { WxDataSetManager, WxSourceLayerOptions } from '../wxAPI/WxDataSetManager';
+import { WxDataSetManager, WxSourceLayerOptions } from '../wxAPI/WxDataSetManager';
 
 /**
  * A custom layer source implementation
@@ -34,7 +34,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	 */
 	constructor(wxLayerOptions: WxLayerOptions, frwOptions: FrameworkOptions) {
 		WXLOG(`WxTileSource.constructor (id=${frwOptions.id})`);
-		frwOptions.bounds = frwOptions.bounds || wxLayerOptions.wxdatasetManager.getBoundaries180(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
+		//frwOptions.bounds = frwOptions.bounds || wxLayerOptions.wxdatasetManager.getBoundaries180(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
 		super(wxLayerOptions, frwOptions);
 	} // constructor
 

@@ -8,7 +8,7 @@ start();
 import { WxTilesLogging } from '../src/utils/wxtools';
 import { WxAPI } from '../src/wxAPI/wxAPI';
 import { flyTo, initFrameWork } from './frwrkdeps';
-import { CustomTilesetLayer } from '../src/customlayer/customlayer';
+import { CustomWxTilesLayer } from '../src/customlayer/customlayer';
 import { WxTileLayer } from '../src/customlayer/oldcustlay';
 // simpleDemo();
 
@@ -43,7 +43,7 @@ async function simpleDemo() {
 	await new Promise((resolve) => map.once('idle', resolve));
 
 	// map.addLayer(new WxTileLayer(wxsource.id));
-	map.addLayer(new CustomTilesetLayer('wxlayerC1', wxsource.id));
+	map.addLayer(new CustomWxTilesLayer('wxlayerC1', wxsource.id));
 	const { zoom, lon, lat } = wxdatasetManager.getCenterAndFitZoom();
 	flyTo(map, zoom, lon, lat, 0, 0);
 	// const { east, north, south, west } = wxdatasetManager.getBoundaries().boundariesnorm;
