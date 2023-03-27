@@ -204,9 +204,9 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 		if (!this.program) return;
 		const sourceCache = this.map.style._otherSourceCaches[this.sourceID];
 		const wxsource: WxTileSource = sourceCache.getSource()._implementation;
-		const coords = (sourceCache.getVisibleCoordinates() as Array<any>).reverse();
-		const coordsCovering = wxsource.coveringTiles();
-		if (!coords.length) return;
+		const visibleCoordsMapBox = (sourceCache.getVisibleCoordinates() as Array<any>).reverse();
+		const coveringCoords = wxsource.coveringTiles();
+		if (!visibleCoordsMapBox.length) return;
 		gl.useProgram(this.program);
 
 		// This is needed because there's a cache that cares about the layer id
@@ -217,8 +217,7 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 
 		const context = painter.context;
 
-		// const minTileZ = coords.length && coords[0].z;
-		const minTileZ = coords.length && coords[0].overscaledZ;
+		const minTileZ = (visibleCoordsMapBox.length && visibleCoordsMapBox[0].overscaledZ) || 0;
 
 		const stencilMode = {
 			test: { func: 0x0207, mask: 0 },
@@ -235,19 +234,24 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 		};
 
 		const z = Math.round(this.map.getZoom());
-		for (let coord of coords) {
+		for (let coord of visibleCoordsMapBox) {
 			const tile = sourceCache.getTile(coord);
+			if (!tile) {
+				console.log('no tile', coord);
+			}
 			const wxtile = tilesCache.get(HashXYZ(coord.canonical));
-			if (!tile || !wxtile) continue;
+			if (!tile || !wxtile) {
+				continue;
+			}
 			// if (!tile || !wxtile || Math.abs(coord.overscaledZ - z) > 1) continue;
-			const parentTile = sourceCache.findLoadedParent(coord, 0);
-			const wxparentTile = parentTile?.coord?.canonical && tilesCache.get(HashXYZ(parentTile.coord.canonical));
+			// const parentTile = sourceCache.findLoadedParent(coord, 0);
+			// const wxparentTile = parentTile?.coord?.canonical && tilesCache.get(HashXYZ(parentTile.coord.canonical));
 
 			// These are normally whole objects, but I've simplified them down into raw json.
-			const depthMode = painter.depthModeForSublayer(coord.z - minTileZ, true, gl.LESS);
+			const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ, true, gl.LESS);
 			const colorMode = painter.colorModeForRenderPass();
 
-			tile.registerFadeDuration(0.3); // Was stored in the paint properties, here is hardcoded
+			// tile.registerFadeDuration(0.3); // Was stored in the paint properties, here is hardcoded
 
 			// Set GL properties
 			context.setDepthMode(depthMode);
@@ -336,7 +340,8 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 			}
 		}
 
-		this.map.triggerRepaint();
+		wxsource.getMetadata().vector && // TODO: control via style
+			this.map.triggerRepaint();
 	}
 }
 

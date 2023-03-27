@@ -224,7 +224,7 @@ export class WxLayer {
 
 	/** @internal load, cache, draw the tile. Abortable */
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
-		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
+		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit).catch(() => null); // no throw
 	} // _loadTile
 
 	/** @internal cache given time step for faster access when needed. Resolved when done.
@@ -258,7 +258,12 @@ export class WxLayer {
 		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
 
-		const data = await this.loader.load(tile, requestInit);
+		if (requestInit?.signal)
+			requestInit.signal.onabort = () => {
+				console.log(1);
+			};
+
+		const data = await this.loader.load(tile /* , requestInit */);
 		if (!data) return null; // also happens when tile is cut by qTree or by Mask
 
 		const ctxFill = create2DContext(256, 256);

@@ -13,10 +13,11 @@ export const OPACITY = 0.8;
 // start() is the fully interchangable function for Leaflet and Mapbox
 export async function start() {
 	const map = await initFrameWork();
-	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
+	// addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	WxTilesLogging(false);
 	// const dataServerURL = 'http://localhost:9191/data/';
-	const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
+	// const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
+	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
@@ -38,7 +39,7 @@ export async function start() {
 	// let variable = 'wind.speed.northward.at-10m';
 
 	// let datasetName = 'obs-radar.rain.nzl.national';
-	// let variables: WxVars = ['reflectivity'];
+	// let variable = 'reflectivity';
 
 	// get datasetName from URL
 	const urlParams = window.location.toString().split('##')[1];
@@ -139,7 +140,7 @@ export async function start() {
 	addControl(map, infoControl, 'bottom-left');
 	map.on('mousemove', (e) => infoControl.update(wxsourceLayer, map, position(e)));
 
-	await apiControl.onchange(datasetName, variable, true); // initial load
+	await apiControl.onchange(datasetName, variable, false); // initial load
 
 	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	if (wxsource) {

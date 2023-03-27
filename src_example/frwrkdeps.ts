@@ -28,9 +28,11 @@ export async function initFrameWork() {
 		// style: 'mapbox://styles/mapbox/light-v10',
 		// style: 'mapbox://styles/mapbox/satellite-v9',
 		style: { version: 8, name: 'Empty', sources: {}, layers: [] },
-		center: [0, 80.75],
-		// center: [174.5, -40.75],
+		// center: [0, 80.75],
+		center: [174.5, -40.75],
 		// zoom: 3,
+		zoom: 5,
+
 		// projection: { name: 'globe' },
 	});
 
@@ -131,8 +133,8 @@ export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: stri
 
 export async function addLayer(map: mapboxgl.Map, idL: string, source: any) {
 	map.addSource(source.id, source);
-	map.addLayer(new CustomWxTilesLayer(idL, source.id, OPACITY));
-	console.log('addLayer', idL, source.id);
+	const baseL = map.getLayer('baseL') && 'baseL';
+	map.addLayer(new CustomWxTilesLayer(idL, source.id, OPACITY), baseL);
 	/*
 	map.addLayer(
 		{
@@ -144,6 +146,7 @@ export async function addLayer(map: mapboxgl.Map, idL: string, source: any) {
 				'raster-opacity': OPACITY,
 			},
 		},
-		'baseL'
+		baseL
 	); //*/
+	await new Promise((done) => map.once('idle', done));
 }
