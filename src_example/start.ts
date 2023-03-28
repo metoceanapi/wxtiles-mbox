@@ -6,7 +6,7 @@ import { WxTimeControl } from '../src/controls/WxTimeControl ';
 import { WxAPIControl } from '../src/controls/WxAPIControl';
 import { initFrameWork, addRaster, flyTo, setURL, addControl, removeLayer, addLayer, position } from './frwrkdeps';
 
-export const OPACITY = 0.8;
+export const OPACITY = 0.9999;
 
 // this is universal function for Leaflet and Mapbox.
 // Functions below are just framework specific wrappers for this universal function
@@ -17,6 +17,7 @@ export async function start() {
 	WxTilesLogging(false);
 	// const dataServerURL = 'http://localhost:9191/data/';
 	const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
+	// const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
@@ -28,7 +29,6 @@ export async function start() {
 		requestInit: { headers: myHeaders },
 	});
 
-	// TODO: borders issue when the first dataset is not global
 	// let datasetName = 'wrf-gfs.nzl.national-8km'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	let datasetName = 'ecmwf.global'; /* 'obs-radar.rain.nzl.national/'; */
 	// let variable = 'air.temperature.at-2m';
@@ -38,7 +38,7 @@ export async function start() {
 	// let variable = 'wind.speed.northward.at-10m';
 
 	// let datasetName = 'obs-radar.rain.nzl.national';
-	// let variables: WxVars = ['reflectivity'];
+	// let variable = 'reflectivity';
 
 	// get datasetName from URL
 	const urlParams = window.location.toString().split('##')[1];
@@ -114,7 +114,7 @@ export async function start() {
 		timeControl.updateSource(wxsourceLayer);
 	};
 
-	const timeControl = new WxTimeControl(50);
+	const timeControl = new WxTimeControl(100);
 	addControl(map, timeControl, 'top-left');
 	timeControl.onchange = (time_) => {
 		setURL(map, (time = time_), datasetName, variable, sth.style);
@@ -139,7 +139,7 @@ export async function start() {
 	addControl(map, infoControl, 'bottom-left');
 	map.on('mousemove', (e) => infoControl.update(wxsourceLayer, map, position(e)));
 
-	await apiControl.onchange(datasetName, variable, true); // initial load
+	await apiControl.onchange(datasetName, variable, false); // initial load
 
 	/*/ DEMO: more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
 	if (wxsource) {
