@@ -1,12 +1,11 @@
 import { RawCLUT } from '../utils/RawCLUT';
 import { WxGetColorStyles, HashXYZ, RGBtoHEX, create2DContext, WXLOG } from '../utils/wxtools';
 import type { WxColorStyleStrict, XYZ, DataPictures, WxColorStyleWeak } from '../utils/wxtools';
-import { type WxVariableMeta } from '../wxAPI/wxAPI';
-import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
+import type { WxAllBoundariesMeta, WxVariableMeta } from '../wxAPI/wxAPI';
+import type { WxDataSetManager } from '../wxAPI/WxDataSetManager';
 import { Loader } from './loader';
 import { Painter, type WxRasterData } from './painter';
-import { WxTileSource } from '../wxsource/wxsource';
-import { WxLayerBaseImplementation } from './WxImplementation';
+import type { WxTileSource } from '../wxsource/wxsource';
 
 /** Type used to set a time step for the layer. */
 export type WxDate = string | number | Date;
@@ -70,10 +69,7 @@ export interface WxLayerOptions {
 	wxdatasetManager: WxDataSetManager;
 
 	/** initial time step */
-	time?: WxDate;
-
-	/** extension of data tiles at the backend */
-	ext?: 'png';
+	time: WxDate;
 
 	/** initial style name */
 	wxstyleName?: string;
@@ -100,20 +96,17 @@ export class TilesCache extends Map<string, WxRasterData> {
  * Used in {@link WxLayerBaseImplementation} to manipulate the the layer's style, data and time
  * */
 export class WxLayer {
-	/** @internal PNG only!*/
-	protected readonly ext: 'png'; // tiles extension. png by default
-
 	/** @internal Variables to be displayed by the layer */
 	readonly variables: WxVars; // variables of the dataset if vector then [eastward, northward]
 
 	/** @internal Data manager created this layer */
 	readonly wxdatasetManager: WxDataSetManager;
 
-	/** @internal Current Meta data for the layer*/
-	readonly currentMeta: WxVariableMeta;
-
 	/** @internal Current time*/
 	protected time: string;
+
+	/** @internal Current variable's Meta data of the layer*/
+	currentVariableMeta: WxVariableMeta;
 
 	/** @internal current URIs to fetch tiles */
 	tilesURIs: WxURIs;
@@ -131,7 +124,7 @@ export class WxLayer {
 	readonly painter: Painter = new Painter(this);
 
 	/** @internal Loader object to load and preprocess tiles */
-	protected readonly loader: Loader = new Loader(this);
+	protected readonly loader: Loader;
 
 	constructor(wxLayerOptions: WxLayerOptions) {
 		WXLOG(`WxLayer.constructor: 
@@ -155,13 +148,13 @@ export class WxLayer {
 
 		this.variables = wxLayerOptions.variables;
 		this.wxdatasetManager = wxLayerOptions.wxdatasetManager;
-		this.ext = wxLayerOptions.ext || 'png';
-		this.currentMeta = this._getCurrentMeta();
+		this.loader = new Loader(this); // create loader AFTER assigment this.wxdatasetManager
 		[this.tilesURIs, this.time] = this._createURLsAndTime(wxLayerOptions.time);
 
 		const styles = WxGetColorStyles();
 		const baseStyle = styles['base'];
 		const wxOptStyle = wxLayerOptions.wxstyleName && styles[wxLayerOptions.wxstyleName];
+		this.currentVariableMeta = this._getCurrentVariableMeta();
 		[this.style, this.CLUT] = this._createStyleAndCLUT({ ...baseStyle, ...wxOptStyle, ...wxLayerOptions.wxstyle });
 	} // constructor
 
@@ -170,6 +163,25 @@ export class WxLayer {
 		WXLOG(`WxLayer.nonanimatabl()`);
 		return this.variables.length < 2 || this.style.streamLineStatic || this.style.streamLineColor === 'none';
 	} // animatable
+
+	/**
+	 * @internal
+	 * Get maximum zoom according to the layer's Dataset manager
+	 * @returns {number} maximum zoom
+	 */
+	getMaxZoom(): number {
+		WXLOG(`WxLayer.getMaxZoom`);
+		return this.wxdatasetManager.isInstanced() ? this.wxdatasetManager.getInstanceMeta(this.getTime()).maxZoom : this.wxdatasetManager.getMaxZoom();
+	} // getMaxZoom
+
+	/**
+	 * @internal
+	 * Get boundaries zoom according to the layer's Dataset manager
+	 * @returns {WxAllBoundariesMeta | undefined} boundaries
+	 * */
+	getBoundaries(): WxAllBoundariesMeta | undefined {
+		return this.wxdatasetManager.isInstanced() ? this.wxdatasetManager.getInstanceMeta(this.getTime()).boundaries : this.wxdatasetManager.getBoundaries();
+	} // getBoundaries
 
 	/**
 	 * @internal
@@ -213,13 +225,17 @@ export class WxLayer {
 		const rgba = raw.map((r) => this.CLUT.colorsI[r]);
 		const hexColor = rgba.map(RGBtoHEX);
 		const inStyleUnits = data.map((d) => this.CLUT.DataToStyle(d));
-		return { data, raw, rgba, hexColor, inStyleUnits, tilePoint: tilePixel, styleUnits: this.style.units, dataUnits: this.currentMeta.units };
+		return { data, raw, rgba, hexColor, inStyleUnits, tilePoint: tilePixel, styleUnits: this.style.units, dataUnits: this.currentVariableMeta.units };
 	} // _getTileData
 
 	/** @internal reassign URIs and a time step with a new given time step */
 	setURLsAndTime(time_?: WxDate): void {
 		WXLOG(`WxLayer.setURLsAndTime time=${time_}`);
 		[this.tilesURIs, this.time] = this._createURLsAndTime(time_);
+		if (this.wxdatasetManager.isInstanced()) {
+			this.currentVariableMeta = this._getCurrentVariableMeta();
+			[this.style, this.CLUT] = this._createStyleAndCLUT();
+		}
 	} // _setURLsAndTime
 
 	/** @internal load, cache, draw the tile. Abortable */
@@ -273,22 +289,14 @@ export class WxLayer {
 		return raster_data;
 	} // _loadCacheDrawTile
 
-	/** @ignore */
-	protected _createStyleAndCLUT(style_?: WxColorStyleWeak): [WxColorStyleStrict, RawCLUT] {
-		// don't use {...obj} spread operator! as we need to assign 'undefined' values
-		const style = Object.assign(this.getCurrentStyleObjectCopy(), style_); // deep copy, so could be (and is) changed
-		const CLUT = this._prepareCLUT(style);
-		return [style, CLUT];
-	}
-
 	/** @ignore creates/calculates meta data for vector layers */
-	protected _getCurrentMeta(): WxVariableMeta {
-		const metas = this.variables.map((v) => {
-			const meta = this.wxdatasetManager.getVariableMeta(v);
-			if (!meta) throw new Error(`WxLayer ${this.wxdatasetManager.datasetName}: variable ${v} is not valid`);
-			return meta;
+	protected _getCurrentVariableMeta(): WxVariableMeta {
+		const variablesMetas = this.variables.map((v) => {
+			const variableMeta = this.wxdatasetManager.getInstanceVariableMeta(v, this.time); // meta <-> instance!!!
+			if (!variableMeta) throw new Error(`WxLayer ${this.wxdatasetManager.datasetName}: variable ${v} is not valid`);
+			return variableMeta;
 		});
-		let { min, max, units, vector } = metas[0];
+		let { min, max, units, vector } = variablesMetas[0];
 		if (this.variables.length > 1) {
 			// for the verctor field we need to get the min and max of the vectors' length
 			// but convert and calculate ALL vector length just for that is too much
@@ -296,7 +304,7 @@ export class WxLayer {
 			// hence min of a vector length can't be less than 0
 			min = 0;
 			// max of a field can't be less than max of the components multiplied by sqrt(2)
-			max = 1.42 * Math.max(-metas[0].min, metas[0].max, -metas[1].min, metas[1].max);
+			max = 1.42 * Math.max(-variablesMetas[0].min, variablesMetas[0].max, -variablesMetas[1].min, variablesMetas[1].max);
 			// tese values arn't real! but they are good enough for the estimation
 		}
 
@@ -314,16 +322,24 @@ export class WxLayer {
 		};
 	} // _getPixelInfo
 
+	/** @ignore */
+	protected _createStyleAndCLUT(style_?: WxColorStyleWeak): [WxColorStyleStrict, RawCLUT] {
+		// don't use {...obj} spread operator! as we need to assign 'undefined' values
+		const style = Object.assign({}, this.style, style_); // deep copy, so could be (and is) changed
+		const CLUT = this._prepareCLUT(style);
+		return [style, CLUT];
+	}
+
 	/** @ignore Create a new CLUT for the given style */
 	protected _prepareCLUT(style: WxColorStyleStrict): RawCLUT {
-		const { min, max, units } = this.currentMeta;
+		const { min, max, units } = this.currentVariableMeta;
 		return new RawCLUT(style, units, [min, max], this.variables.length === 2);
 	} // _prepareCLUTf
 
 	/** @ignore calculate valid timestep and URIs */
 	protected _createURLsAndTime(time_?: WxDate): [WxURIs, string] {
 		const time = this.wxdatasetManager.getValidTime(time_);
-		const tilesURIs = <WxURIs>this.variables.map((variable) => this.wxdatasetManager.createURI(variable, time, this.ext));
+		const tilesURIs = <WxURIs>this.variables.map((variable) => this.wxdatasetManager.createURI(variable, time));
 		return [tilesURIs, time];
 	} // _createURLsAndTime
 }

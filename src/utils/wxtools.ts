@@ -315,7 +315,6 @@ export type UriLoaderPromiseFunc<T> = (url: string, ...props: any) => Promise<T>
 
 /** Makes a cachable function that loads image from URL, with additional properties */
 export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): UriLoaderPromiseFunc<T> {
-	//return fn;
 	const cache = new Map<string, Promise<T>>();
 	return (url, ...props): Promise<T> => {
 		const cached = cache.get(url);

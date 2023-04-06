@@ -29,8 +29,11 @@ export class WxTimeControl {
 		this.timesEl = document.createElement('select');
 		div.appendChild(this.timesEl);
 		this.timesEl.onchange = async () => {
+			if (this.timesEl.style.backgroundColor === 'yellow') return;
+			this.timesEl.style.backgroundColor = 'yellow';
 			this.timesEl.value = (await this.wxsource?.setTime(this.timesEl.value)) || '';
 			this.onchange(this.timesEl.value);
+			this.timesEl.style.backgroundColor = 'white';
 		};
 
 		this.wxsource && this.updateSource(this.wxsource);
@@ -45,8 +48,9 @@ export class WxTimeControl {
 				const nextTimeStep = async () => {
 					// recursive time steps renderer function
 					if (!this.wxsource) return;
+					this.timesEl.style.backgroundColor = 'yellow';
 					if (this.button.innerHTML === 'Stop') {
-						const nextTimeIndex = t++ % this.wxsource.wxdatasetManager.getTimes().length;
+						const nextTimeIndex = t++ % this.wxsource.getTimes().length;
 						await this.wxsource.setTime(nextTimeIndex, holder.abortController);
 						setTimeout(nextTimeStep, this.delay);
 					} else {
@@ -55,6 +59,7 @@ export class WxTimeControl {
 
 					this.timesEl.value = this.wxsource.getTime() || '';
 					this.onchange(this.timesEl.value);
+					this.timesEl.style.backgroundColor = 'white';
 				};
 
 				await this.wxsource?.setCoarseLevel(3);
@@ -84,7 +89,7 @@ export class WxTimeControl {
 		this.button.innerHTML = 'Start';
 		this.wxsource = wxsource;
 		this.timesEl.options.length = 0;
-		const times = this.wxsource?.wxdatasetManager.getTimes() || [];
+		const times = this.wxsource?.getTimes() || [];
 		this.setTimes(times);
 		this.timesEl.value = this.wxsource?.getTime() || '';
 		this.onchange(this.timesEl.value);

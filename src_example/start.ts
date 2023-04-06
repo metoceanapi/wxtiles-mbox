@@ -6,19 +6,18 @@ import { WxTimeControl } from '../src/controls/WxTimeControl ';
 import { WxAPIControl } from '../src/controls/WxAPIControl';
 import { initFrameWork, addRaster, flyTo, setURL, addControl, removeLayer, addLayer, position } from './frwrkdeps';
 
-export const OPACITY = 0.9999;
+export const OPACITY = 0.8;
 
 // this is universal function for Leaflet and Mapbox.
 // Functions below are just framework specific wrappers for this universal function
 // start() is the fully interchangable function for Leaflet and Mapbox
 export async function start() {
 	const map = await initFrameWork();
-	console.log('mapbox version', (map as any).version);
 	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
-	WxTilesLogging(false);
+	// WxTilesLogging(console.trace);
 	// const dataServerURL = 'http://localhost:9191/data/';
-	// const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
-	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	// const dataServerURL = 'https://68.171.214.87/data/'
+	const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
@@ -30,16 +29,15 @@ export async function start() {
 		requestInit: { headers: myHeaders },
 	});
 
-	// let datasetName = 'wrf-gfs.nzl.national-8km'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
-	let datasetName = 'ecmwf.global'; /* 'obs-radar.rain.nzl.national/'; */
+	// let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// let variable = 'air.temperature.at-2m';
-	let variable = 'wind.speed.eastward.at-10m';
+	// let variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
 
-	// let datasetName = 'wrf-ecmwf.gbr.national';
-	// let variable = 'wind.speed.northward.at-10m';
+	// let datasetName = 'ww3-ecmwf.global';
+	// let variable = 'wave.direction.mean';
 
-	// let datasetName = 'obs-radar.rain.nzl.national';
-	// let variable = 'reflectivity';
+	let datasetName = 'obs-radar.rain.nzl.national';
+	let variable = 'reflectivity';
 
 	// get datasetName from URL
 	const urlParams = window.location.toString().split('##')[1];
@@ -97,7 +95,7 @@ export async function start() {
 		}
 		const meta = wxdatasetManager.getVariableMeta(variable);
 		if (meta?.units === 'RGB') {
-			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variable, 0), wxdatasetManager.getMaxZoom());
+			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variable, wxdatasetManager.getTimes()[0]), wxdatasetManager.getMaxZoom());
 			timeControl.setTimes(wxdatasetManager.getTimes());
 			legendControl.clear();
 		} else {
@@ -114,10 +112,11 @@ export async function start() {
 		timeControl.updateSource(wxsourceLayer);
 	};
 
-	const timeControl = new WxTimeControl(100);
+	const timeControl = new WxTimeControl(50);
 	addControl(map, timeControl, 'top-left');
 	timeControl.onchange = (time_) => {
 		setURL(map, (time = time_), datasetName, variable, sth.style);
+		infoControl.update(wxsourceLayer, map);
 	};
 
 	const customStyleEditorControl = new WxStyleEditorControl();
