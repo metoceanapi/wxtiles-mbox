@@ -78,6 +78,10 @@ export interface WxLayerOptions {
 	wxstyle?: WxColorStyleWeak;
 }
 
+/**
+ * @internal
+ * Used in {@link WxLayerBaseImplementation} cache of tiles
+ * */
 export class TilesCache extends Map<string, WxRasterData> {
 	clear(): void {
 		WXLOG(`TilesCache.clear()`);
