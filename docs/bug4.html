@@ -33,29 +33,22 @@
 			map.addControl(new mapboxgl.NavigationControl());
 
 			map.showTileBoundaries = true;
-
 			const customSource = {
 				type: 'custom',
-				dataType: 'raster',
 				id: 'customSource',
-				tileSize: 256,
-
-				async loadTile({ x, y, z }, init) {
-					const canvas = document.createElement('canvas');
-					canvas.width = canvas.height = this.tileSize;
-					const ctx = canvas.getContext('2d');
-					ctx.fillStyle = `rgb(${~~(20 * x)},${~~(20 * y)},${~~(20 * z)})`;
-					ctx.fillRect(25, 25, canvas.width - 50, canvas.height - 50);
-					ctx.font = '15px sans-serif';
-					ctx.fillStyle = 'red';
-					ctx.fillText(z + '/' + x + '/' + y, 50, 170);
-					return canvas;
+				loadTile: async (j, i) => {
+					await new Promise((r) => {
+						i.signal.onabort = r;
+						setTimeout(r, ~~(Math.random() * 500));
+					});
+					if (i.signal.aborted) return;
+					return new ImageData(new Uint8ClampedArray([0, 0, 255, 255]), 1, 1);
 				},
 			};
 
 			map.on('load', async () => {
 				map.addSource(customSource.id, customSource);
-				map.addLayer({ id: 'rasterLayer', type: 'raster', source: customSource.id, paint: { 'raster-fade-duration': 0 } });
+				map.addLayer({ id: 'rasterLayer', type: 'raster', source: customSource.id, paint1: { 'raster-fade-duration': 0 } });
 				setTimeout(() => map.flyTo({ center: [174.8, -40.9], zoom: 6 }), 2000);
 				setTimeout(() => map.flyTo({ center: [174.8, -40.9], zoom: 1 }), 4000);
 			});

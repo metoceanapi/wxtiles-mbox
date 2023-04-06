@@ -13,11 +13,12 @@ export const OPACITY = 0.9999;
 // start() is the fully interchangable function for Leaflet and Mapbox
 export async function start() {
 	const map = await initFrameWork();
+	console.log('mapbox version', (map as any).version);
 	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	WxTilesLogging(false);
 	// const dataServerURL = 'http://localhost:9191/data/';
-	const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
-	// const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	// const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
+	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
@@ -60,12 +61,11 @@ export async function start() {
 		sth.style = str && { ...JSON.parse(decodeURI(str)) }; // reset levels if change units
 	} catch (e) {
 		/* ignore errors silently */
-		console.log(e);
+		console.log("Can't parse style from URL");
 	}
 
-	// flyTo(map, zoom, lng, lat, bearing, pitch);
+	params && flyTo(map, zoom, lng, lat, bearing, pitch); // if no params stay at default position set in initFrameWork()
 
-	// const sth = { style: {} };
 	map.on('zoom', () => setURL(map, time, datasetName, variable, sth.style));
 	map.on('drag', () => setURL(map, time, datasetName, variable, sth.style));
 	map.on('rotate', () => setURL(map, time, datasetName, variable, sth.style));

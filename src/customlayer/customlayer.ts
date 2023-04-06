@@ -236,7 +236,7 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 
 		for (let coord of visibleCoordsMapBox) {
 			const tile = sourceCache.getTile(coord);
-			tile.registerFadeDuration(1000); // Was stored in the paint properties, here is hardcoded
+			tile.registerFadeDuration(200); // Was stored in the paint properties, here is hardcoded
 			const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ, true, gl.LESS);
 			const colorMode = painter.colorModeForRenderPass();
 
