@@ -68,7 +68,7 @@ export class Painter {
 	 * */
 	paint({ data, ctxFill, ctxText, ctxStreamLines }: WxRasterData): void {
 		const { layer } = this;
-		const { units } = layer.currentMeta;
+		const { units } = layer.currentVariableMeta;
 		const imageData = new ImageData(256, 256); //new ImageData(256, 256);
 		const imageBuffer = new Uint32Array(imageData.data.buffer); // a usefull representation of image's bytes (same memory)
 		ctxFill.clearRect(0, 0, 256, 256);
