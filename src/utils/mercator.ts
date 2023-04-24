@@ -36,7 +36,7 @@ function MetersToPixels(x: number, y: number, zoom: number): [number, number] {
 
 // Resolution calculates the resolution (meters/Pixel) for given zoom level (measured at Equator)
 function Resolution(zoom: number): number {
-	return initialResolution / Math.pow(2, zoom);
+	return initialResolution / 2 ** zoom;
 }
 
 // LatLonToPixels converts given lat/lon in WGS84 Datum to Pixel coordinates in given zoom level
