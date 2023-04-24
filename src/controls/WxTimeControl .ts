@@ -62,7 +62,7 @@ export class WxTimeControl {
 					this.timesEl.style.backgroundColor = 'white';
 				};
 
-				await this.wxsource?.setCoarseLevel(3);
+				await this.wxsource?.setCoarseLevel(2);
 				nextTimeStep();
 			} else {
 				holder.abortController.abort();

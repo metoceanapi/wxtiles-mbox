@@ -56,12 +56,6 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 
 	/**
 	 * @ignore
-	 * Used to make coarse level requests for time animation
-	 * */
-	protected readonly oldMaxZoom: number; /* to restore coarse maximum zoom level to make tiles load faster during animation */
-
-	/**
-	 * @ignore
 	 * An instance of the layer
 	 * */
 	protected readonly layer: WxLayer;
@@ -80,7 +74,6 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 		WXLOG(`WxLayerBaseImplementation.constructor (${frwOptions.id})`);
 		super(frwOptions);
 		this.layer = new WxLayer(wxLayerOptions);
-		this.oldMaxZoom = this.layer.getMaxZoom();
 	} // constructor
 
 	/**
@@ -227,23 +220,14 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 
 	/** set coarse maximum zoom level to make tiles load faster during animation */
 	async setCoarseLevel(level: number = 2): Promise<void> {
-		// TODO
-		// WXLOG(`WxLayerBaseImplementation.setCoarseLevel (${this.id}) level=${level}`);
-		// const desLevel = Math.max(this.oldMaxZoom - level, 0);
-		// if (this.layer.wxdatasetManager.meta.maxZoom !== desLevel) {
-		// 	this.layer.wxdatasetManager.meta.maxZoom = desLevel; // TODO: rethink the logic
-		// 	return this._reloadVisible();
-		// }
+		this.layer.coarseLevel = level;
+		// return this._reloadVisible(); // NOT needed? Hmmm... ибо used before loading new tile anyway
 	}
 
 	/** restores to the dataset's maximum zoom level */
 	async unsetCoarseLevel(): Promise<void> {
-		// TODO
-		// WXLOG(`WxLayerBaseImplementation.unsetCoarseLevel (${this.id})`);
-		// if (this.layer.wxdatasetManager.meta.maxZoom !== this.oldMaxZoom) {
-		// 	this.layer.wxdatasetManager.meta.maxZoom = this.oldMaxZoom;
-		// 	return this._reloadVisible();
-		// }
+		this.layer.coarseLevel = 0;
+		return this._reloadVisible();
 	}
 
 	/**

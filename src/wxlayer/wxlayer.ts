@@ -124,11 +124,14 @@ export class WxLayer {
 	/** @internal cahced URI->data */
 	tilesCache: TilesCache = new TilesCache();
 
+	/** @internal current coarsing zoom level */
+	coarseLevel: number = 0;
+
 	/** @internal Painter object to render tiles */
 	readonly painter: Painter = new Painter(this);
 
 	/** @internal Loader object to load and preprocess tiles */
-	protected readonly loader: Loader;
+	protected readonly loader: Loader = new Loader(this);
 
 	constructor(wxLayerOptions: WxLayerOptions) {
 		WXLOG(`WxLayer.constructor: 
@@ -152,7 +155,6 @@ export class WxLayer {
 
 		this.variables = wxLayerOptions.variables;
 		this.wxdatasetManager = wxLayerOptions.wxdatasetManager;
-		this.loader = new Loader(this); // create loader AFTER assigment this.wxdatasetManager
 		[this.tilesURIs, this.time] = this._createURLsAndTime(wxLayerOptions.time);
 
 		const styles = WxGetColorStyles();
@@ -177,6 +179,11 @@ export class WxLayer {
 		WXLOG(`WxLayer.getMaxZoom`);
 		return this.wxdatasetManager.isInstanced() ? this.wxdatasetManager.getInstanceMeta(this.getTime()).maxZoom : this.wxdatasetManager.getMaxZoom();
 	} // getMaxZoom
+
+	getCoarseMaxZoom(): number {
+		WXLOG(`WxLayer.getCoarseMaxZoom`);
+		return this.getMaxZoom() - this.coarseLevel;
+	}
 
 	/**
 	 * @internal
