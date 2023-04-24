@@ -10,7 +10,7 @@ export const __colorStyles_default_preset: WxColorStylesStrict = {
 		vectorType: 'arrows',
 		vectorColor: 'inverted',
 		vectorFactor: 1,
-		streamLineColor: '#777777',
+		streamLineColor: 'none',
 		streamLineSpeedFactor: 1,
 		streamLineStatic: false,
 		showBelowMin: true,
@@ -24,6 +24,13 @@ export const __colorStyles_default_preset: WxColorStylesStrict = {
 		units: '',
 		extraUnits: undefined,
 		mask: 'none',
+		gl: {
+			animationSpeed: 1,
+			noiseTexturePow: 5,
+			vectorFieldFactor: 1,
+			animationIntensity: 5,
+			wavesCount: 4,
+		},
 	},
 	custom: {
 		parent: undefined,

@@ -29,15 +29,15 @@ export async function start() {
 		requestInit: { headers: myHeaders },
 	});
 
-	// let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// let variable = 'air.temperature.at-2m';
-	// let variables: WxVars = ['wind.speed.eastward.at-10m', 'wind.speed.northward.at-10m'];
+	let variable = 'wind.speed.eastward.at-10m';
 
 	// let datasetName = 'ww3-ecmwf.global';
 	// let variable = 'wave.direction.mean';
 
-	let datasetName = 'obs-radar.rain.nzl.national';
-	let variable = 'reflectivity';
+	// let datasetName = 'obs-radar.rain.nzl.national';
+	// let variable = 'reflectivity';
 
 	// get datasetName from URL
 	const urlParams = window.location.toString().split('##')[1];

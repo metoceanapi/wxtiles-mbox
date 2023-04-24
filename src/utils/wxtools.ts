@@ -157,6 +157,15 @@ export interface WxColorStyleStrict {
 	 * - **'land'** - make land transparent.
 	 * */
 	mask?: 'land' | 'sea' | 'none';
+
+	/** If true then use WebGL to render tiles */
+	gl?: {
+		animationSpeed?: number;
+		noiseTexturePow?: number;
+		vectorFieldFactor?: number;
+		animationIntensity?: number;
+		wavesCount?: number;
+	};
 }
 
 /**
@@ -335,7 +344,15 @@ export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): UriLoaderPromis
  * */
 export async function loadImage(url: string, requestInit?: RequestInit): Promise<ImageBitmap> {
 	//// Method 0
-	return createImageBitmap(await (await fetch(url, requestInit)).blob());
+	const f = await fetch(url, requestInit);
+	const b = await f.blob(); // TODO: finish processing new instances
+	if (!f.ok) {
+		const reason = f.headers.get('x-reason');
+		console.log(reason);
+		throw { name: 'Tile loading failed', reason };
+	}
+
+	return await createImageBitmap(b, { premultiplyAlpha: 'none' });
 
 	// //// Method 000
 	// const img = new Image();

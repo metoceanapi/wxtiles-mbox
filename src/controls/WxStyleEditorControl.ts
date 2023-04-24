@@ -64,6 +64,12 @@ export class WxStyleEditorControl {
 
 	maskSelect: HTMLSelectElement; // string
 
+	animationSpeed: HTMLInputElement; // number
+	noiseTexturePow: HTMLInputElement; // number
+	vectorFieldFactor: HTMLInputElement; // number
+	animationIntensity: HTMLInputElement; // number
+	wavesCount: HTMLInputElement; // number
+
 	styleBase: WxColorStyleStrict;
 
 	// main container
@@ -107,7 +113,7 @@ export class WxStyleEditorControl {
 		});
 
 		// Text area to edit custom style
-		this.editorTextAreaEl = createEl(customStyleHiddableDivEl, 'textarea', { id: 'customStyleTextArea', style: 'width: 20vw; height: 70vh' });
+		this.editorTextAreaEl = createEl(customStyleHiddableDivEl, 'textarea', { id: 'customStyleTextArea', style: 'width: 20vw;' });
 		this.editorTextAreaEl.readOnly = true;
 		// this.editorTextAreaEl.addEventListener('change', () => this._onTextChange());
 		// Editor container
@@ -172,7 +178,7 @@ export class WxStyleEditorControl {
 		[this.vectorColorSelect, this.vectorColorInput] = addSelectInputColor('vectorColor');
 		[this.streamLineColorSelect, this.streamLineColorInput] = addSelectInputColor('streamLineColor');
 
-		this.streamLineSpeedFactorInput = addInput({ id: 'streamLineSpeedFactorInput', type: 'number', min: '0.1', max: '10', step: '0.1' });
+		this.streamLineSpeedFactorInput = addInput({ id: 'streamLineSpeedFactorInput', type: 'range', onEvent: 'input', min: '0.1', max: '10', step: '0.1' });
 		this.streamLineStaticInput = addInput({ id: 'streamLineStaticInput', type: 'checkbox' });
 
 		this.showBelowMinInput = addInput({ id: 'showBelowMinInput', type: 'checkbox' });
@@ -196,6 +202,12 @@ export class WxStyleEditorControl {
 		this.unitsInput = addInput({ id: 'unitsInput', type: 'text' });
 		this.extraUnitsInput = addInput({ id: 'extraUnitsInput', type: 'text' });
 		this.maskSelect = addSelect({ id: 'maskSelect', opts: ['none', 'sea', 'land'] });
+
+		this.animationSpeed = addInput({ id: 'animationSpeed', type: 'range', onEvent: 'input', min: '0.1', max: '10', step: '0.1' });
+		this.noiseTexturePow = addInput({ id: 'noiseTexturePow', type: 'range', onEvent: 'input', min: '5', max: '8', step: '1' });
+		this.vectorFieldFactor = addInput({ id: 'vectorFieldFactor', type: 'range', onEvent: 'input', min: '0.1', max: '3', step: '0.1' });
+		this.animationIntensity = addInput({ id: 'animationIntensity', type: 'range', onEvent: 'input', min: '0.1', max: '10', step: '0.1' });
+		this.wavesCount = addInput({ id: 'wavesCount', type: 'range', onEvent: 'input', min: '2', max: '10', step: '1' });
 	}
 
 	// for Leaflet
@@ -264,6 +276,13 @@ export class WxStyleEditorControl {
 			units: this.unitsInput.value || undefined, //string;
 			extraUnits: objFromValue('extraUnitsInput'), // WxUnits; //{ [name: string]: [string, number, ?number] };
 			mask: (this.maskSelect.value as any) || undefined, // string;
+			gl: {
+				animationSpeed: +this.animationSpeed.value || undefined,
+				noiseTexturePow: +this.noiseTexturePow.value || undefined,
+				vectorFieldFactor: +this.vectorFieldFactor.value || undefined,
+				animationIntensity: +this.animationIntensity.value || undefined,
+				wavesCount: +this.wavesCount.value || undefined,
+			},
 		};
 
 		return style;
@@ -299,6 +318,11 @@ export class WxStyleEditorControl {
 		this.unitsInput.value = style.units || ''; //string;
 		this.extraUnitsInput.value = style.extraUnits ? JSON.stringify(style.extraUnits) : ''; // WxUnits; //{ [name: string]: [string, number, ?number] };
 		this.maskSelect.value = style.mask || ''; // string;
+		style.gl?.animationSpeed && (this.animationSpeed.value = style.gl?.animationSpeed.toString());
+		style.gl?.noiseTexturePow && (this.noiseTexturePow.value = style.gl?.noiseTexturePow.toString());
+		style.gl?.vectorFieldFactor && (this.vectorFieldFactor.value = style.gl?.vectorFieldFactor.toString());
+		style.gl?.animationIntensity && (this.animationIntensity.value = style.gl?.animationIntensity.toString());
+		style.gl?.wavesCount && (this.wavesCount.value = style.gl?.wavesCount.toString());
 	}
 
 	protected _onDivChange(): void {

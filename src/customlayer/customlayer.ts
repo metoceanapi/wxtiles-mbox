@@ -2,8 +2,8 @@ import vertexSource from './customsahders/custom.vs';
 import fragmentSource from './customsahders/custom.fs';
 import { WxTileSource } from '../wxsource/wxsource';
 import { HashXYZ } from '../utils/wxtools';
-import { WxRasterData } from '../wxlayer/painter';
 import mapboxgl from 'mapbox-gl';
+
 class VertexArrayObject {
 	boundProgram: any;
 	boundLayoutVertexBuffer: any;
@@ -172,21 +172,30 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 	uniforms: CustomWxTilesLayerUniforms = new CustomWxTilesLayerUniforms();
 
 	noiseTexture: WebGLTexture | null = null;
+	noiseTexturePow: number = 5;
 
 	constructor(public id: string, public sourceID: string, opacity?: number) {
 		this.opacity = opacity || 1.0;
 	}
-	onRemove(map: any, gl: WebGLRenderingContext): void {
-		// map.style._layers[this.id].source = undefined;
 
+	onRemove(map: any, gl: WebGLRenderingContext): void {
+		if (map.style?._layers?.[this.id]?.source) {
+			delete map.style._layers[this.id].source;
+		}
 		// delete gl resources
 		gl.deleteTexture(this.noiseTexture);
 		gl.deleteProgram(this.program);
 	}
 
+	checkCreateNoiseTexture(gl: WebGLRenderingContext, pow: number) {
+		if (pow === this.noiseTexturePow && this.noiseTexture) return;
+		gl.deleteTexture(this.noiseTexture);
+		this.noiseTexture = createNoiseTexture(gl, pow);
+		this.noiseTexturePow = pow;
+	}
+
 	onAdd(map, gl: WebGLRenderingContext) {
 		this.map = map;
-		this.noiseTexture = createNoiseTexture(gl);
 		this.program = createShaderProgram(gl);
 		// The VertexBuffer assumes that 'this' looks like a Program, at least that it has attributes
 		this.attributes = {
@@ -197,7 +206,7 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 		// Here are all the uniforms needed either by default for the render, or for any of our visual effects
 		this.uniforms.fill(gl, this.program);
 
-		map.style._layers[this.id].source = this.sourceID;
+		map.style._layers[this.id].source = this.sourceID; // needed for MapBox internal pipeline and caching
 	}
 
 	render(gl: WebGLRenderingContext /* , matrix */): void {
@@ -208,6 +217,7 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 		if (!visibleCoordsMapBox.length) return;
 
 		gl.useProgram(this.program);
+		const wxstyle = wxsource.getCurrentStyleObjectCopy();
 
 		// This is needed because there's a cache that cares about the layer id
 		const layerID = this.id;
@@ -234,6 +244,9 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 			frontFace: 0x0901,
 		};
 
+		const glAnimation = wxsource.getCurrentVariableMeta().vector && wxstyle.gl?.animationSpeed && wxstyle.gl.animationSpeed > 0.2;
+		glAnimation && this.checkCreateNoiseTexture(gl, wxstyle.gl?.noiseTexturePow || 5);
+
 		for (let coord of visibleCoordsMapBox) {
 			const tile = sourceCache.getTile(coord);
 			tile.registerFadeDuration(300); // Was stored in the paint properties, here is hardcoded
@@ -251,9 +264,8 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 			gl.uniform1i(this.uniforms.u_tileTexture, 0); // Texture unit 0 (layer 0)
 			gl.uniform1f(this.uniforms.u_opacity, this.opacity);
 
-			const wxstyle = wxsource.getCurrentStyleObjectCopy();
 			const wxtile = tilesCache.get(HashXYZ(coord.canonical));
-			if (wxtile?.data.data.length === 3 && wxstyle.streamLineSpeedFactor > 0.2) {
+			if (wxtile?.data.data.length === 3 && glAnimation) {
 				// vector data. Let's render winds and currents
 				if (!wxtile.rd) {
 					// create a texture from wxtile
@@ -276,12 +288,12 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 				gl.uniform1f(this.uniforms.u_Vmin, wxtile.data.data[2].dmin);
 				gl.uniform1f(this.uniforms.u_Vmul, wxtile.data.data[2].dmul * 65535);
 
-				const speedFactor = wxsource.getCurrentStyleObjectCopy().streamLineSpeedFactor;
+				const speedFactor = wxstyle.gl?.animationSpeed || 1;
 				const animationTimePosition = ((Date.now() % 10000) / 5000) * speedFactor;
 				gl.uniform1f(this.uniforms.u_animationTimePosition, animationTimePosition);
-				gl.uniform1f(this.uniforms.u_vectorFieldFactor, 1); // Let it be  for now
-				gl.uniform1f(this.uniforms.u_animationIntensity, 5); // Let it be  for now
-				gl.uniform1f(this.uniforms.u_wavesCount, 4); // Let it be  for now
+				gl.uniform1f(this.uniforms.u_vectorFieldFactor, wxstyle.gl?.vectorFieldFactor || 1); // Let it be  for now
+				gl.uniform1f(this.uniforms.u_animationIntensity, wxstyle.gl?.animationIntensity || 5); // Let it be  for now
+				gl.uniform1f(this.uniforms.u_wavesCount, wxstyle.gl?.wavesCount || 4); // Let it be  for now
 
 				// Set up the noise textures
 				context.activeTexture.set(gl.TEXTURE3);
@@ -295,14 +307,10 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 			context.activeTexture.set(gl.TEXTURE0);
 			tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
 
-			// I'm assuming our source is an "ImageSource", though I don't really know what that means.
-			// I followed the implementation on that branch of the if to produce the following.
 			const mercatorBoundsBuffer = painter.mercatorBoundsBuffer;
 			const quadTriangleIndexBuffer = painter.quadTriangleIndexBuffer;
 			const mercatorBoundsSegments = painter.mercatorBoundsSegments;
 			const primitiveSize = 3; // ибо triangles
-
-			// Stolen from the draw function
 			for (const segment of mercatorBoundsSegments.get()) {
 				const vaos = segment.vaos || (segment.vaos = {});
 				const vao: VertexArrayObject = vaos[layerID] || (vaos[layerID] = new VertexArrayObject());
@@ -327,8 +335,7 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 			}
 		}
 
-		wxsource.getMetadata().vector && // TODO: control via style
-			this.map.triggerRepaint();
+		glAnimation && this.map.triggerRepaint();
 	}
 }
 
@@ -389,11 +396,10 @@ function createShaderProgram(gl: WebGLRenderingContext): WebGLProgram {
 	return program;
 }
 
-function createNoiseTexture(gl: WebGLRenderingContext): WebGLTexture {
+function createNoiseTexture(gl: WebGLRenderingContext, pow: number): WebGLTexture {
+	const texDim = 2 ** Math.max(4, Math.min(pow, 8));
 	// create RGB noise data texDim x texDim in noiseTextureData
-	const texDim = 64;
 	const noiseTextureData = Uint8Array.from({ length: texDim * texDim }, () => Math.random() * 256);
-
 	// create a noise texture
 	const noiseTexture = gl.createTexture();
 	if (!noiseTexture) throw new Error('Could not create noise texture: GlError=' + gl.getError());
