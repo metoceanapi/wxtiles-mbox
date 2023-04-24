@@ -11,7 +11,7 @@ import {
 	type XYZ,
 	WXLOG,
 } from '../utils/wxtools';
-import { WxAPI, type WxBoundaryMeta } from '../wxAPI/wxAPI';
+import { type WxBoundaryMeta } from '../wxAPI/wxAPI';
 import { applyMask, makeBox, splitCoords, subData, subDataDegree, subMask } from './loadertools';
 import { WxRequestInit, WxURIs, type WxLayer } from './wxlayer';
 
@@ -42,15 +42,12 @@ export class Loader {
 	/** refference to the Layer {@link WxLayer} in which this loader is used */
 	protected readonly layer: WxLayer;
 
-	protected readonly wxAPI: WxAPI;
-
 	/** function to load, decode and cache data from URL */
 	protected loadDataFunc: UriLoaderPromiseFunc<DataIntegral> = /*loadDataIntegral; //*/ cacheUriPromise(loadDataIntegral);
 
 	/** Do not use constructor directly */
 	constructor(layer: WxLayer) {
 		this.layer = layer;
-		this.wxAPI = layer.wxdatasetManager.wxAPI;
 	}
 
 	/**
@@ -82,9 +79,9 @@ export class Loader {
 		const tileType = this._checkTypeAndMask(tile);
 		if (!tileType) return null; // tile is cut by mask
 
-		const { upCoords, subCoords } = splitCoords(tile, this.layer.getMaxZoom());
+		const { upCoords, subCoords } = splitCoords(tile, this.layer.getCoarseMaxZoom());
 		const URLs = <WxURIs>uris.map((uri) => uriXYZ(uri, upCoords));
-		const requestInitCopy = Object.assign({}, this.wxAPI.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
+		const requestInitCopy = Object.assign({}, this.layer.wxdatasetManager.wxAPI.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
 		const rawdata = <DataIntegrals>await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
 		return { rawdata, subCoords, tileType };
 		// we don't need to process data, as it's for cache preloading only
@@ -107,17 +104,18 @@ export class Loader {
 			}
 
 			let maskImage: ImageData;
+			const { wxAPI } = this.layer.wxdatasetManager;
 			try {
-				const { upCoords, subCoords } = splitCoords(tile, this.wxAPI.maskDepth);
-				maskImage = await this.wxAPI.loadMaskFunc(upCoords);
-				maskImage = subMask(maskImage, subCoords, this.wxAPI.maskChannel);
+				const { upCoords, subCoords } = splitCoords(tile, wxAPI.maskDepth);
+				maskImage = await wxAPI.loadMaskFunc(upCoords);
+				maskImage = subMask(maskImage, subCoords, wxAPI.maskChannel);
 			} catch (e) {
 				style.mask = undefined;
 				WXLOG("Can't load Mask. Masking is disabled");
 				return;
 			}
 
-			applyMask(data[0], maskImage, this.wxAPI.maskChannel, style.mask);
+			applyMask(data[0], maskImage, wxAPI.maskChannel, style.mask);
 		}
 	}
 
@@ -143,7 +141,7 @@ export class Loader {
 	protected _checkTypeAndMask(coords: XYZ): TileType | undefined {
 		const { mask } = this.layer.style;
 		if (mask === 'land' || mask === 'sea') {
-			const tileType = this.wxAPI.qtree.check(coords); // check 'type' of the tile
+			const tileType = this.layer.wxdatasetManager.wxAPI.qtree.check(coords); // check 'type' of the tile
 			return mask === tileType ? undefined /* cut by QTree */ : tileType;
 		}
 
