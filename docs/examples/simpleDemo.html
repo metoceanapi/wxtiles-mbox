@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>WxTiles v2.0</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="shortcut icon" href="res/icon.png" type="image/x-icon" />
+
+		<!-- MAPBOX lib goes first -->
+		<link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet" />
+		<script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+
+		<!-- WxTile lib goes here -->
+		<script src="https://unpkg.com/@metoceanapi/wxtiles-mbox@2.1.1/dist/web/bundle.js"></script>
+		<link rel="stylesheet" href="https://unpkg.com/@metoceanapi/wxtiles-mbox@2.1.1/dist/web/bundle.css" />
+	</head>
+
+	<body style="margin: 0">
+		<div id="map" style="height: 100vh; width: 100vw"></div>
+
+		<script>
+			('use strict');
+			simpleDemo();
+			async function simpleDemo() {
+				mapboxgl.accessToken = 'pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A';
+				const map = new mapboxgl.Map({
+					container: 'map',
+					// style: 'mapbox://styles/mapbox/light-v10',
+					// style: 'mapbox://styles/mapbox/satellite-v9',
+					style: { version: 8, name: 'Empty', sources: {}, layers: [] },
+					// center: [0, 80.75],
+					center: [174.5, -40.75],
+					// zoom: 3,
+					zoom: 5,
+					projection: { name: 'globe' },
+				});
+
+				map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+				// map.showTileBoundaries = true;
+				await map.once('load');
+
+				map.addSource('baseS', { type: 'raster', tiles: ['https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}'], maxzoom: 4 });
+				map.addLayer({ id: 'baseL', type: 'raster', source: 'baseS' });
+
+				const { WxTilesLogging, WxAPI, CustomWxTilesLayer } = window.wxtilesmbox;
+
+				const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+				const headers = new Headers();
+				// headers.append('x-api-key', '--proper-key-value--'); // If needed in the future
+				const requestInit = {
+					headers,
+				}; // add more options if needed such as headers, mode, credentials, etc
+
+				// Get the API ready - should be ONE per application
+				WxTilesLogging(true); // If needed
+				const wxapi = new WxAPI({ dataServerURL, maskURL: 'auto', qtreeURL: 'auto', requestInit });
+
+				const datasetName = 'gfs.global';
+				const variable = 'air.temperature.at-2m'; // Scalar example
+				// const variable = 'wind.speed.eastward.at-10m'; // Vector example
+
+				// Create a dataset manager (may be used for many layers from this dataset)
+				const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
+
+				// create a layer
+				const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
+				map.addSource(wxsource.id, wxsource);
+				await new Promise((resolve) => map.once('idle', resolve));
+				map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 } });
+
+				
+				// map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
+			}
+		</script>
+	</body>
+</html>

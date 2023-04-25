@@ -165,14 +165,14 @@ class CustomWxTilesLayerUniforms extends UniformsManager {
 export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 	type: 'custom' = 'custom';
 	renderingMode: '2d' | '3d' = '2d';
-	opacity: number;
-	map: any;
-	program!: WebGLProgram;
-	attributes!: { a_pos: any; a_texture_pos: any };
-	uniforms: CustomWxTilesLayerUniforms = new CustomWxTilesLayerUniforms();
+	private opacity: number;
+	private map: any;
+	private program: WebGLProgram | null = null;
+	private attributes: { a_pos: number; a_texture_pos: number } = { a_pos: 0, a_texture_pos: 0 }; // must be here
+	private uniforms: CustomWxTilesLayerUniforms = new CustomWxTilesLayerUniforms();
 
-	noiseTexture: WebGLTexture | null = null;
-	noiseTexturePow: number = 5;
+	private noiseTexture: WebGLTexture | null = null;
+	private noiseTexturePow: number = 5;
 
 	constructor(public id: string, public sourceID: string, opacity?: number) {
 		this.opacity = opacity || 1.0;

@@ -70,3 +70,5 @@ export { Loader, type WxData, type SLine, type SLinePoint } from './wxlayer/load
 
 export { QTree } from './utils/qtree';
 export type { TileType, Tree, SubTrees, SubTreesN, TreeN } from './utils/qtree';
+
+export { CustomWxTilesLayer } from './customlayer/customlayer';
