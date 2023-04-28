@@ -11,8 +11,8 @@
 		<script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
 
 		<!-- WxTile lib goes here -->
-		<script src="https://unpkg.com/@metoceanapi/wxtiles-mbox@2.1.1/dist/web/bundle.js"></script>
-		<link rel="stylesheet" href="https://unpkg.com/@metoceanapi/wxtiles-mbox@2.1.1/dist/web/bundle.css" />
+		<script src="https://unpkg.com/@metoceanapi/wxtiles-mbox@2.1.2/dist/web/bundle.js"></script>
+		<link rel="stylesheet" href="https://unpkg.com/@metoceanapi/wxtiles-mbox@2.1.2/dist/web/bundle.css" />
 	</head>
 
 	<body style="margin: 0">
@@ -56,8 +56,8 @@
 				const wxapi = new WxAPI({ dataServerURL, maskURL: 'auto', qtreeURL: 'auto', requestInit });
 
 				const datasetName = 'gfs.global';
-				const variable = 'air.temperature.at-2m'; // Scalar example
-				// const variable = 'wind.speed.eastward.at-10m'; // Vector example
+				// const variable = 'air.temperature.at-2m'; // Scalar example
+				const variable = 'wind.speed.eastward.at-10m'; // Vector example
 
 				// Create a dataset manager (may be used for many layers from this dataset)
 				const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
@@ -66,11 +66,14 @@
 				const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
 				map.addSource(wxsource.id, wxsource);
 				await new Promise((resolve) => map.once('idle', resolve));
-				map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 } });
-				// map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
+				
+				
+				// map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 } });
+				
+				map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
 
 				// update the style: mask sea
-				// await wxsource.updateCurrentStyleObject({ mask: 'sea' });
+				await wxsource.updateCurrentStyleObject({ mask: 'land' });
 
 				// start the blur animation
 				(async function step(n = 0) {
