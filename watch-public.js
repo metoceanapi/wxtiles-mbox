@@ -11,10 +11,10 @@ esbuild
 		loader: {
 			'.png': 'base64',
 			'.woff': 'base64',
-			'.fs': 'text',
-			'.vs': 'text',
+			'.frag': 'text',
+			'.vert': 'text',
 		},
-		target: 'es2020',
+		// target: 'es2020',
 		format: 'iife',
 		outfile: 'public/wxtilembox/wxtilembox.js',
 		sourcemap: true,

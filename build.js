@@ -1,16 +1,17 @@
 const esbuild = require('esbuild');
 const { externalGlobalPlugin } = require('esbuild-plugin-external-global');
+const { glsl } = require('esbuild-plugin-glsl');
 
 const sharedConfig = {
 	entryPoints: ['src/index.ts'],
 	bundle: true,
 	loader: {
 		'.woff': 'base64',
-		'.fs': 'text',
-		'.vs': 'text',
+		'.vert': 'text', // shanged to use plugin glsl
+		'.frag': 'text',
 	},
-	plugins: [externalGlobalPlugin({ mapboxgl: 'window.mapboxgl' })],
-	target: 'es6',
+	plugins: [externalGlobalPlugin({ mapboxgl: 'window.mapboxgl' }), glsl({ minify: true })],
+	// target: 'es6',
 	minify: true,
 };
 

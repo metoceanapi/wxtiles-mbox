@@ -30,6 +30,7 @@ export async function start() {
 	});
 
 	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	// let variable = 'cloud.cover';
 	// let variable = 'air.temperature.at-2m';
 	let variable = 'wind.speed.eastward.at-10m';
 

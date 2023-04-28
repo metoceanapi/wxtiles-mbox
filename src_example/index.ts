@@ -29,7 +29,8 @@ async function simpleDemo() {
 	const variable = 'wind.speed.northward.at-10m'; // Scalar example
 	// const variable = 'wind.speed.eastward.at-10m'; // Vector example
 	// create a source layer
-	const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
+	const wxsource = wxdatasetManager.createSourceLayer({ variable, time: 0 }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
+
 	// add the layer to the map. Framework dependant part
 	map.addSource(wxsource.id, wxsource);
 	// map.addLayer({
@@ -44,8 +45,6 @@ async function simpleDemo() {
 
 	// map.addLayer(new WxTileLayer(wxsource.id));
 	map.addLayer(new CustomWxTilesLayer('wxlayerC1', wxsource.id));
-	const { zoom, lon, lat } = wxdatasetManager.getCenterAndFitZoom();
-	flyTo(map, zoom, lon, lat, 0, 0);
 	// const { east, north, south, west } = wxdatasetManager.getBoundaries().boundariesnorm;
 	// map.fitBounds([west, south, east, north]);
 
