@@ -30,6 +30,7 @@
 		"changelogkeeper": "^1.2.0",
 		"esbuild": "^0.15.15",
 		"esbuild-plugin-external-global": "^1.0.1",
+		"esbuild-plugin-glsl": "^1.2.1",
 		"express": "^4.18.2",
 		"mapbox-gl": "2.10.0",
 		"typedoc": "^0.23.21",

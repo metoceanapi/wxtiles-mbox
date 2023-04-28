@@ -1,5 +1,5 @@
-import vertexSource from './customsahders/custom.vs';
-import fragmentSource from './customsahders/custom.fs';
+import vertexSource from './customsahders/custom.vert';
+import fragmentSource from './customsahders/custom.frag';
 import { WxTileSource } from '../wxsource/wxsource';
 import { HashXYZ } from '../utils/wxtools';
 import mapboxgl from 'mapbox-gl';
