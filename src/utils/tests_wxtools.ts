@@ -1,6 +1,6 @@
 import { DataIntegral, IntegralPare, blurData, buildIntegralPare, loadDataIntegral } from './wxtools';
 
-function buildIntegralNaive(raw: Uint16Array): Uint32Array {
+function ft_buildIntegralNaive(raw: Uint16Array): Uint32Array {
 	const integral = new Uint32Array(258 * 258);
 	for (let y = 0; y < 258; y++) {
 		for (let x = 0; x < 258; x++) {
@@ -27,7 +27,9 @@ function ft_printIm(raw: ArrayLike<number>, n: number, comment: string) {
 		}
 		console.log(s);
 	}
-	console.log('...');
+	let s = '';
+	for (let x = 0; x < n * 2 + 1; x++) s += '...\t';
+	console.log(s);
 	for (let y = 258 - n; y < 258; y++) {
 		let s = '';
 		for (let x = 0; x < n; x++) {
@@ -43,74 +45,137 @@ function ft_printIm(raw: ArrayLike<number>, n: number, comment: string) {
 	console.log('**********');
 }
 
-function Uint16ArrayRandom() {
-	return new Uint16Array(258 * 258).map(() => Math.floor(Math.random() * 255));
+function ft_Uint16ArrayRandom() {
+	let seed = 1;
+	// const rnd = () => Math.floor(Math.abs(Math.sin(seed++)) * 32000 + 32000);
+	const rnd = () => Math.floor(Math.random() * 32000);
+	return new Uint16Array(258 * 258).map(rnd);
 }
 
-function Uint32ArrayCompare(a: Uint32Array, b: Uint32Array) {
+function ft_Uint16ArrayAscent() {
+	return new Uint16Array(258 * 258).map((v, i) => (i % 258) + ~~(i / 258));
+}
+
+function ft_Uint16ArrayDescent() {
+	return new Uint16Array(258 * 258).map((v, i) => 514 - ((i % 258) + ~~(i / 258)));
+}
+
+function ft_Uint32ArrayCompare(a: ArrayLike<number>, b: ArrayLike<number>) {
 	if (a.length !== b.length) return false;
-	for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
-	return true;
+	for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return i;
+	return 0;
 }
 
-async function test_buildIntegralPare() {
-	const imU = await loadDataIntegral(
-		'https://tilestest.metoceanapi.com/data/gfs.global/2023-04-25T00:00:00Z/air.temperature.at-2m/2023-05-05T00:00:00Z/3/3/6.png'
-	);
+function ft_blurNaive(im: Uint16Array, radius: number): Uint16Array {
+	const raw = new Uint16Array(im);
+	for (let y = 2; y < 256; y++) {
+		for (let x = 2; x < 256; x++) {
+			if (im[y * 258 + x] === 0) continue;
+			let sum = 0;
+			let count = 0;
 
-	const raw = imU.raw; // random data
+			const rx = Math.min(radius, x - 1, 256 - x);
+			const ry = Math.min(radius, y - 1, 256 - y);
 
-	const inp = imU.integral; // fast algo
-	const inpNaive = buildIntegralNaive(raw); // naive algo
-
-	console.log(Uint32ArrayCompare(inp.integral, inpNaive), ' - should be true');
-
-	ft_printIm(inp.integral, 4, 'integral');
-	ft_printIm(inpNaive, 4, 'naive');
-
-	console.log(1);
-}
-
-test_buildIntegralPare();
-
-async function test_blurData() {
-	function ft_blurNaive(im: DataIntegral, radius: number) {
-		const raw = new Uint16Array(im.raw);
-		for (let y = 2; y < 257; y++) {
-			for (let x = 2; x < 257; x++) {
-				if (raw[y * 258 + x] === 0) continue;
-				let sum = 0;
-				let count = 0;
-				for (let iy = y - radius; iy <= y + radius; iy++) {
-					for (let ix = x - radius; ix <= x + radius; ix++) {
-						if (iy >= 0 && iy < 258 && ix >= 0 && ix < 258) {
-							sum += raw[iy * 258 + ix];
-							count++;
-						}
+			for (let iy = y - ry; iy <= y + ry; iy++) {
+				for (let ix = x - rx; ix <= x + rx; ix++) {
+					if (im[iy * 258 + ix] !== 0) {
+						sum += im[iy * 258 + ix];
+						count++;
 					}
 				}
-				im.raw[y * 258 + x] = sum / count;
 			}
+
+			raw[y * 258 + x] = sum / count;
 		}
 	}
 
-	const imU = await loadDataIntegral(
-		'https://tilestest.metoceanapi.com/data/gfs.global/2023-04-25T00:00:00Z/air.temperature.at-2m/2023-05-05T00:00:00Z/3/3/6.png'
-	);
-	const imD = await loadDataIntegral(
-		'https://tilestest.metoceanapi.com/data/gfs.global/2023-04-25T00:00:00Z/air.temperature.at-2m/2023-05-05T00:00:00Z/3/3/7.png'
-	);
-
-	ft_printIm(imU.raw, 4, 'clear image'); // clear image
-	ft_blurNaive(imU, 1); // blur image using naive algorithm
-	ft_printIm(imU.raw, 4, 'naive algorithm');
-	blurData(imU, 1); // blur image
-	ft_printIm(imU.raw, 4, 'fast algorithm');
-
-	blurData(imD, 1);
-	ft_printIm(imD.raw, 4, '');
+	return raw;
 }
 
-// test_blurData();
+function ft_buildDataIntegralAscent(): DataIntegral {
+	return new DataIntegral(ft_Uint16ArrayAscent(), 0, 1, 1);
+}
 
-export function tests() {}
+function ft_buildDataIntegralDescend(): DataIntegral {
+	return new DataIntegral(ft_Uint16ArrayDescent(), 0, 1, 1);
+}
+
+function ft_buildDataIntegralRandom(): DataIntegral {
+	return new DataIntegral(ft_Uint16ArrayRandom(), 0, 1, 1);
+}
+
+async function test_buildIntegralPare() {
+	console.log('test_buildIntegralPare');
+	const imU = ft_buildDataIntegralAscent(); //await loadDataIntegral('https://tilestest.metoceanapi.com/data/gfs.global/2023-04-26T18:00:00Z/cloud.cover/2023-05-06T15:00:00Z/3/0/3.png');
+
+	const inpNaive = ft_buildIntegralNaive(imU.raw); // naive algo
+
+	const rezult = ft_Uint32ArrayCompare(imU.integral.integral, inpNaive);
+	console.log(rezult ? 'PASSED' : 'FAILED');
+
+	!rezult && ft_printIm(imU.integral.integral, 4, 'integral');
+	!rezult && ft_printIm(inpNaive, 4, 'naive');
+
+	console.log('test_buildIntegralPare - end');
+}
+
+async function test_blurData() {
+	console.log('test_blurData');
+
+	// const imU = await loadDataIntegral('https://tilestest.metoceanapi.com/data/gfs.global/2023-04-26T18:00:00Z/cloud.cover/2023-05-06T15:00:00Z/3/0/3.png');
+	// const imD = await loadDataIntegral('https://tilestest.metoceanapi.com/data/gfs.global/2023-04-26T18:00:00Z/cloud.cover/2023-05-06T15:00:00Z/3/0/3.png');
+
+	const blurRadius = 4;
+	const imU = ft_buildDataIntegralRandom();
+	const blurNaive = ft_blurNaive(imU.raw, blurRadius); // blur image using naive algorithm
+	blurData(imU, blurRadius); // blur image
+
+	const rezult = ft_Uint32ArrayCompare(imU.raw, blurNaive);
+	if (rezult) {
+		const printN = 3;
+		ft_printIm(imU.raw, printN, 'clear image U');
+		ft_printIm(blurNaive, printN, 'naive BLUR');
+		ft_printIm(imU.raw, printN, 'fast integral BLUR');
+		const x = rezult % 258;
+		const y = ~~(rezult / 258);
+		console.log('test_blurData - FAILED: radius=', blurRadius, ', (x,y)=', x, y, ' diff=', imU.raw[y * 258 + x] - blurNaive[y * 258 + x]);
+	} else {
+		console.log('test_blurData - PASSED');
+	}
+
+	// blurData(imU, 0); // deblur image
+	// ft_printIm(imU.raw, 4, 'deblur image');
+
+	// blurData(imD, 1);
+	// ft_printIm(imD.raw, 4, '');
+}
+
+async function test_blurDataBoundaries() {
+	console.log('test_blurDataBoundaries');
+	// not finished
+	const blurRadius = 1;
+	const imT = ft_buildDataIntegralRandom();
+	const imB = ft_buildDataIntegralRandom();
+	// copy last two rows imT to first two rows imB
+	for (let i = 0; i < 258; i++) {
+		imB.raw[258 * 0 + i] = imT.raw[258 * 256 + i];
+		imB.raw[258 * 1 + i] = imT.raw[258 * 257 + i];
+	}
+	// print
+	ft_printIm(imT.raw, 3, 'clear image T');
+	ft_printIm(imB.raw, 3, 'clear image B');
+	blurData(imT, blurRadius);
+	blurData(imB, blurRadius);
+	ft_printIm(imT.raw, 3, 'BLUR image T');
+	ft_printIm(imB.raw, 3, 'BLUR image B');
+
+	return;
+} // test_blurDataBoundaries
+
+export async function tests() {
+	// TESTS are not usable in general. They are just for development and debugging
+	await test_buildIntegralPare();
+	await test_blurData();
+	await test_blurDataBoundaries();
+}

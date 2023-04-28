@@ -2,10 +2,6 @@ import { __units_default_preset } from '../defaults/uconv';
 import { __colorSchemes_default_preset } from '../defaults/colorschemes';
 import { __colorStyles_default_preset } from '../defaults/styles';
 
-import { tests } from './tests_wxtools';
-tests();
-
-
 /** x,y,z */
 export interface XYZ {
 	x: number;
@@ -548,10 +544,14 @@ function restoreRawFromIntegral(im: DataIntegral): DataIntegral {
 	2 ------
 	*/
 	const { integral: I } = im.integral;
-	for (let y = 1; y < 257; y++) {
-		for (let x = 1; x < 257; x++) {
+	im.raw[0] = I[0]; // upper left value
+	// the rest picture
+	for (let y = 1; y < 258; y++) {
+		im.raw[y] = I[y] - I[y - 1]; // uper boundary
+		im.raw[258 * y] = I[258 * y] - I[258 * (y - 1)]; // left boundary
+		for (let x = 1; x < 258; x++) {
 			const i = 258 * y + x;
-			if (im.raw[i]) im.raw[i] = I[i - 259] + I[i] - I[i - 258] - I[i - 1];
+			im.raw[i] = I[i - 259] + I[i] - I[i - 258] - I[i - 1];
 		}
 	}
 
@@ -559,7 +559,11 @@ function restoreRawFromIntegral(im: DataIntegral): DataIntegral {
 }
 
 /**
- * BoxBlur implementation based on {@link DataIntegral}
+ * BoxBlur implementation based on integral image {@link DataIntegral}.
+ * Adaptaion of using in 'tiling' mode. Uses only one boudary line for each tile.
+ * Gives decent visual results, but not as good as bluring over the whole image.
+ * Sometimes distortion of the image is noticable on the edges of the tiles.
+ * Also it doesn't change/blur corners of the tiles.
  * @param data - {@link DataIntegral}
  * @param radius - radius for the box-blur algorithm
  * */
@@ -571,6 +575,7 @@ export function blurData(im: DataIntegral, radius: number): DataIntegral {
 
 	const { integral, integralNZ } = im.integral;
 
+	// process picture excluding two lines of boundaries
 	for (let y = 2; y < 256; y++) {
 		for (let x = 2; x < 256; x++) {
 			const i = 258 * y + x;
@@ -600,9 +605,115 @@ export function blurData(im: DataIntegral, radius: number): DataIntegral {
 			const ry = Math.min(radius, y - 1, 256 - y);
 
 			const i1 = 258 * (y - ry - 1) + x;
+			const i2 = 258 * (y + ry) + x;
+			let sumNZ: number;
+			if (integralNZ) {
+				const ANZ = integralNZ[i1 - rx - 1];
+				const BNZ = integralNZ[i1 + rx];
+				const CNZ = integralNZ[i2 - rx - 1];
+				const DNZ = integralNZ[i2 + rx];
+				sumNZ = ANZ + DNZ - BNZ - CNZ; // amount of non Zero values
+			} else {
+				sumNZ = (2 * rx + 1) * (2 * ry + 1); // all values are non Zero
+			}
+
 			const A = integral[i1 - rx - 1];
 			const B = integral[i1 + rx];
-			const i2 = 258 * (y + ry) + x;
+			const C = integral[i2 - rx - 1];
+			const D = integral[i2 + rx];
+			const sum = A + D - B - C;
+
+			im.raw[i] = sum / sumNZ;
+		}
+	}
+
+	// process boundaries
+	// Copy the first line from the boundary to the second line, to make life easier
+	for (let k = 2; k < 256; k++) {
+		// top two lines
+		const ti = 258 + k; // start with (2,1)
+		if (im.raw[ti]) {
+			/*
+			    |
+			  012345
+			  A  B
+			0 -+++--
+			1 C+oD--  - (2,1) rx=1, A=B=0
+			2 ------
+
+			      |
+			(25)4567
+			    A  B
+			0 ---+++
+			1 --C+oD  - (256,1) rx=1, A=B=0
+			2 ------
+
+			     |
+			  012345
+			  A    B
+			0 -+++++--
+			1 C++o+D--  - (3,1) rx=2, A=B=0
+			2 --------
+
+			       |
+			(25)234567
+			    A    B
+			0   -+++++
+			1   C++o+D  - (255,1) rx=2, A=B=0
+			2   ------
+			*/
+
+			const x = k;
+			const rx = Math.min(radius, x - 1, 256 - x);
+
+			const i2 = 258 + x;
+			let sumNZ: number;
+			if (integralNZ) {
+				const ANZ = 0;
+				const BNZ = 0;
+				const CNZ = integralNZ[i2 - rx - 1];
+				const DNZ = integralNZ[i2 + rx];
+				sumNZ = ANZ + DNZ - BNZ - CNZ; // amount of non Zero values
+			} else {
+				sumNZ = (2 * rx + 1) * 2; // all values are non Zero
+			}
+
+			const A = 0;
+			const B = 0;
+			const C = integral[i2 - rx - 1];
+			const D = integral[i2 + rx];
+			const sum = A + D - B - C;
+
+			const s = sum / sumNZ;
+
+			im.raw[ti - 258] = s; // 0 line
+			im.raw[ti] = s; // 1 line
+		} // top
+
+		// bottom two lines
+		const bi = 258 * 256 + k;
+		if (im.raw[bi]) {
+			/*
+			       |
+			     012345
+			254  ------
+			255  A--B--
+			256  -+o+--  - (2,256) ry=1
+			257  C++D--
+
+			        |
+			     012345
+			254  --------
+			255  A----B--
+			256  -++o++--  - (3,256) ry=2
+			257  C++++D--
+			*/
+			const x = k;
+			const rx = Math.min(radius, x - 1, 256 - x);
+			const i1 = 258 * 255 + x;
+			const i2 = 258 * 257 + x;
+			const A = integral[i1 - rx - 1];
+			const B = integral[i1 + rx];
 			const C = integral[i2 - rx - 1];
 			const D = integral[i2 + rx];
 			const sum = A + D - B - C;
@@ -615,114 +726,74 @@ export function blurData(im: DataIntegral, radius: number): DataIntegral {
 				const DNZ = integralNZ[i2 + rx];
 				sumNZ = ANZ + DNZ - BNZ - CNZ; // amount of non Zero values
 			} else {
-				sumNZ = (2 * rx + 1) * (2 * ry + 1); // all values are non Zero
+				sumNZ = (2 * rx + 1) * 2; // all values are non Zero
 			}
 
-			im.raw[i] = sum / sumNZ;
-		}
-	}
+			const s = sum / sumNZ;
+			im.raw[bi] = s; // 256 row
+			im.raw[bi + 258] = s; // 257 row
+		} // bottom
 
-	// im.raw[259] = integral[259] / (integralNZ ? integralNZ[259] : 4); // (1,1)
+		// left two lines
+		const li = 258 * k + 1;
+		if (im.raw[li]) {
+			const y = k;
+			const ry = Math.min(radius, y - 1, 256 - y);
+			const i1 = 258 * (y - ry - 1) + 1;
+			const i2 = 258 * (y + ry) + 1;
 
-	// for (let k = 2; k < 257; k++) {
-	// 	// top - second line from the top. We don't need to calculate the first line (border)
-	// 	const ti = 258 + k;
-	// 	if (im.raw[ti]) {
-	// 		/*
-	// 		    |
-	// 		  012345
-	// 		  A  B
-	// 		0 -+++--
-	// 		1 C+oD--  - (2,1) rx=1, A=B=0
-	// 		2 ------
+			let sumNZ: number;
+			if (integralNZ) {
+				const ANZ = 0;
+				const BNZ = integralNZ[i1];
+				const CNZ = 0;
+				const DNZ = integralNZ[i2];
+				sumNZ = ANZ + DNZ - BNZ - CNZ; // amount of non Zero values
+			} else {
+				sumNZ = (2 * ry + 1) * 2; // all values are non Zero
+			}
 
-	// 		      |
-	// 		(25)4567
-	// 		    A  B
-	// 		0 ---+++
-	// 		1 --C+oD  - (256,1) rx=1, A=B=0
-	// 		2 ------
+			const A = 0;
+			const B = integral[i1];
+			const C = 0;
+			const D = integral[i2];
+			const sum = A + D - B - C;
 
-	// 		     |
-	// 		  012345
-	// 		  A    B
-	// 		0 -+++++--
-	// 		1 C++o+D--  - (3,1) rx=2, A=B=0
-	// 		2 --------
+			const s = sum / sumNZ;
+			im.raw[li - 1] = s; // 0 column
+			im.raw[li] = s; // 1 column
+		} // left
 
-	// 		       |
-	// 		(25)234567
-	// 		    A    B
-	// 		0   -+++++
-	// 		1   C++o+D  - (255,1) rx=2, A=B=0
-	// 		2   ------
-	// 		*/
-	// 		const x = k;
-	// 		const rx = Math.min(radius, x - 1, 257 - x);
+		// right two lines
+		const ri = 258 * k + 256;
+		if (im.raw[ri]) {
+			const y = k;
+			const ry = Math.min(radius, y - 1, 256 - y);
+			const i1 = 258 * (y - ry - 1) + 256;
+			const i2 = 258 * (y + ry) + 256;
 
-	// 		const A = 0;
-	// 		const B = 0;
-	// 		const i2 = 258 + x;
-	// 		const C = integral[i2 - rx - 1];
-	// 		const D = integral[i2 + rx];
-	// 		const sum = A + D - B - C;
-	// 		let sumNZ: number;
-	// 		if (integralNZ) {
-	// 			const ANZ = 0;
-	// 			const BNZ = 0;
-	// 			const CNZ = integralNZ[i2 - rx - 1];
-	// 			const DNZ = integralNZ[i2 + rx];
-	// 			sumNZ = ANZ + DNZ - BNZ - CNZ; // amount of non Zero values
-	// 		} else {
-	// 			sumNZ = (2 * rx + 1) * 2; // all values are non Zero
-	// 		}
+			let sumNZ: number;
+			if (integralNZ) {
+				const ANZ = integralNZ[i1 - 1];
+				const BNZ = integralNZ[i1 + 1];
+				const CNZ = integralNZ[i2 - 1];
+				const DNZ = integralNZ[i2 + 1];
+				sumNZ = ANZ + DNZ - BNZ - CNZ; // amount of non Zero values
+			} else {
+				sumNZ = 2 * (2 * ry + 1); // all values are non Zero
+			}
 
-	// 		im.raw[ti] = sum / sumNZ;
-	// 	} // top
+			const A = integral[i1 - 1];
+			const B = integral[i1 + 1];
+			const C = integral[i2 - 1];
+			const D = integral[i2 + 1];
+			const sum = A + D - B - C;
 
-	// 	// bottom
-	// 	const bi = 258 * 256 + k;
-	// 	if (im.raw[bi]) {
-	// 		// bottom - second line from the bottom. We don't need to calculate the last line
-	// 		/*
-	// 		       |
-	// 		     012345
-	// 		254  ------
-	// 		255  A--B--
-	// 		256  -+o+--  - (2,256) ry=1
-	// 		257  C++D--
-
-	// 		        |
-	// 		     012345
-	// 		254  --------
-	// 		255  A----B--
-	// 		256  -++o++--  - (3,256) ry=2
-	// 		257  C++++D--
-	// 		*/
-	// 		const x = k;
-	// 		const rx = Math.min(radius, x - 1, 257 - x);
-	// 		const i1 = 258 * 255 + x;
-	// 		const A = integral[i1 - rx - 1];
-	// 		const B = integral[i1 + rx];
-	// 		const i2 = 258 * 257 + x;
-	// 		const C = integral[i2 - rx - 1];
-	// 		const D = integral[i2 + rx];
-	// 		const sum = A + D - B - C;
-
-	// 		let sumNZ: number;
-	// 		if (integralNZ) {
-	// 			const ANZ = integralNZ[i1 - rx - 1];
-	// 			const BNZ = integralNZ[i1 + rx];
-	// 			const CNZ = integralNZ[i2 - rx - 1];
-	// 			const DNZ = integralNZ[i2 + rx];
-	// 			sumNZ = ANZ + DNZ - BNZ - CNZ; // amount of non Zero values
-	// 		} else {
-	// 			sumNZ = (2 * rx + 1) * 2; // all values are non Zero
-	// 		}
-
-	// 		im.raw[bi] = sum / sumNZ;
-	// 	} // bottom
-	// } // for k
+			const s = sum / sumNZ;
+			im.raw[ri] = s; // 256 column
+			im.raw[ri + 1] = s; // 257 column
+		} // right
+	} // for k
 
 	return im;
 }
