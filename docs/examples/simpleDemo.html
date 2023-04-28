@@ -7,8 +7,8 @@
 		<link rel="shortcut icon" href="res/icon.png" type="image/x-icon" />
 
 		<!-- MAPBOX lib goes first -->
-		<link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet" />
-		<script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+		<link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+		<script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
 
 		<!-- WxTile lib goes here -->
 		<script src="https://unpkg.com/@metoceanapi/wxtiles-mbox@2.1.1/dist/web/bundle.js"></script>
@@ -32,7 +32,7 @@
 					center: [174.5, -40.75],
 					// zoom: 3,
 					zoom: 5,
-					projection: { name: 'globe' },
+					// projection: { name: 'globe' },
 				});
 
 				map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
@@ -66,10 +66,9 @@
 				const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
 				map.addSource(wxsource.id, wxsource);
 				await new Promise((resolve) => map.once('idle', resolve));
-				map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 } });
+				// map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 } });
 
-				
-				// map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
+				map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
 			}
 		</script>
 	</body>
