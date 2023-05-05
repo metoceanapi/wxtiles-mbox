@@ -26,7 +26,7 @@ Usage and API documentation is mainly the same for both frameworks.
 
 ### MapBox-gl-js
 
-[SimpleDemo](/examples/simpleDemo.html).
+[SimpleDemo](/wxtiles-mbox/examples/simpleDemo.html).
 
 ```ts
 (async func(){
@@ -105,7 +105,7 @@ import { WxAPI } from '@metoceanapi/wxtiles-leaflet';
 
 ### 'Land' masking and animated blur effect
 
-[blur example](/examples/seaMaskAndAnimatedBlur.html)
+[blur example](/wxtiles-mbox/examples/seaMaskAndAnimatedBlur.html)
 
 ```ts
 (async function step(n: number = 0) {
