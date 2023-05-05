@@ -13,7 +13,7 @@ export const OPACITY = 0.8;
 // start() is the fully interchangable function for Leaflet and Mapbox
 export async function start() {
 	const map = await initFrameWork();
-	// addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
+	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	// WxTilesLogging(console.trace);
 	const dataServerURL = 'data/'; // different sources manged in 'start' script in package.json
 	// const dataServerURL = 'http://localhost:9191/data/';
@@ -31,11 +31,11 @@ export async function start() {
 		requestInit: { headers: myHeaders },
 	});
 
-	let datasetName = 'swan-ecmwf.nzl.cook-strait'; //'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// let variable = 'cloud.cover';
 	// let variable = 'air.temperature.at-2m';
-	// let variable = 'wind.speed.eastward.at-10m';
-	let variable = 'wave.direction.peak';
+	let variable = 'wind.speed.eastward.at-10m';
+	// let variable = 'wave.direction.peak';
 
 	// let datasetName = 'ww3-ecmwf.global';
 	// let variable = 'wave.direction.mean';

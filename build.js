@@ -11,7 +11,6 @@ const sharedConfig = {
 		'.frag': 'text',
 	},
 	plugins: [externalGlobalPlugin({ mapboxgl: 'window.mapboxgl' }), glsl({ minify: true })],
-	// target: 'es6',
 	minify: true,
 };
 
