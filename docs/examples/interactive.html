@@ -47,8 +47,8 @@
 
 				// Define the dataset and variable
 				const datasetName = 'gfs.global';
-				// const variable = 'air.temperature.at-2m'; // Scalar example
-				const variable = 'wind.speed.eastward.at-10m'; // Vector example
+				const variable = 'air.temperature.at-2m'; // Scalar example
+				// const variable = 'wind.speed.eastward.at-10m'; // Vector example
 
 				// Create a dataset manager (may be used for many layers from this dataset)
 				const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
@@ -57,12 +57,27 @@
 				const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' });
 				map.addSource(wxsource.id, wxsource);
 				await new Promise((resolve) => map.once('idle', resolve));
-				
+
 				//// Add wxlayer using 'native raster' layer type
 				// map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 /* necessary */ } });
 
 				//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
 				map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
+
+				await wxsource.updateCurrentStyleObject({ levels: undefined }); // reset levels if existing in the style
+				const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
+				// generate a new color map from the existing levels
+				const colMap = levels.map((level) => [level, '#' + Math.random().toString(16).slice(2, 8) + 'ff']);
+				let busy = false;
+				map.on('mousemove', async (e) => {
+					if (!wxsource || busy) return;
+					busy = true;
+					const tileInfo = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap(), map);
+					if (tileInfo) {
+						await wxsource.updateCurrentStyleObject({ colorMap: [...colMap, [tileInfo.inStyleUnits[0], '#ff000000']] });
+					}
+					busy = false;
+				});
 			}
 		</script>
 	</body>

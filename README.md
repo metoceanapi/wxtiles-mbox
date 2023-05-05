@@ -26,29 +26,52 @@ Usage and API documentation is mainly the same for both frameworks.
 
 ### MapBox-gl-js
 
+[SimpleDemo](/examples/simpleDemo.html).
+
 ```ts
-import 'mapbox-gl/dist/mapbox-gl.css';
-import mapboxgl from 'mapbox-gl';
-import { WxAPI } from '@metoceanapi/wxtiles-mbox';
-
 (async func(){
-	// Get the API ready - there should be ONE per application
-	// requestInit is used in every request to the server. Add your keys, credentials, mode, etc.
-	const wxapi = new WxAPI({ dataServerURL: 'https://tiles.metoceanapi.com/data/',
-		requestInit: { /* headers: new Headers([['x-api-key', 'key']]), */ } });
+	//// MAPBOX initialization START
+	mapboxgl.accessToken = '--key--';
+	const map = new mapboxgl.Map({ container: 'map', style: { version: 8, name: 'Empty', sources: {}, layers:[] } });
+	map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+	await map.once('load');
+	// base layer
+	map.addSource('baseS', { type: 'raster', tiles: ['https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}'], maxzoom: 4 });
+	map.addLayer({ id: 'baseL', type: 'raster', source: 'baseS' });
+	//// MAPBOX initialization END
 
-	// Create a dataset manager (may be used for many variables-layers from this dataset)
-	const wxdatasetManager = await wxapi.createDatasetManager('gfs.global');
+	//// WXTILES initialization START
+	// grab the WxTiles API
+	const { WxTilesLogging, WxAPI, CustomWxTilesLayer } = window.wxtilesmbox;
+	// WxTilesLogging(true); // log WxTiles info to console if needed
 
-	// create a source layer
-	const wxsource = wxdatasetManager.createSourceLayer({ variable:'air.temperature.at-2m' },
-		{ id: 'wxsource', opacity: 1,attribution: 'WxTiles' });
+	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	// Specify RequestInit object such as headers, mode, credentials, etc
+	const requestInit = {
+		/* headers: new Headers({ 'x-api-key': '--proper-key-value--' }) //*/
+	};
 
-	// add the layer to the map
-    const map = new mapboxgl.Map({ container: 'map', accessToken:'token', style: { version: 8, name: 'Empty', sources: {}, layers: [] } });
-    await map.once('load');
+	// Get the API ready - should be ONE per application
+	const wxapi = new WxAPI({ dataServerURL, requestInit });
+
+	// Define the dataset and variable
+	const datasetName = 'gfs.global';
+	// const variable = 'air.temperature.at-2m'; // Scalar example
+	const variable = 'wind.speed.eastward.at-10m'; // Vector example
+
+	// Create a dataset manager (may be used for many layers from this dataset)
+	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
+
+	// create a layer
+	const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' });
 	map.addSource(wxsource.id, wxsource);
-	map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 /*NEDDED for animation*/ } });
+	await new Promise((resolve) => map.once('idle', resolve));
+
+	//// Add wxlayer using 'native raster' layer type
+	// map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 /* necessary */ } });
+
+	//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
+	map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
 })()
 
 ```
@@ -78,6 +101,17 @@ import { WxAPI } from '@metoceanapi/wxtiles-leaflet';
 	map.addLayer(wxsource);
 	await new Promise((done) => wxsource.once('load', done)); // highly recommended to await for the first load
 })()
+```
+
+### 'Land' masking and animated blur effect
+
+[blur example](/examples/seaMaskAndAnimatedBlur.html)
+
+```ts
+(async function step(n: number = 0) {
+	await wxsource.updateCurrentStyleObject({ isolineText: false, blurRadius: ~~(10 * Math.sin(n / 500) + 10) }); // await always !!
+	requestAnimationFrame(step);
+})();
 ```
 
 ### Change the time step
@@ -152,16 +186,9 @@ map.on('mousemove', (e) => {
 });
 ```
 
-### animated blur effect
-
-```ts
-(async function step(n: number = 0) {
-	await wxsource.updateCurrentStyleObject({ isolineText: false, blurRadius: ~~(10 * Math.sin(n / 500) + 10) }); // await always !!
-	requestAnimationFrame(step);
-})();
-```
-
 ### more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
+
+[blur example](/examples/interactive.html)
 
 ```ts
 await wxsource.updateCurrentStyleObject({ levels: undefined }); // reset levels if existing in the style
@@ -175,7 +202,7 @@ map.on('mousemove', async (e) => {
 	const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(position(e), map);
 	if (tileInfo) {
 		await wxsource.updateCurrentStyleObject({ colorMap: [...colMap, [tileInfo.inStyleUnits[0], '#ff000000']] });
-		onsole.log(tileInfo);
+		console.log(tileInfo);
 	}
 	busy = false;
 });
