@@ -29,8 +29,8 @@ export async function initFrameWork() {
 		// style: 'mapbox://styles/mapbox/satellite-v9',
 		style: { version: 8, name: 'Empty', sources: {}, layers: [] },
 		// center: [180, 0],
-		center: [174.5, -40.75],
-		zoom: 3,
+		center: [174.5, -41.3],
+		zoom: 5,
 
 		// projection: { name: 'globe' },
 	});

@@ -220,7 +220,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 
 	/** set coarse maximum zoom level to make tiles load faster during animation */
 	async setCoarseLevel(level: number = 2): Promise<void> {
-		this.layer.coarseLevel = level;
+		this.layer.coarseLevel = Math.max(0, Math.min(level, this.wxdatasetManager.getMaxZoom()));
 		// return this._reloadVisible(); // NOT needed? Hmmm... ибо used before loading new tile anyway
 	}
 
