@@ -79,7 +79,7 @@ export async function start() {
 	const legendControl = new WxLegendControl();
 	addControl(map, legendControl, 'top-right');
 
-	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: 'WxTiles' };
+	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: '<a href="https://metoceanapi.github.io/wxtiles-mbox/docs">WxTiles DOCS</a>' };
 	const apiControl = new WxAPIControl(wxapi, datasetName, variable);
 	addControl(map, apiControl, 'top-left');
 	apiControl.onchange = async (datasetName_, variable_, resetStyleAndFlyTo = true): Promise<void> => {
