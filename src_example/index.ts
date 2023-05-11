@@ -1,68 +1,60 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
-import mapboxgl from 'mapbox-gl';
 
 import { start } from './start';
 start();
 
-// /*
+/*
+import mapboxgl from 'mapbox-gl';
 import { WxTilesLogging } from '../src/utils/wxtools';
 import { WxAPI } from '../src/wxAPI/wxAPI';
 import { flyTo, initFrameWork } from './frwrkdeps';
 import { CustomWxTilesLayer } from '../src/customlayer/customlayer';
 import { WxTileLayer } from '../src/customlayer/oldcustlay';
-// simpleDemo();
+simpleDemo();
 
 async function simpleDemo() {
-	const map = await initFrameWork();
-	// const dataServerURL = 'https://tiles.metoceanapi.com/data/';
-	const dataServerURL = 'http://localhost:9191/data/';
-	// const headers = new Headers();
-	// headers.append('x-api-key', '--proper-key-value--'); // If needed in the future
-	const requestInit: RequestInit = {
-		// headers /
-	}; // add more options if needed such as headers, mode, credentials, etc
+	//// MAPBOX initialization START
+	mapboxgl.accessToken = 'pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A';
+	const map = new mapboxgl.Map({ container: 'map', style: { version: 8, name: 'Empty', sources: {}, layers: [] } });
+	// add navigation controls
+	map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+	await map.once('load');
+	//// MAPBOX initialization END
+
+	//// Helpers
+	const addWxLayer = async (wxsource) => {
+		map.addSource(wxsource.id, wxsource);
+		//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
+		map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id));
+		await new Promise((resolve) => map.once('idle', resolve));
+	};
+
+	const getCoords = (e) => e.lngLat.wrap();
+	//// Helpers END
+
+	//// WXTILES START
+	// grab the WxTiles API
+	// const { WxTilesLogging, WxAPI, CustomWxTilesLayer } = window.wxtilesmbox;
+
+	WxTilesLogging(true); // log WxTiles info to console if needed
+
+	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	// Get the API ready - should be ONE per application
-	WxTilesLogging(true); // If needed
-	const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none', requestInit });
+	const wxapi = new WxAPI({ dataServerURL });
+
+	// Define the dataset and variable
+	const datasetName = 'gfs.global';
+	// const variable = 'air.temperature.at-2m'; // Scalar example
+	const variable = 'wind.speed.eastward.at-10m'; // Vector example
+
 	// Create a dataset manager (may be used for many layers from this dataset)
-	const wxdatasetManager = await wxapi.createDatasetManager('wrf-ecmwf.gbr.national');
-	const variable = 'wind.speed.northward.at-10m'; // Scalar example
-	// const variable = 'wind.speed.eastward.at-10m'; // Vector example
-	// create a source layer
-	const wxsource = wxdatasetManager.createSourceLayer({ variable, time: 0 }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
+	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 
-	// add the layer to the map. Framework dependant part
-	map.addSource(wxsource.id, wxsource);
-	// map.addLayer({
-	// 	id: 'wxlayer',
-	// 	type: 'raster',
-	// 	source: wxsource.id,
-	// 	paint: { 'raster-fade-duration': 0 },
-	// });
+	// create a layer
+	const layerFrameworkOptions = { id: 'wxsource', opacity: 1, attribution: 'WxTiles' };
+	const wxsource = wxdatasetManager.createSourceLayer({ variable, time: 0 }, layerFrameworkOptions);
 
-	// await id: 'wxlayer' is loaded
-	await new Promise((resolve) => map.once('idle', resolve));
-
-	// map.addLayer(new WxTileLayer(wxsource.id));
-	map.addLayer(new CustomWxTilesLayer('wxlayerC1', wxsource.id));
-	// const { east, north, south, west } = wxdatasetManager.getBoundaries().boundariesnorm;
-	// map.fitBounds([west, south, east, north]);
-
-	// // await 2 seconds
-	// await new Promise((resolve) => setTimeout(resolve, 2000));
-
-	// // get the id: 'wxsource'
-	// const sourceId = wxsource.id;
-	// // get the source
-	// const source = map.getSource(sourceId);
-	// const ctiles = source._implementation.coveringTiles();
-	// // get the layer
-	// const layer = map.getLayer('wxlayer');
-	// // get the mapbox style
-	// const style = map.getStyle();
-	// // get the mapbox style layer
-	// const styleLayer = style.layers.find((l) => l.id === 'wxlayer');
-	// // get the mapbox style source
-	// const styleSource = style.sources[sourceId];
+	// add the layer to the map
+	await addWxLayer(wxsource);
 }
 // */

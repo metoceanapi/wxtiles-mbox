@@ -19,31 +19,36 @@
 		<div id="map" style="height: 100vh; width: 100vw"></div>
 		<script>
 			('use strict');
-			simpleDemo();
-			async function simpleDemo() {
+			start();
+			async function start() {
 				//// MAPBOX initialization START
 				mapboxgl.accessToken = 'pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A';
 				const map = new mapboxgl.Map({ container: 'map', style: { version: 8, name: 'Empty', sources: {}, layers: [] } });
+				// add navigation controls
 				map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 				await map.once('load');
-				// base layer
-				map.addSource('baseS', { type: 'raster', tiles: ['https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}'], maxzoom: 4 });
-				map.addLayer({ id: 'baseL', type: 'raster', source: 'baseS' });
 				//// MAPBOX initialization END
 
-				//// WXTILES initialization START
-				// grab the WxTiles API
-				const { WxTilesLogging, WxAPI, CustomWxTilesLayer } = window.wxtilesmbox;
-				// WxTilesLogging(true); // log WxTiles info to console if needed
-
-				const dataServerURL = 'https://tiles.metoceanapi.com/data/';
-				// Specify RequestInit object such as headers, mode, credentials, etc
-				const requestInit = {
-					/* headers: new Headers({ 'x-api-key': '--proper-key-value--' }) //*/
+				//// Helpers
+				const addWxLayer = async (wxsource) => {
+					map.addSource(wxsource.id, wxsource);
+					//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
+					map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id));
+					await new Promise((resolve) => map.once('idle', resolve));
 				};
 
+				const getCoords = (e) => e.lngLat.wrap();
+				//// Helpers END
+
+				//// WXTILES START
+				// grab the WxTiles API
+				const { WxTilesLogging, WxAPI, CustomWxTilesLayer } = window.wxtilesmbox;
+
+				WxTilesLogging(true); // log WxTiles info to console if needed
+
+				const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 				// Get the API ready - should be ONE per application
-				const wxapi = new WxAPI({ dataServerURL, requestInit });
+				const wxapi = new WxAPI({ dataServerURL, maskURL: 'auto', qtreeURL: 'auto' });
 
 				// Define the dataset and variable
 				const datasetName = 'gfs.global';
@@ -54,17 +59,16 @@
 				const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 
 				// create a layer
-				const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' });
-				map.addSource(wxsource.id, wxsource);
-				await new Promise((resolve) => map.once('idle', resolve));
+				const layerFrameworkOptions = { id: 'wxsource', opacity: 1, attribution: 'WxTiles' };
+				const wxsource = wxdatasetManager.createSourceLayer({ variable }, layerFrameworkOptions);
 
-				//// Add wxlayer using 'native raster' layer type
-				// map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 /* necessary */ } });
+				// add the layer to the map
+				await addWxLayer(wxsource);
 
-				//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
-				map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
+				// extra magic
+				// on mouse movement, add a new color to the color map and re-render the layer
+				await wxsource.updateCurrentStyleObject({ levels: undefined, mask: 'land' }); // reset levels if existing in the style
 
-				await wxsource.updateCurrentStyleObject({ levels: undefined }); // reset levels if existing in the style
 				const levels = wxsource.getCurrentStyleObjectCopy().levels || []; // get current/default/any levels
 				// generate a new color map from the existing levels
 				const colMap = levels.map((level) => [level, '#' + Math.random().toString(16).slice(2, 8) + 'ff']);
@@ -72,7 +76,7 @@
 				map.on('mousemove', async (e) => {
 					if (!wxsource || busy) return;
 					busy = true;
-					const tileInfo = wxsource.getLayerInfoAtLatLon(e.lngLat.wrap(), map);
+					const tileInfo = wxsource.getLayerInfoAtLatLon(getCoords(e), map);
 					if (tileInfo) {
 						await wxsource.updateCurrentStyleObject({ colorMap: [...colMap, [tileInfo.inStyleUnits[0], '#ff000000']] });
 					}

@@ -24,9 +24,11 @@ Usage and API documentation is mainly the same for both frameworks.
 
 ## Examples
 
+[SimpleDemo](https://metoceanapi.github.io/wxtiles-mbox/examples/simpleDemo.html).
+[Animated blur parameter](https://metoceanapi.github.io/wxtiles-mbox/examples/seaMaskAndAnimatedBlur.html)
+[Mouse Interaction](https://metoceanapi.github.io/wxtiles-mbox/examples/interactive.html)
 ### MapBox-gl-js
 
-[SimpleDemo](/wxtiles-mbox/examples/simpleDemo.html).
 
 ```ts
 (async func(){
@@ -76,36 +78,8 @@ Usage and API documentation is mainly the same for both frameworks.
 
 ```
 
-### Leaflet
-
-```ts
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import { WxAPI } from '@metoceanapi/wxtiles-leaflet';
-
-(async func(){
-	// Get the API ready - there should be ONE per application
-	// requestInit is used in every request to the server. Add your keys, credentials, mode, etc.
-	const wxapi = new WxAPI({ dataServerURL: 'https://tiles.metoceanapi.com/data/',
-		requestInit: { /* headers: new Headers([['x-api-key', 'key']]), */ } });
-
-	// Create a dataset manager (may be used for many variables-layers from this dataset)
-	const wxdatasetManager = await wxapi.createDatasetManager('gfs.global');
-
-	// create a source layer
-	const wxsource = wxdatasetManager.createSourceLayer({ variable:'air.temperature.at-2m' },
-		{ id: 'wxsource', opacity: 1,attribution: 'WxTiles' });
-
-	// add the layer to the map
-	const map = L.map('map', { center: [0, 0], zoom: 2, zoomControl: true });
-	map.addLayer(wxsource);
-	await new Promise((done) => wxsource.once('load', done)); // highly recommended to await for the first load
-})()
-```
-
 ### 'Land' masking and animated blur effect
 
-[blur example](/wxtiles-mbox/examples/seaMaskAndAnimatedBlur.html)
 
 ```ts
 (async function step(n: number = 0) {
@@ -187,8 +161,6 @@ map.on('mousemove', (e) => {
 ```
 
 ### more interactive - additional level and a bit of the red transparentness around the level made from current mouse position
-
-[blur example](/examples/interactive.html)
 
 ```ts
 await wxsource.updateCurrentStyleObject({ levels: undefined }); // reset levels if existing in the style

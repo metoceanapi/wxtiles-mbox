@@ -20,62 +20,55 @@
 
 		<script>
 			('use strict');
-			simpleDemo();
-			async function simpleDemo() {
+			start();
+			async function start() {
+				//// MAPBOX initialization START
 				mapboxgl.accessToken = 'pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A';
-				const map = new mapboxgl.Map({
-					container: 'map',
-					// style: 'mapbox://styles/mapbox/light-v10',
-					// style: 'mapbox://styles/mapbox/satellite-v9',
-					style: { version: 8, name: 'Empty', sources: {}, layers: [] },
-					// center: [0, 80.75],
-					center: [174.5, -40.75],
-					// zoom: 3,
-					zoom: 5,
-					// projection: { name: 'globe' },
-				});
-
+				const map = new mapboxgl.Map({ container: 'map', style: { version: 8, name: 'Empty', sources: {}, layers: [] } });
+				// add navigation controls
 				map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-				// map.showTileBoundaries = true;
 				await map.once('load');
+				//// MAPBOX initialization END
 
-				map.addSource('baseS', { type: 'raster', tiles: ['https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}'], maxzoom: 4 });
-				map.addLayer({ id: 'baseL', type: 'raster', source: 'baseS' });
+				//// Helpers
+				const addWxLayer = async (wxsource) => {
+					map.addSource(wxsource.id, wxsource);
+					//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
+					map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id));
+					await new Promise((resolve) => map.once('idle', resolve));
+				};
 
+				const getCoords = (e) => e.lngLat.wrap();
+				//// Helpers END
+
+				//// WXTILES START
+				// grab the WxTiles API
 				const { WxTilesLogging, WxAPI, CustomWxTilesLayer } = window.wxtilesmbox;
 
+				WxTilesLogging(true); // log WxTiles info to console if needed
+
 				const dataServerURL = 'https://tiles.metoceanapi.com/data/';
-				const headers = new Headers();
-				// headers.append('x-api-key', '--proper-key-value--'); // If needed in the future
-				const requestInit = {
-					headers,
-				}; // add more options if needed such as headers, mode, credentials, etc
-
 				// Get the API ready - should be ONE per application
-				WxTilesLogging(true); // If needed
-				const wxapi = new WxAPI({ dataServerURL, maskURL: 'auto', qtreeURL: 'auto', requestInit });
+				const wxapi = new WxAPI({ dataServerURL });
 
+				// Define the dataset and variable
 				const datasetName = 'gfs.global';
-				// const variable = 'air.temperature.at-2m'; // Scalar example
-				const variable = 'wind.speed.eastward.at-10m'; // Vector example
+				const variable = 'air.temperature.at-2m'; // Scalar example
+				// const variable = 'wind.speed.eastward.at-10m'; // Vector example
 
 				// Create a dataset manager (may be used for many layers from this dataset)
 				const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 
 				// create a layer
-				const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
-				map.addSource(wxsource.id, wxsource);
-				await new Promise((resolve) => map.once('idle', resolve));
+				const layerFrameworkOptions = { id: 'wxsource', opacity: 1, attribution: 'WxTiles' };
+				const wxsource = wxdatasetManager.createSourceLayer({ variable }, layerFrameworkOptions);
 
-				//// Add wxlayer using 'native raster' layer type
-				// map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 /* necessary */ } });
+				// add the layer to the map
+				await addWxLayer(wxsource);
 
-				//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
-				map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
-
+				// extra magic
 				// update the style: mask sea
 				await wxsource.updateCurrentStyleObject({ mask: 'land' });
-
 				// start the blur animation
 				(async function step(n = 0) {
 					await wxsource.updateCurrentStyleObject({ isolineText: false, blurRadius: ~~(10 * Math.sin(n / 500) + 10) });
