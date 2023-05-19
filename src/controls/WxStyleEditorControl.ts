@@ -117,7 +117,7 @@ export class WxStyleEditorControl {
 		this.editorTextAreaEl.readOnly = true;
 		// this.editorTextAreaEl.addEventListener('change', () => this._onTextChange());
 		// Editor container
-		this.editorDivEl = createEl(customStyleHiddableDivEl, 'div'); // TODO check
+		this.editorDivEl = createEl(customStyleHiddableDivEl, 'div');
 		// Helpers
 		const addLabel = (id: string, br: boolean = true) => {
 			createEl(this.editorDivEl, 'label', { htmlFor: id, id: id + 'Label', className: id + 'LabelClass', textContent: id.replace(/Input|Select$/i, '') });
@@ -193,8 +193,8 @@ export class WxStyleEditorControl {
 			this._onDivChange();
 		});
 
-		this.colorsInput = addInput({ id: 'colorsInput', type: 'text' }); // TODO:
-		this.colorMapInput = addInput({ id: 'colorMapInput', type: 'text' }); // TODO:
+		this.colorsInput = addInput({ id: 'colorsInput', type: 'text' }); 
+		this.colorMapInput = addInput({ id: 'colorMapInput', type: 'text' }); 
 		this.levelsInput = addInput({ id: 'levelsInput', type: 'text' }); // TODO:
 
 		this.blurRadiusInput = addInput({ id: 'blurRadiusInput', type: 'range', onEvent: 'input', min: '0', max: '10', step: '1' });

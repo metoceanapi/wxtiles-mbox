@@ -333,12 +333,12 @@ function _drawVectorAnimationLinesStep(wxdata: WxData, ctx: CanvasRenderingConte
 	for (let i = 0; i < slines.length; ++i) {
 		const sLine = slines[i];
 		const sSize = sLine.length - 1;
-		// pseed - is the most opaque piece // TODO:improve?
+		// pseed - is the most opaque piece
 		let pseed = (seed + (1 + sLine[0].x) * (1 + sLine[0].y)) % 30;
 		for (let k = 0; k < sSize; ++k) {
 			const p0 = sLine[k];
 			const p1 = sLine[k + 1];
-			let t = 1 - (pseed - k) / sSize; // TODO: improve?
+			let t = 1 - (pseed - k) / sSize;
 			if (t < 0 || t > 1) t = 0;
 			const col = (~~(t * 255)).toString(16).padStart(2, '0');
 			const w = 1 + ~~((1.2 - t) * 5);
