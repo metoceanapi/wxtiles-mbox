@@ -23,6 +23,10 @@ export interface WxLayerBaseAPI {
 	unsetCoarseLevel(): Promise<void>;
 	setStyleByName(wxstyleName: string, reload: boolean): Promise<void>;
 	updateCurrentStyleObject(style?: WxColorStyleWeak, reload?: boolean, requestInit?: WxRequestInit): Promise<void>;
+	// evented methods
+	on(type: string, listener: ListenerMethod): this;
+	off(type: string, listener: ListenerMethod): this;
+	once(type: string, listener: ListenerMethod): this;
 }
 
 /**
@@ -36,6 +40,10 @@ export interface WxLayerAPI extends WxLayerBaseAPI {
 	coveringTiles(): XYZ[];
 }
 
+export type ListenerMethod = <T extends keyof WxEventType>(arg?: WxEventType[T]) => void;
+export type WxEventType = {
+	changed: void;
+};
 /**
  * Implementation of universal methods for the layer (for Mapbox and Leaflet)
  * To be extended by framework specific implementation
@@ -65,6 +73,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * used to avoid multiple animation requests
 	 * */
 	protected redrawRequested?: Promise<void>;
+	listeners: { [eventName: string]: ListenerMethod[] } = {};
 
 	/**
 	 * @internal
@@ -292,4 +301,38 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * Force reload and redraw all tiles.
 	 */
 	protected update() {}
+
+	// evented methods
+	on<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
+		// push listener to the list of listeners
+		this.listeners[type] = this.listeners[type] || [];
+		this.listeners[type].push(listener);
+		return this;
+	}
+
+	off<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
+		// remove listener from the list of listeners
+		if (this.listeners[type]) {
+			this.listeners[type] = this.listeners[type].filter((l) => l !== listener);
+		}
+		return this;
+	}
+
+	once<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
+		// push listener to the list of listeners
+		const onceListener = (...args: any[]) => {
+			listener(...args);
+			this.off(type, onceListener);
+		};
+		this.on(type, onceListener);
+		return this;
+	}
+
+	protected fire<T extends keyof WxEventType>(type: T, data?: WxEventType[T]) {
+		// fire runs all listeners asynchroniously, so my algos don't stuck
+		// call all listeners for the type
+		if (this.listeners[type]) {
+			this.listeners[type].forEach(async (l) => l(data));
+		}
+	}
 }
