@@ -1,0 +1,13 @@
+# YAML config dof docker-container to spin the watch-public.mjs server in docker node
+version: '3'
+services:
+  mbox-watch-server:
+    image: node
+    container_name: mbox-watch-server
+    restart: always
+    network_mode: host
+    ports:
+      - 3003:3003
+    volumes:
+      - ./:/service
+    command: bash -c "cd service && node watch-public.mjs"
