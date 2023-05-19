@@ -206,14 +206,14 @@ export function WxTilesLibSetup({ colorStyles = {}, units = {}, colorSchemes = {
 	WXLOG('WxTile lib setup: styles unrolled');
 
 	// Make sure fonts are loaded & ready!
-	try {
-		(async () => {
+	(async () => {
+		try {
 			await document.fonts.load('32px barbs');
 			await document.fonts.load('32px arrows');
-		})();
-	} catch (e) {
-		WXLOG('WxTile lib setup: fonts not loaded');
-	}
+		} catch (e) {
+			WXLOG('WxTile lib setup: fonts not loaded');
+		}
+	})();
 
 	WXLOG('WxTile lib setup is done.');
 }
@@ -345,14 +345,11 @@ export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): UriLoaderPromis
 export async function loadImage(url: string, requestInit?: RequestInit): Promise<ImageBitmap> {
 	//// Method 0
 	const f = await fetch(url, requestInit);
-	const b = await f.blob(); // TODO: finish processing new instances
-	if (!f.ok) {
-		const reason = f.headers.get('x-reason');
-		console.log(reason);
-		throw { name: 'Tile loading failed', reason };
+	if (f.status !== 200 && f.status !== 304) {
+		throw { name: 'Tile loading failed', reason: f.headers.get('x-reason'), status: f.status };
 	}
 
-	return await createImageBitmap(b, { premultiplyAlpha: 'none' });
+	return await createImageBitmap(await f.blob(), { premultiplyAlpha: 'none' });
 
 	// //// Method 000
 	// const img = new Image();

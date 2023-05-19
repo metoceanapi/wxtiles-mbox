@@ -24,30 +24,37 @@ export enum TileType {
 
 /**  class QTree utilizes quad-tree structure to get the type of the tile at the given coord */
 export class QTree {
-	qtree: Tree = { nodes: null }; // by default a tree with no nodes and depth 0 always gives TileType.Mixed
-	qtreedepth: number = 0;
+	private _qtree: Tree = { nodes: null }; // by default a tree with no nodes and depth 0 always gives TileType.Mixed
+	private _qtreedepth: number = 0;
+	private _ready: Promise<void>;
 
-	constructor() {
+	constructor(input: RequestInfo, requestInit?: RequestInit | undefined) {
 		WXLOG('QTree.constructor');
+		this._ready = this._load(input, requestInit);
 	}
 
-	async load(input: RequestInfo, requestInit?: RequestInit | undefined): Promise<void> {
+	get ready() {
+		return this._ready;
+	}
+
+	private async _load(input: RequestInfo, requestInit?: RequestInit | undefined): Promise<void> {
+		if (input == 'none') return;
 		try {
 			const _seamask = await fetchJson<string>(input, requestInit);
-			this.qtree = qtreeFromString(_seamask, { pos: 0 });
+			this._qtree = qtreeFromString(_seamask, { pos: 0 });
 		} catch (e) {
 			throw new Error(`Failed to load QTree: ${e.message}`);
 		}
 
-		this.qtreedepth = getTreeDepth(this.qtree);
-		WXLOG(`QTree.load: qtreedepth=${this.qtreedepth}`);
+		this._qtreedepth = getTreeDepth(this._qtree);
+		WXLOG(`QTree.load: qtreedepth=${this._qtreedepth}`);
 	}
 
 	check(coord: XYZ): TileType {
-		const d = coord.z - this.qtreedepth;
+		const d = coord.z - this._qtreedepth;
 		const deepest = d >= 0; // if the coord is deeper than the qtree, don't go deeper than the qtree
-		const subCoords = deepest ? { x: coord.x >> d, y: coord.y >> d, z: this.qtreedepth } : { ...coord /*copy!*/ };
-		return qTreeCheckCoord(this.qtree, subCoords, deepest);
+		const subCoords = deepest ? { x: coord.x >> d, y: coord.y >> d, z: this._qtreedepth } : { ...coord /*copy!*/ };
+		return qTreeCheckCoord(this._qtree, subCoords, deepest);
 	}
 }
 

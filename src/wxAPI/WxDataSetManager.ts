@@ -61,22 +61,22 @@ export class WxDataSetManager {
 	/** dataset's name  */
 	readonly datasetName: string;
 
-	/** Get dataset's current instance. */
-	private readonly datasetCurrentInstance: string;
-
-	/**  dataset's meta */
-	private readonly datasetCurrentMeta: WxDatasetMeta;
-
-	/** if not empty, returns dataset's instances to be used as time steps in the dataset */
-	private readonly instanced?: string[];
-
-	/**  dataset's metas for an instanced dataset */
-	private readonly metas: Map<string, WxDatasetMeta>;
-
 	/**  a reference to the wxAPI object */
 	readonly wxAPI: WxAPI;
 
-	/** Do not use this constructor directly, use {@link WxAPI.createDatasetManager} instead. */
+	/** Get dataset's current instance. */
+	private datasetCurrentInstance: string;
+
+	/**  dataset's meta */
+	private datasetCurrentMeta: WxDatasetMeta;
+
+	/** if not empty, returns dataset's instances to be used as time steps in the dataset */
+	private instanced?: string[];
+
+	/**  dataset's metas for an instanced dataset */
+	private metas: Map<string, WxDatasetMeta>;
+
+	/** Do not use this constructor directly, use {@link WxAPI} instead. */
 	constructor({ datasetName, datasetCurrentInstance, instanced, datasetCurrentMeta, metas, wxAPI }: WxDataSetManagerOptions) {
 		if (!wxAPI.datasetsMetas.allDatasetsList.includes(datasetName)) throw new Error(`Dataset ${datasetName} not found`);
 		this.datasetName = datasetName;
@@ -86,6 +86,14 @@ export class WxDataSetManager {
 		this.metas = metas;
 		this.wxAPI = wxAPI;
 		WXLOG(`WxDataSetManager.constructor: ${this.datasetName}`);
+	}
+
+	async update() {
+		const newDsManager = await this.wxAPI.createDatasetManager(this.datasetName);
+		this.datasetCurrentInstance = newDsManager.datasetCurrentInstance;
+		this.instanced = newDsManager.instanced;
+		this.datasetCurrentMeta = newDsManager.datasetCurrentMeta;
+		this.metas = newDsManager.metas;
 	}
 
 	isInstanced(): boolean {
@@ -237,43 +245,5 @@ export class WxDataSetManager {
 		};
 
 		return new WxTileSource(layerOptions, frwOptions);
-	}
-
-	/**
-	 * A part of WxAPI (is not used internally)
-	 * Check if dataset's instance updated (fresh data is arrived) since datasset object was created
-	 * @returns {boolean} - true if dataset's instance updated since datasset object was created
-	 * */
-	async checkDatasetOutdated(): Promise<boolean> {
-		WXLOG(`WxDataSetManager.checkDatasetOutdated: ${this.datasetName}`);
-		await this.wxAPI.initDone;
-		return (await this.getDatasetInstance()) === this.datasetCurrentInstance;
-	}
-
-	/**
-	 * A part of WxAPI (is not used internally)
-	 * Get dataset's instance.
-	 * @returns {Promise<string>} - dataset's instance
-	 * */
-	protected async getDatasetInstance(): Promise<string> {
-		WXLOG(`WxDataSetManager.getDatasetInstance: ${this.datasetName}`);
-		const instances = await this.getDatasetInstances();
-		return instances[instances.length - 1];
-	}
-
-	/**
-	 * A part of WxAPI (is not used internally)
-	 * Get dataset's instances.
-	 * @returns {Promise<string[]>} - dataset's all instances
-	 * */
-	protected async getDatasetInstances(): Promise<string[]> {
-		WXLOG(`WxDataSetManager.getDatasetInstances: ${this.datasetName}`);
-		try {
-			const instances = await fetchJson<WxInstances>(this.wxAPI.dataServerURL + this.datasetName + '/instances.json', this.wxAPI.requestInit);
-			if (instances.length === 0) throw new Error(`No instances found for dataset ${this.datasetName}`);
-			return instances;
-		} catch (e) {
-			throw new Error(`getting dataset instances failure message: ${e.message} datasetName: ${this.datasetName} (they are likely removed from API)`);
-		}
 	}
 }

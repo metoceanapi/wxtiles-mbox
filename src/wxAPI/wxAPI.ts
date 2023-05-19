@@ -154,6 +154,42 @@ export interface WxAPIOptions extends WxTilesLibOptions {
 	requestInit?: RequestInit;
 }
 
+class WxDatasetsManager {
+	private _datasetsMetas: WxDataSetsMetasJSON = { allDatasetsList: [] };
+	private _ready!: Promise<WxDataSetsMetasJSON>;
+	constructor(private readonly wxAPI: WxAPI) {
+		this.updateAll(); // init _ready
+		(async () => (this._datasetsMetas = await this._ready))();
+	}
+
+	updateAll() {
+		return (this._ready = fetchJson<WxDataSetsMetasJSON>(this.wxAPI.dataServerURL + 'datasetsmeta.json', this.wxAPI.requestInit));
+	}
+
+	updateOne(datasetName: string) {
+		this._ready = new Promise(async (resolve) => {
+			try {
+				const r = await fetchJson<WxDataSetsMetasJSON>(this.wxAPI.dataServerURL + datasetName + '.meta.json', this.wxAPI.requestInit);
+				this._datasetsMetas[datasetName] = r[datasetName];
+			} catch (e) {
+				console.log('failed to update dataset meta: ' + datasetName + '. All datasets update will be triggered');
+				await this.updateAll();
+			}
+			
+			resolve(this._datasetsMetas);
+		});
+		return this._ready;
+	}
+
+	get ready() {
+		return this._ready;
+	}
+
+	get datasetsMetas() {
+		return this._datasetsMetas;
+	}
+}
+
 /** WxAPI is an initialisation object for the library. See {@link WxAPIOptions} for options.
  * @example
  * ```typescript
@@ -169,7 +205,7 @@ export class WxAPI {
 	readonly dataServerURL: string;
 
 	/** @internal see {@link WxAPIOptions}*/
-	readonly maskURL: string = 'auto';
+	readonly maskURL: string;
 
 	/** @internal see {@link WxAPIOptions}*/
 	readonly maskChannel: number;
@@ -180,17 +216,19 @@ export class WxAPI {
 	/** @internal see {@link WxAPIOptions}*/
 	readonly requestInit?: RequestInit;
 
-	/** @internal see {@link WxDataSetsMetasJSON}*/
-	readonly datasetsMetas: WxDataSetsMetasJSON = { allDatasetsList: [] };
+	// /** @internal see {@link WxDataSetsMetasJSON}*/
+	// readonly datasetsMetas: WxDataSetsMetasJSON = { allDatasetsList: [] };
 
 	/** @internal resolved when {@link WxAPI} is ready to use */
 	readonly initDone: Promise<void>;
 
 	/** @internal instance of the qtree object */
-	readonly qtree: QTree = new QTree();
+	readonly qtree: QTree;
 
 	/** @internal function to load mask tiles */
-	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData> = () => Promise.reject(new Error('maskURL not defined'));
+	readonly loadMaskFunc: ({ x, y, z }: XYZ) => Promise<ImageData>;
+
+	readonly datasetsManager: WxDatasetsManager;
 
 	/** @param options - see {@link WxAPIOptions} */
 	constructor({
@@ -207,27 +245,31 @@ export class WxAPI {
 		WXLOG('WxAPI.constructor', dataServerURL);
 		WxTilesLibSetup({ colorStyles, units, colorSchemes });
 
+		// compose auto-URLs for qtree and mask
+		if (qtreeURL === 'auto') qtreeURL = dataServerURL + 'masks/11+1.seamask.qtree';
+		if (maskURL === 'auto') maskURL = dataServerURL + 'masks/{z}/{x}/{y}.png';
+
 		this.dataServerURL = dataServerURL;
 		this.requestInit = requestInit;
-		qtreeURL = qtreeURL === 'auto' ? dataServerURL + 'masks/11+1.seamask.qtree' : qtreeURL;
 
-		if (maskURL !== 'none') {
-			const maskloader = cacheUriPromise(loadImageData);
-			this.maskURL = maskURL = maskURL === 'auto' ? dataServerURL + 'masks/{z}/{x}/{y}.png' : maskURL;
-			this.loadMaskFunc = (coord: XYZ) => maskloader(uriXYZ(maskURL, coord), requestInit);
-		}
-
+		this.maskURL = maskURL;
 		this.maskChannel = maskChannel === 'R' ? 0 : maskChannel === 'G' ? 1 : maskChannel === 'B' ? 2 : maskChannel === 'A' ? 3 : 0; // default to R
 		this.maskDepth = maskDepth;
+		if (this.maskURL !== 'none') {
+			const maskloader = cacheUriPromise(loadImageData);
+			this.loadMaskFunc = (coord: XYZ) => maskloader(uriXYZ(this.maskURL, coord), requestInit);
+		} else {
+			this.loadMaskFunc = () => Promise.reject(new Error('maskURL not defined'));
+		}
 
-		this.initDone = Promise.all([
-			fetchJson<WxDataSetsMetasJSON>(dataServerURL + 'datasetsmeta.json', requestInit),
-			qtreeURL !== 'none' ? this.qtree.load(qtreeURL, requestInit) : Promise.resolve(),
-		]).then(([datasetsMetas, _]): void => {
-			datasetsMetas.allDatasetsList || (datasetsMetas.allDatasetsList = Object.keys(datasetsMetas));
-			(this as any).datasetsMetas = datasetsMetas; // overcome readonly once :/
-			WXLOG('WxAPI.constructor initDone');
-		});
+		this.datasetsManager = new WxDatasetsManager(this);
+		this.qtree = new QTree(qtreeURL, requestInit);
+
+		this.initDone = Promise.all([this.datasetsManager.ready, this.qtree.ready]).then(() => WXLOG('WxAPI.constructor initDone'));
+	}
+
+	get datasetsMetas() {
+		return this.datasetsManager.datasetsMetas;
 	}
 
 	/**
@@ -265,6 +307,7 @@ export class WxAPI {
 	 * @returns {Promise<WxDataSetManager>} - WxDataSetManager object for the given dataset name */
 	async createDatasetManager(datasetName: string): Promise<WxDataSetManager> {
 		await this.initDone;
+		await this.datasetsManager.updateOne(datasetName);
 		WXLOG('WxAPI.createDatasetManager', datasetName);
 		const datasetShortMeta = this.getDatasetShortMeta(datasetName);
 		const datasetCurrentInstance = datasetShortMeta?.instance;

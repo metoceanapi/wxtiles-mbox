@@ -16,7 +16,7 @@ export async function start() {
 	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	// WxTilesLogging(console.trace);
 	// const dataServerURL = 'data/'; // different sources manged in 'start' script in package.json
-	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
 	// const dataServerURL = 'http://localhost:9191/data/';
 	// const dataServerURL = 'https://68.171.214.87/data/'; // hihi1
 	// const dataServerURL = 'https://68.171.214.81/data/'; // hihi2

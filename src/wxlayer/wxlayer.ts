@@ -251,11 +251,7 @@ export class WxLayer {
 
 	/** @internal load, cache, draw the tile. Abortable */
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
-		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit).catch((e) => {
-			if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
-			// if (e.reason === 'instance-not-found' | 'time-not-found') reload timesteps and instances
-			return null; // else NODATA in the tile
-		});
+		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
 	} // _loadTile
 
 	/** @internal cache given time step for faster access when needed. Resolved when done.
