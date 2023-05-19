@@ -100,7 +100,28 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	 * @returns {Promise<Picture>} - A picture of the tile.
 	 */
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<any> {
-		const raster_data = await this.layer.loadTile(tile, requestInit);
+		let raster_data: WxRasterData | null = null;
+		try {
+			raster_data = await this.layer.loadTile(tile, requestInit);
+		} catch (e) {
+			if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
+			// if (e.reason === 'instance-not-found') {
+			// 	// TODO: finish processing new instances 'instance-not-found'
+			// 	WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Trying to update wxdatasetManager and load again.`);
+			// 	try {
+			// 		await this.wxdatasetManager.update(); // try to update wxdatasetManager
+			// 		// TODO clear the CACHE!!!!!!!!!!!!!
+			// 		raster_data = await this.layer.loadTile(tile, requestInit); // try to load again
+			// 		this.fire('changed');
+			// 	} catch (e) {
+			// 		if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
+			// 		// this time return AKA null tile
+			// 		WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Failed to load tile.`, e);
+			// 	}
+			// }
+		} finally {
+		}
+
 		return raster_data ? this.layer.painter.getPaintedCanvas(raster_data, this.animation, this.animationSeed) : new ImageData(1, 1);
 	} // loadTile
 
