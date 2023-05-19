@@ -24,11 +24,11 @@ Usage and API documentation is mainly the same for both frameworks.
 
 ## Examples
 
-[SimpleDemo](https://metoceanapi.github.io/wxtiles-mbox/examples/simpleDemo.html).
-[Animated blur parameter](https://metoceanapi.github.io/wxtiles-mbox/examples/seaMaskAndAnimatedBlur.html)
-[Mouse Interaction](https://metoceanapi.github.io/wxtiles-mbox/examples/interactive.html)
-### MapBox-gl-js
+1. [SimpleDemo](https://metoceanapi.github.io/wxtiles-mbox/examples/simpleDemo.html).
+2. [Animated blur parameter](https://metoceanapi.github.io/wxtiles-mbox/examples/seaMaskAndAnimatedBlur.html)
+3. [Mouse Interaction](https://metoceanapi.github.io/wxtiles-mbox/examples/interactive.html)
 
+### MapBox-gl-js
 
 ```ts
 (async func(){
@@ -79,7 +79,6 @@ Usage and API documentation is mainly the same for both frameworks.
 ```
 
 ### 'Land' masking and animated blur effect
-
 
 ```ts
 (async function step(n: number = 0) {
