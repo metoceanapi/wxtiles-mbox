@@ -7,7 +7,14 @@ import { Loader } from './loader';
 import { Painter, type WxRasterData } from './painter';
 import type { WxTileSource } from '../wxsource/wxsource';
 
-/** Type used to set a time step for the layer. */
+/**
+ * Type used to set a time step for the layer.
+ * Can be
+ * 1. a string in the dataset's format,
+ * 2. a number of a time step in the dataset's meta data,
+ * 3. a number of milliseconds since 1970-01-01T00:00:00Z
+ * 4. a Date object.
+ * */
 export type WxDate = string | number | Date;
 
 /** Used to make an abortable call to the layer update */
@@ -43,7 +50,7 @@ export interface WxTileInfo {
 }
 
 /** Array of variable names to be used in {@link WxLayer} */
-export type WxVars = [string] | [string, string];
+export type WxLayerVarsNames = [string] | [string, string];
 
 /** @internal Array of URIs to request tiles */
 export type WxURIs = [string] | [string, string];
@@ -55,27 +62,6 @@ export interface WxLngLat {
 
 	/** Latitude */
 	lat: number;
-}
-
-/**
- * Options to construct {@link WxTileSource} object
- * Do not use this type directly, use {@link WxLayerOptions} instead
- * */
-export interface WxLayerOptions {
-	/** Variables of the layer */
-	variables: WxVars;
-
-	/** Dataset Manager */
-	wxdatasetManager: WxDataSetManager;
-
-	/** initial time step */
-	time: WxDate;
-
-	/** initial style name */
-	wxstyleName?: string;
-
-	/** initial style, applyed on top of style passed by name {@link wxstyleName} */
-	wxstyle?: WxColorStyleWeak;
 }
 
 /**
@@ -97,17 +83,38 @@ export class TilesCache extends Map<string, WxRasterData> {
 
 /**
  * @internal
+ * Do not use this type directly, use {@link WxSourceLayerOptions} instead
+ * */
+export interface WxLayerOptions {
+	/** Variables of the layer */
+	variables: WxLayerVarsNames;
+
+	/** Dataset Manager */
+	wxdatasetManager: WxDataSetManager;
+
+	/** initial time step */
+	time: WxDate;
+
+	/** initial style name */
+	wxstyleName?: string;
+
+	/** initial style, applyed on top of style passed by name {@link wxstyleName} */
+	wxstyle?: WxColorStyleWeak;
+}
+
+/**
+ * @internal
  * Used in {@link WxLayerBaseImplementation} to manipulate the the layer's style, data and time
  * */
 export class WxLayer {
 	/** @internal Variables to be displayed by the layer */
-	readonly variables: WxVars; // variables of the dataset if vector then [eastward, northward]
+	readonly variables: WxLayerVarsNames; // variables of the dataset if vector then [eastward, northward]
 
 	/** @internal Data manager created this layer */
 	readonly wxdatasetManager: WxDataSetManager;
 
 	/** @internal Current time*/
-	protected time: string;
+	protected _time: string;
 
 	/** @internal Current variable's Meta data of the layer*/
 	currentVariableMeta: WxVariableMeta;
@@ -128,10 +135,10 @@ export class WxLayer {
 	coarseLevel: number = 0;
 
 	/** @internal Painter object to render tiles */
-	readonly painter: Painter = new Painter(this);
+	protected readonly _painter: Painter = new Painter(this);
 
 	/** @internal Loader object to load and preprocess tiles */
-	protected readonly loader: Loader = new Loader(this);
+	protected readonly _loader: Loader = new Loader(this);
 
 	constructor(wxLayerOptions: WxLayerOptions) {
 		WXLOG(`WxLayer.constructor: 
@@ -149,13 +156,13 @@ export class WxLayer {
 		}
 
 		wxLayerOptions.variables.forEach((v) => {
-			if (!wxLayerOptions.wxdatasetManager.checkVariableValid(v))
+			if (!wxLayerOptions.wxdatasetManager.isVariableValid(v))
 				throw new Error(`datasetName: ${wxLayerOptions.wxdatasetManager.datasetName}: variable ${v} is not valid`);
 		});
 
 		this.variables = wxLayerOptions.variables;
 		this.wxdatasetManager = wxLayerOptions.wxdatasetManager;
-		[this.tilesURIs, this.time] = this._createURLsAndTime(wxLayerOptions.time);
+		[this.tilesURIs, this._time] = this._createURLsAndTime(wxLayerOptions.time);
 
 		const styles = WxGetColorStyles();
 		const baseStyle = styles['base'];
@@ -200,7 +207,7 @@ export class WxLayer {
 	 * @returns {string} time step in the dataset meta's format */
 	getTime(): string {
 		WXLOG(`WxLayer.getTime`);
-		return this.time;
+		return this._time;
 	} // getTime
 
 	/**
@@ -210,7 +217,7 @@ export class WxLayer {
 	clearCache(): void {
 		WXLOG(`WxLayer.clearCache`);
 		this.tilesCache.clear();
-		this.loader.clearCache();
+		this._loader.clearCache();
 	} // clearCache
 
 	/** @internal */
@@ -242,30 +249,41 @@ export class WxLayer {
 	/** @internal reassign URIs and a time step with a new given time step */
 	setURLsAndTime(time_?: WxDate): void {
 		WXLOG(`WxLayer.setURLsAndTime time=${time_}`);
-		[this.tilesURIs, this.time] = this._createURLsAndTime(time_);
+		[this.tilesURIs, this._time] = this._createURLsAndTime(time_);
 		if (this.wxdatasetManager.isInstanced()) {
 			this.currentVariableMeta = this._getCurrentVariableMeta();
 			[this.style, this.CLUT] = this._createStyleAndCLUT();
 		}
 	} // _setURLsAndTime
 
-	/** @internal load, cache, draw the tile. Abortable */
+	getPaintedCanvas(data: WxRasterData, animation: boolean, seed: number): HTMLCanvasElement {
+		return this._painter.getPaintedCanvas(data, animation, seed);
+	}
+
+	/**
+	 * @internal
+	 *  load, cache, draw the tile. Abortable
+	 * */
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
 		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
 	} // _loadTile
 
-	/** @internal cache given time step for faster access when needed. Resolved when done.
+	/**
+	 * @internal
+	 *  cache given time step for faster access when needed. Resolved when done.
 	 * @param time_ time step to cache
 	 * @param requestInit request options
-	 * @returns {Promise<void>} */
+	 * @returns {Promise<void>}
+	 * */
 	async preloadTime(time_: WxDate, tiles: XYZ[], requestInit?: WxRequestInit): Promise<void> {
 		WXLOG(`WxLayer.preloadTime time=${time_}`);
 		const [tilesURIs] = this._createURLsAndTime(time_);
-		await Promise.allSettled(tiles.map((tile) => this.loader.cacheLoad(tile, tilesURIs, requestInit))); // fill up cache
+		await Promise.allSettled(tiles.map((tile) => this._loader.cacheLoad(tile, tilesURIs, requestInit))); // fill up cache
 	} // _preloadTime
 
 	/**
-	 * @description Load all tiles, draw it on canvas, save to cache and return. Resolved when done.
+	 * @internal
+	 *  Load all tiles, draw it on canvas, save to cache and return. Resolved when done.
 	 * @param tiles
 	 * @param requestInit
 	 * @returns {Promise<viod>} */
@@ -280,28 +298,35 @@ export class WxLayer {
 		} else tilesCache.clear(); // clear unneeded cache
 	} // _reloadTiles
 
-	/** @ignore */
+	/**
+	 * @internal
+	 * @ignore
+	 * */
 	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: TilesCache, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
 		const tileData = tilesCache.get(HashXYZ(tile));
 		if (tileData) return tileData;
 
-		const data = await this.loader.load(tile, requestInit);
+		const data = await this._loader.load(tile, requestInit);
 		if (!data) return null; // also happens when tile is cut by qTree or by Mask
 
 		const ctxFill = create2DContext(256, 256);
 		const ctxText = ctxFill; //  check if some browsers need separate canvas for text
 		const ctxStreamLines = this.variables.length === 2 ? create2DContext(256, 256) : ctxFill;
 		const raster_data: WxRasterData = { ctxFill, ctxText, ctxStreamLines, data };
-		this.painter.paint(raster_data);
+		this._painter.paint(raster_data);
 		tilesCache.set(HashXYZ(tile), raster_data);
 		return raster_data;
 	} // _loadCacheDrawTile
 
-	/** @ignore creates/calculates meta data for vector layers */
+	/**
+	 * @internal
+	 * @ignore
+	 *  creates/calculates meta data for vector layers
+	 * */
 	protected _getCurrentVariableMeta(): WxVariableMeta {
 		const variablesMetas = this.variables.map((v) => {
-			const variableMeta = this.wxdatasetManager.getInstanceVariableMeta(v, this.time); // meta <-> instance!!!
-			if (!variableMeta) throw new Error(`WxLayer ${this.wxdatasetManager.datasetName}: variable ${v} is not valid`);
+			const variableMeta = this.wxdatasetManager.getVariableMeta(v); // meta <-> instance!!!
+			if (!variableMeta) throw new Error(`datasetName ${this.wxdatasetManager.datasetName}: variable ${v} is not valid`);
 			return variableMeta;
 		});
 		let { min, max, units, vector } = variablesMetas[0];
@@ -346,8 +371,8 @@ export class WxLayer {
 
 	/** @ignore calculate valid timestep and URIs */
 	protected _createURLsAndTime(time_?: WxDate): [WxURIs, string] {
-		const time = this.wxdatasetManager.getValidTime(time_);
-		const tilesURIs = <WxURIs>this.variables.map((variable) => this.wxdatasetManager.createURI(variable, time));
-		return [tilesURIs, time];
+		const validTime = this.wxdatasetManager.getNearestValidTime(time_);
+		const tilesURIs = <WxURIs>this.variables.map((variable) => this.wxdatasetManager.createURI(variable, validTime));
+		return [tilesURIs, validTime];
 	} // _createURLsAndTime
 }

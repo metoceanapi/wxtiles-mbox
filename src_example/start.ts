@@ -1,4 +1,4 @@
-import { WxTileSource, type WxVars, WxAPI, WxTilesLogging, type WxTileInfo, FrameworkOptions, WxGetColorStyles, WXLOG, WxColorStyleWeak } from '../src/index';
+import { WxTileSource, WxAPI, WxTilesLogging, type WxTileInfo, FrameworkOptions, WxGetColorStyles, WXLOG, WxColorStyleWeak } from '../src/index';
 import { WxLegendControl } from '../src/controls/WxLegendControl';
 import { WxStyleEditorControl } from '../src/controls/WxStyleEditorControl';
 import { WxInfoControl } from '../src/controls/WxInfoControl';
@@ -15,8 +15,8 @@ export async function start() {
 	const map = await initFrameWork();
 	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	// WxTilesLogging(console.trace);
-	// const dataServerURL = 'data/'; // different sources manged in 'start' script in package.json
-	const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
+	const dataServerURL = 'data/'; // different sources manged in 'start' script in package.json
+	// const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
 	// const dataServerURL = 'http://localhost:9191/data/';
 	// const dataServerURL = 'https://68.171.214.87/data/'; // hihi1
 	// const dataServerURL = 'https://68.171.214.81/data/'; // hihi2
@@ -100,8 +100,9 @@ export async function start() {
 		}
 		const meta = wxdatasetManager.getVariableMeta(variable);
 		if (meta?.units === 'RGB') {
-			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variable, wxdatasetManager.getTimes()[0]), wxdatasetManager.getMaxZoom());
-			timeControl.setTimes(wxdatasetManager.getTimes());
+			const times = wxdatasetManager.getAllTimes();
+			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variable, times[0]), wxdatasetManager.getMaxZoom());
+			timeControl.setTimes(times);
 			legendControl.clear();
 		} else {
 			wxsourceLayer = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: sth.style }, frameworkOptions);

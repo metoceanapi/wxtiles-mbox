@@ -158,7 +158,7 @@ export interface WxColorStyleStrict {
 	 * */
 	mask?: 'land' | 'sea' | 'none';
 
-	/** If true then use WebGL to render tiles */
+	/** If exists then try to use WebGL to render tiles */
 	gl?: {
 		animationSpeed?: number;
 		noiseTexturePow?: number;

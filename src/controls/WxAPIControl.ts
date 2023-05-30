@@ -69,14 +69,14 @@ export class WxAPIControl {
 	async fillVariables(variable?: string): Promise<void> {
 		this.variables.options.length = 0;
 		const dataset = this.datasets.value;
-		(await this.wxapi.getDatasetVariables(dataset)).forEach((variable) => {
+		(await this.wxapi.getDatasetAllVariables(dataset))?.forEach((variable) => {
 			const option = document.createElement('option');
 			option.value = variable;
 			option.text = variable;
 			this.variables.appendChild(option);
 		});
 
-		variable && (this.variables.value = variable);
+		variable && this.variables.options.length && (this.variables.value = variable);
 	}
 
 	onAdd(/* map */) {

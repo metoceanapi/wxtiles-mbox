@@ -45,7 +45,7 @@ export class WxInfoControl {
 		this.div.innerHTML += (baseAtmosphericModel && `baseAtmosphericModel=${baseAtmosphericModel}<br>`) || '';
 		this.div.innerHTML += (model && `model=${model}<br>`) || '';
 		this.div.innerHTML += `dataset=${datasetName}<br>
-		variables=${wxsource.getVariables()}<br>
+		variables=${wxsource.getVariablesNames()}<br>
 		time=${wxsource.getTime()}<br>
 		min=${min.toFixed(2)} ${units}, max=${max.toFixed(2)} ${units}<br>`;
 		const tileInfo: WxTileInfo | undefined = wxsource.getLayerInfoAtLatLon(this.pos, map);

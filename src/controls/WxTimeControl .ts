@@ -50,7 +50,7 @@ export class WxTimeControl {
 					if (!this.wxsource) return;
 					this.timesEl.style.backgroundColor = 'yellow';
 					if (this.button.innerHTML === 'Stop') {
-						const nextTimeIndex = t++ % this.wxsource.getTimes().length;
+						const nextTimeIndex = t++ % this.wxsource.getAllTimes().length;
 						await this.wxsource.setTime(nextTimeIndex, holder.abortController);
 						setTimeout(nextTimeStep, this.delay);
 					} else {
@@ -89,7 +89,7 @@ export class WxTimeControl {
 		this.button.innerHTML = 'Start';
 		this.wxsource = wxsource;
 		this.timesEl.options.length = 0;
-		const times = this.wxsource?.getTimes() || [];
+		const times = this.wxsource?.getAllTimes() || [];
 		this.setTimes(times);
 		this.timesEl.value = this.wxsource?.getTime() || '';
 		this.onchange(this.timesEl.value);

@@ -1,17 +1,17 @@
 import mapboxgl from 'mapbox-gl';
 
 import { type XYZ, WXLOG } from '../utils/wxtools';
-import { type WxRequestInit, type WxTileInfo, type WxLngLat, WxLayerOptions } from '../wxlayer/wxlayer';
+import { type WxRequestInit, type WxTileInfo, type WxLngLat, type WxLayerOptions } from '../wxlayer/wxlayer';
 import { WxLayerBaseImplementation, type WxLayerAPI } from '../wxlayer/WxImplementation';
-import { FrameworkOptions } from './wxsourcetypes';
+import { type FrameworkOptions } from './wxsourcetypes';
 import { type WxRasterData } from '../wxlayer/painter';
-import { WxDataSetManager, WxSourceLayerOptions } from '../wxAPI/WxDataSetManager';
+import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
 
 /**
  * A custom layer source implementation
  * It is used to load and display weather data from the WxTiles server.
  * **NOTE**
- * Dont use this  directly, use {@link WxDataSetManager.createSourceLayer},  {@link WxSourceLayerOptions} and {@link FrameworkOptions} instead
+ * Dont use this  directly, use {@link WxDataSetManager.createSourceLayer} instead
  * @example
  * ```ts
 	const wxapi = new WxAPI({ 'http://dataserver.com' });
@@ -28,13 +28,12 @@ import { WxDataSetManager, WxSourceLayerOptions } from '../wxAPI/WxDataSetManage
  */
 export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAPI, mapboxgl.CustomSourceInterface<any> {
 	/**
-	 *
+	 * @internal
 	 * @param {WxLayerOptions} wxLayerOptions - The options for the {@link WxLayerBaseImplementation}.
 	 * @param {FrameworkOptions} frwOptions - The options for the framework.
 	 */
 	constructor(wxLayerOptions: WxLayerOptions, frwOptions: FrameworkOptions) {
 		WXLOG(`WxTileSource.constructor (id=${frwOptions.id})`);
-		//frwOptions.bounds = frwOptions.bounds || wxLayerOptions.wxdatasetManager.getBoundaries180(); // MAPBOX API let mapbox manage boundaries, but not all cases are covered.
 		super(wxLayerOptions, frwOptions);
 	} // constructor
 
@@ -55,7 +54,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 		tileCoord.y = Math.floor(tileCoord.y);
 		const tilePixel_ = mapPixCoord.sub(tileCoord.mult(tilesize)); // tile pixel coordinates
 		const tilePixel = tilePixel_.mult(255 / tilesize).round(); // convert to 256x256 pixel coordinates
-		return this.layer.getTileData({ x: tileCoord.x, y: tileCoord.y, z: zoom }, tilePixel);
+		return this._layer.getTileData({ x: tileCoord.x, y: tileCoord.y, z: zoom }, tilePixel);
 	}
 
 	/**
@@ -64,7 +63,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	 **/
 	async _reloadVisible(requestInit?: WxRequestInit): Promise<void> {
 		WXLOG(`WxTileSource _reloadVisible (${this.id})`);
-		await this.layer.reloadTiles(this.coveringTiles(), requestInit); // reload tiles with new time
+		await this._layer.reloadTiles(this.coveringTiles(), requestInit); // reload tiles with new time
 		if (requestInit?.signal?.aborted) {
 			WXLOG(`WxTileSource _reloadVisible (${this.id}) aborted`);
 			return;
@@ -85,7 +84,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 
 	/**
 	 * @ignore
-	 * @description reload tiles that are currently visible on the map.
+	 * reload tiles that are currently visible on the map.
 	 * 	<MBOX API> get assigned by map.addSource
 	 */
 	update() {
@@ -102,36 +101,39 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<any> {
 		let raster_data: WxRasterData | null = null;
 		try {
-			raster_data = await this.layer.loadTile(tile, requestInit);
+			raster_data = await this._layer.loadTile(tile, requestInit);
 		} catch (e) {
 			if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
-			// if (e.reason === 'instance-not-found') {
-			// 	// TODO: finish processing new instances 'instance-not-found'
-			// 	WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Trying to update wxdatasetManager and load again.`);
-			// 	try {
-			// 		await this.wxdatasetManager.update(); // try to update wxdatasetManager
-			// 		// TODO clear the CACHE!!!!!!!!!!!!!
-			// 		raster_data = await this.layer.loadTile(tile, requestInit); // try to load again
-			// 		this.fire('changed');
-			// 	} catch (e) {
-			// 		if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
-			// 		// this time return AKA null tile
-			// 		WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Failed to load tile.`, e);
-			// 	}
-			// }
+			if (e.reason === 'instance-not-found') {
+				// TODO: finish processing new instances 'instance-not-found'
+				WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Trying to update wxdatasetManager and load again.`);
+				try {
+					await this.wxdatasetManager.update(); // try to update wxdatasetManager
+					// TODO clear the CACHE!!!!!!!!!!!!!
+					raster_data = await this._layer.loadTile(tile, requestInit); // try to load again
+					this._fire('changed');
+				} catch (e) {
+					if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
+					if (e.reason === 'instance-not-found') {
+						// this time we a re sure that the something is wrong with the dataset
+						WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Failed to load tile.`, e);
+					}
+					// this time return AKA null tile
+				}
+			}
 		} finally {
 		}
 
-		return raster_data ? this.layer.painter.getPaintedCanvas(raster_data, this.animation, this.animationSeed) : new ImageData(1, 1);
+		return raster_data ? this._layer.getPaintedCanvas(raster_data, this._animation, this._animationSeed) : new ImageData(1, 1);
 	} // loadTile
 
 	/**
 	 * @internal
-	 * @description Used by framework. Cleans up resources used by the source.
+	 * Used by framework. Cleans up resources used by the source.
 	 */
 	onRemove(map: any): void {
 		WXLOG(`WxTileSource onRemove (${this.id})`);
-		this.animation = false;
+		this._animation = false;
 		this.clearCache();
 	} // onRemove
 }

@@ -7,9 +7,6 @@ import { WXLOG } from '../utils/wxtools';
  * Used as universal type for the custom source parent class. see {@link WxTileSource}
  */
 export class FrameworkParentClass {
-	/**
-	 * @param {FrameworkOptions} options - Framework's basic options to construct the layer.
-	 */
 	/** MAPBOX API required */
 	readonly id: string;
 	/** MAPBOX API required */
@@ -25,6 +22,9 @@ export class FrameworkParentClass {
 	/** MAPBOX API */
 	readonly attribution?: string;
 
+	/**
+	 * @param {FrameworkOptions} frwOptions - Framework's basic options to construct the layer.
+	 */
 	constructor(frwOptions: FrameworkOptions) {
 		WXLOG(`FrameworkParentClass.constructor frwOptions: ${JSON.stringify(frwOptions)}`);
 		this.id = frwOptions.id;
