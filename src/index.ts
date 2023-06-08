@@ -9,7 +9,6 @@
  * - {@link WxTileSource} class for managing WX tiles sources.
  * - {@link WxColorStyleWeak} interface for color styles.
  * - {@link WxDate} type for dates.
- * - {@link WxVars} type for variables.
  * - {@link WxDatasetMeta} interface for dataset's metadata.
  * - {@link WxVariableMeta} interface for variable's meta data.
  * - {@link WxAllBoundariesMeta} interface for boundaries of a dataset.
@@ -20,46 +19,70 @@
  */
 
 export {
-	WxAPI,
+	//
+	Loader,
+	type WxData,
+	type SLine,
+	type SLinePoint,
+} from './wxlayer/loader';
+
+export {
+	//
+	Painter,
+	type WxRasterData,
+} from './wxlayer/painter';
+
+export {
+	//
+	QTree,
+	type TileType,
+	type Tree,
+	type TreeN,
+	type SubTrees,
+	type SubTreesN,
+} from './utils/qtree';
+
+export { WxAPI } from './wxAPI/WxAPI';
+
+export {
+	type WxInstances,
 	type WxAPIOptions,
 	type WxDatasetMeta,
 	type WxVariableMeta,
 	type WxVariablesMetas,
 	type WxBoundaryMeta,
 	type WxAllBoundariesMeta,
-} from './wxAPI/wxAPI';
-
-export {
-	//
-	type WxDataSetManager,
+	type WxDatasetShortMeta,
+	type WxAllDatasetsShortMetas,
 	type WxSourceLayerOptions,
-} from './wxAPI/WxDataSetManager';
+	type WxDataSetManagerOptions,
+} from './wxAPI/WxAPItypes';
+
+export { WxDataSetManager } from './wxAPI/WxDataSetManager';
+
+export { WxTileSource } from './wxsource/wxsource';
+
+export { type FrameworkOptions } from './wxsource/wxsourcetypes';
 
 export {
-	//
-	type WxTileSource,
-} from './wxsource/wxsource';
-
-export {
-	//
-	type FrameworkOptions,
-} from './wxsource/wxsourcetypes';
-
-export {
-	//
+	WxLayer,
 	type WxLayerOptions,
 	type WxDate,
 	type WxRequestInit,
 	type WxTileInfo,
 	type WxLayerVarsNames,
 	type WxLngLat,
-	// type WxURIs,
+	type WxURIs,
+	TilesCache,
 } from './wxlayer/wxlayer';
 
 export {
 	//
+	WxLayerBaseImplementation,
 	type WxEventType,
 	type ListenerMethod,
+	type WxLayerAPI,
+	type WxLayerBaseAPI,
 } from './wxlayer/WxImplementation';
 
 export {
@@ -67,6 +90,7 @@ export {
 	WxCreateLegend,
 	type WxLegend,
 	type WxTick,
+	type RawCLUT,
 } from './utils/RawCLUT';
 
 export {
@@ -75,9 +99,13 @@ export {
 	WxGetColorSchemes,
 	WxTilesLogging,
 	WXLOG,
-} from './utils/wxtools';
-export {
-	// XYZ,
+	type XYZ,
+	type DataPicture,
+	type DataPictures,
+	DataIntegral,
+	type DataIntegrals,
+	type UriLoaderPromiseFunc,
+	type IntegralPare,
 	type WxUnits,
 	type WxUnitTuple,
 	type WxColorSchemes,
@@ -89,7 +117,4 @@ export {
 	type Converter,
 } from './utils/wxtools';
 
-export {
-	//
-	CustomWxTilesLayer,
-} from './customlayer/customlayer';
+export { CustomWxTilesLayer } from './customlayer/customlayer';

@@ -1,6 +1,6 @@
 import { coordToPixel, PixelsToLonLat } from '../utils/mercator';
 import { DataPicture, XYZ } from '../utils/wxtools';
-import { WxBoundaryMeta } from '../wxAPI/wxAPI';
+import { WxBoundaryMeta } from '../wxAPI/WxAPItypes';
 
 function interpolatorDegreeLinear(start: number, end: number, amount: number): number {
 	const shortestAngle = ((((end - start) % 360) + 540) % 360) - 180;

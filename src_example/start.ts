@@ -13,15 +13,15 @@ export const OPACITY = 0.8;
 // start() is the fully interchangable function for Leaflet and Mapbox
 export async function start() {
 	const map = await initFrameWork();
-	addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
+	// addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	// WxTilesLogging(console.trace);
-	const dataServerURL = 'data/'; // different sources manged in 'start' script in package.json
+	// const dataServerURL = 'data/'; // different sources manged in 'start' script in package.json
 	// const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
 	// const dataServerURL = 'http://localhost:9191/data/';
 	// const dataServerURL = 'https://68.171.214.87/data/'; // hihi1
 	// const dataServerURL = 'https://68.171.214.81/data/'; // hihi2
 	// const dataServerURL = 'https://hihi2.metoceanapi.com/data/';
-	// const dataServerURL = 'http://tiles3.metoceanapi.com/';
+	const dataServerURL = 'https://tilesdev.metoceanapi.com/data/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
 	const wxapi = new WxAPI({
@@ -32,17 +32,17 @@ export async function start() {
 		requestInit: { headers: myHeaders },
 	});
 
-	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'ecwmf.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
+	// let datasetName = 'ecmwf.global'; /* 'mercator.global/';  */ /* 'gfs.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// let variable = 'cloud.cover';
 	// let variable = 'air.temperature.at-2m';
-	let variable = 'wind.speed.eastward.at-10m';
+	// let variable = 'wind.speed.eastward.at-10m';
 	// let variable = 'wave.direction.peak';
 
 	// let datasetName = 'ww3-ecmwf.global';
 	// let variable = 'wave.direction.mean';
 
-	// let datasetName = 'obs-radar.rain.nzl.national';
-	// let variable = 'reflectivity';
+	let datasetName = 'obs-radar.rain.nzl.national';
+	let variable = 'reflectivity';
 
 	// get datasetName from URL
 	const urlParams = window.location.toString().split('##')[1];
@@ -98,7 +98,7 @@ export async function start() {
 			const zoom = Math.round(Math.log((360 * 360) / Math.max((east - west + 360) % 360, north - south) / 360) / Math.LN2); // from https://stackoverflow.com/questions/6048975/google-maps-v3-how-to-calculate-the-zoom-level-for-a-given-bounds
 			flyTo(map, zoom, (east + west) / 2, (north + south) / 2, 0, 0);
 		}
-		const meta = wxdatasetManager.getVariableMeta(variable);
+		const meta = wxdatasetManager.getVariableCurrentMeta(variable);
 		if (meta?.units === 'RGB') {
 			const times = wxdatasetManager.getAllTimes();
 			addRaster(map, frameworkOptions.id, 'wxtiles', wxdatasetManager.createURI(variable, times[0]), wxdatasetManager.getMaxZoom());

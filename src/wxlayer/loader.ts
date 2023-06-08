@@ -11,7 +11,7 @@ import {
 	type XYZ,
 	WXLOG,
 } from '../utils/wxtools';
-import { type WxBoundaryMeta } from '../wxAPI/wxAPI';
+import { type WxBoundaryMeta } from '../wxAPI/WxAPItypes';
 import { applyMask, makeBox, splitCoords, subData, subDataDegree, subMask } from './loadertools';
 import { WxRequestInit, WxURIs, type WxLayer } from './wxlayer';
 

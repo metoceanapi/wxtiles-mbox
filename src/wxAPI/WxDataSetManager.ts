@@ -1,56 +1,9 @@
-import { WXLOG } from '../utils/wxtools';
+import { fetchJson, WXLOG } from '../utils/wxtools';
 import type { WxDate, WxLayerOptions, WxLayerVarsNames } from '../wxlayer/wxlayer';
 import { WxTileSource } from '../wxsource/wxsource';
-import { FrameworkOptions } from '../wxsource/wxsourcetypes';
-import type { WxDatasetMeta, WxAPI, WxVariableMeta, WxInstances, WxAllBoundariesMeta } from './wxAPI';
-
-/**
- * Options to pass to the {@link WxDataSetManager.createSourceLayer} method.
- * */
-export interface WxSourceLayerOptions extends Omit<WxLayerOptions, 'variables' | 'wxdatasetManager'> {
-	variable: string;
-}
-
-/**
- * Options to pass to the constructor of {@link WxDataSetManager}
- */
-export interface WxDataSetManagerOptions {
-	/**
-	 * @internal
-	 *  Dataset name
-	 * */
-	datasetName: string;
-
-	/**
-	 * @internal
-	 * current instance of the dataset
-	 * */
-	datasetCurrentInstance: string;
-
-	/**
-	 * @internal
-	 * Array of instanced time steps
-	 * */
-	instanced?: WxInstances;
-
-	/**
-	 * @internal
-	 * Dataset's meta data
-	 * */
-	datasetCurrentMeta: WxDatasetMeta;
-
-	/**
-	 * @internal
-	 * Dataset's metas for an instanced dataset
-	 * */
-	metas: Map<string, WxDatasetMeta>;
-
-	/**
-	 * @internal
-	 * The {@link WxAPI} instance to use to interact with the *WxTiles* API
-	 * */
-	wxAPI: WxAPI;
-}
+import type { FrameworkOptions } from '../wxsource/wxsourcetypes';
+import type { WxAPI } from './WxAPI';
+import type { WxDatasetMeta, WxVariableMeta, WxAllBoundariesMeta, WxAllDatasetsShortMetas, WxDataSetManagerOptions, WxSourceLayerOptions } from './WxAPItypes';
 
 /**
  * Class for managing WX datasets.
@@ -163,8 +116,8 @@ export class WxDataSetManager {
 	 * @argument {string} variable - variable name
 	 * @returns {WxVariableMeta | undefined} - dataset variable's meta
 	 * */
-	getVariableMeta(variable: string): WxVariableMeta | undefined {
-		WXLOG(`WxDataSetManager.getVariableMeta: ${this.datasetName}, ${variable}`);
+	getVariableCurrentMeta(variable: string): WxVariableMeta | undefined {
+		WXLOG(`WxDataSetManager.getVariableCurrentMeta: ${this.datasetName}, ${variable}`);
 		return this._datasetCurrentMeta.variablesMeta[variable];
 	}
 
@@ -174,7 +127,7 @@ export class WxDataSetManager {
 	 * @argument {string} instance - instance name
 	 * @returns {WxVariableMeta | undefined} - dataset variable's meta for the given instance
 	 * */
-	getInstanceVariableMeta(variable: string, instance: string): WxVariableMeta | undefined {
+	getInstanceVariableMeta(variable: string, instance?: string): WxVariableMeta | undefined {
 		WXLOG(`WxDataSetManager.getInstanceVariableMeta: ${this.datasetName}, ${variable}, ${instance}`);
 		return this.getInstanceMeta(instance).variablesMeta[variable];
 	}
@@ -202,9 +155,9 @@ export class WxDataSetManager {
 	 * @param {string} instance
 	 * @returns {WxDatasetMeta}
 	 */
-	getInstanceMeta(instance: string): WxDatasetMeta {
+	getInstanceMeta(instance?: string): WxDatasetMeta {
 		WXLOG(`WxDataSetManager.getInstanceMeta: ${this.datasetName}, ${instance}`);
-		return (this._instanced && this._metas.get(instance)) || this._datasetCurrentMeta;
+		return (instance && this._instanced && this._metas.get(instance)) || this._datasetCurrentMeta;
 	}
 
 	/**
@@ -228,7 +181,7 @@ export class WxDataSetManager {
 	 * */
 	isVariableValid(variable: string): boolean {
 		WXLOG(`WxDataSetManager.checkVariableValid: ${this.datasetName}, ${variable}`);
-		return this.getVariableMeta(variable) !== undefined;
+		return this._datasetCurrentMeta.variablesMeta[variable] !== undefined;
 	}
 
 	/** @internal Update dataset's meta data. */
@@ -253,8 +206,62 @@ export class WxDataSetManager {
 	 * */
 	protected _checkCombineVariableIfVector(variable: string): WxLayerVarsNames {
 		WXLOG(`WxDataSetManager.checkCombineVariableIfVector: ${this.datasetName}, ${variable}`);
-		const variableMeta = this.getVariableMeta(variable);
+		const variableMeta = this._datasetCurrentMeta.variablesMeta[variable];
 		if (!variableMeta) throw new Error(`in dataset ${this.datasetName} variable ${variable} not found`);
 		return variableMeta.vector || [variable]; // check if variable is vector and use vector components if so
+	}
+}
+
+/**
+ * Class for managing all datasets metadata.
+ * @internal
+ */
+export class WxAllDatasetsManager {
+	private _allDatasetsShortMetas: WxAllDatasetsShortMetas = {};
+	private _ready: Promise<WxAllDatasetsShortMetas>;
+
+	constructor(private readonly wxAPI: WxAPI) {
+		this._ready = this.updateAll(); // init _ready
+	}
+
+	/**
+	 * Update all datasets metadata
+	 * @returns a promise that resolves when all datasets are loaded
+	 */
+	updateAll(): Promise<WxAllDatasetsShortMetas> {
+		this._ready = fetchJson(this.wxAPI.dataServerURL + 'meta.json', this.wxAPI.requestInit);
+		this._ready.then((dms) => (this._allDatasetsShortMetas = dms));
+		return this._ready;
+	}
+
+	/**
+	 * Update one dataset metadata
+	 * @param {string} datasetName - name of the dataset to update
+	 * @returns {Promise<WxAllDatasetsShortMetas>} a promise that resolves when the dataset is loaded
+	 * if the dataset is not found in the list of datasets, it will update all datasets
+	 */
+	async updateOne(datasetName: string): Promise<WxAllDatasetsShortMetas> {
+		try {
+			const r = await fetchJson(this.wxAPI.dataServerURL + datasetName + '/meta.json', this.wxAPI.requestInit);
+			return Object.assign(this._allDatasetsShortMetas, r);
+		} catch {
+			return this.updateAll(); // if failed, update all
+		}
+	}
+
+	/**
+	 * Promise that resolves when all datasets are loaded
+	 * @returns a promise
+	 */
+	get ready(): Promise<WxAllDatasetsShortMetas> {
+		return this._ready;
+	}
+
+	/**
+	 * Get all datasets metadata
+	 * @returns {WxAllDatasetsShortMetas} all datasets metadata
+	 */
+	get datasetsMetas(): WxAllDatasetsShortMetas {
+		return this._allDatasetsShortMetas;
 	}
 }

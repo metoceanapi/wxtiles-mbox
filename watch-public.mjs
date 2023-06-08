@@ -27,6 +27,7 @@ console.log('watching...');
 const { host, port } = await ctx.serve({ host: 'localhost', port: PORT + 1000, servedir: 'public' });
 console.log(`Dev is running at ${host}:${PORT}`);
 
+//*
 // Then start a proxy server on PORT
 // https://esbuild.github.io/api/#serve-proxy
 http
@@ -39,25 +40,30 @@ http
 			headers: req.headers,
 		};
 
-		if (req.url.startsWith('/data/masks')) {
+		/* 	if (req.url.startsWith('/data/masks')) {
 			options.port = 9191; // all from local 'simple NGINX'
-		} else if (req.url.startsWith('/data')) {
+		} else  */ if (req.url.startsWith('/data')) {
 			// options.port = undefined;
 			// options.hostname = 'hihi2.metoceanapi.com';
 			// options.path = 'https://' + options.hostname + req.url;
 
-			// options.port = 9191; // local 'simple NGINX'
+			options.port = 9191; // local 'simple NGINX'
 
-			options.port = 5050; // wxtiles-http-server
+			// options.port = 8080; // wxtiles-http-server
 		}
 
-		// Forward each incoming request to esbuild
-		const proxyReq = http.request(options, (proxyRes) => {
-			res.writeHead(proxyRes.statusCode, proxyRes.headers);
-			proxyRes.pipe(res, { end: true });
-		});
+		try {
+			// Forward each incoming request to esbuild
+			const proxyReq = http.request(options, (proxyRes) => {
+				res.writeHead(proxyRes.statusCode, proxyRes.headers);
+				proxyRes.pipe(res, { end: true });
+			});
 
-		// Forward the body of the request to esbuild
-		req.pipe(proxyReq, { end: true });
+			// Forward the body of the request to esbuild
+			req.pipe(proxyReq, { end: true });
+		} catch (e) {
+			console.error(e);
+		}
 	})
 	.listen(PORT);
+//*/

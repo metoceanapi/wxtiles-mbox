@@ -169,6 +169,7 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 	private map: any;
 	private program: WebGLProgram | null = null;
 	private attributes: { a_pos: number; a_texture_pos: number } = { a_pos: 0, a_texture_pos: 0 }; // must be here
+	/**@ignore */
 	private uniforms: CustomWxTilesLayerUniforms = new CustomWxTilesLayerUniforms();
 
 	private noiseTexture: WebGLTexture | null = null;

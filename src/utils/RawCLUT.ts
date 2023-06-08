@@ -1,8 +1,8 @@
 import { HEXtoRGBA, RGBtoHEX, makeConverter, WxGetColorSchemes, mixColor, createLevels, WXLOG } from './wxtools';
-import { Converter, WxColorStyleStrict } from './wxtools';
+import type { Converter, WxColorStyleStrict } from './wxtools';
 
 /** classic clamp */
-function clamp(val: number, min: number, max: number) {
+function clamp(val: number, min: number, max: number): number {
 	return val > max ? max : val < min ? min : val;
 }
 
@@ -19,6 +19,7 @@ export interface WxTick {
 }
 
 /**
+ * @internal
  * Class contains information about the color style and the legend
  * Based on the idea of CLUT (Color Look Up Table) to fill tiles with colors from the style
  */
@@ -35,10 +36,10 @@ export class RawCLUT {
 	ticks: WxTick[];
 
 	/**
-	 * @param style the color style
-	 * @param dUnits the units of the data
-	 * @param minmax the array of minimum and maximum data values
-	 * @param vector if true, the style is for vector data
+	 * @param {WxColorStyleStrict} style the color style
+	 * @param {string} dUnits the units of the data
+	 * @param {[number, number]} minmax the array of minimum and maximum data values
+	 * @param {boolean} vector if true, the style is for vector data
 	 * */
 	constructor(style: WxColorStyleStrict, dUnits: string, [dMin, dMax]: [number, number], vector: boolean) {
 		WXLOG(`RawCLUT.constructor`);

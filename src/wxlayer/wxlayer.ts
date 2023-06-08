@@ -1,7 +1,7 @@
 import { RawCLUT } from '../utils/RawCLUT';
 import { WxGetColorStyles, HashXYZ, RGBtoHEX, create2DContext, WXLOG } from '../utils/wxtools';
 import type { WxColorStyleStrict, XYZ, DataPictures, WxColorStyleWeak } from '../utils/wxtools';
-import type { WxAllBoundariesMeta, WxVariableMeta } from '../wxAPI/wxAPI';
+import type { WxAllBoundariesMeta, WxVariableMeta } from '../wxAPI/WxAPItypes';
 import type { WxDataSetManager } from '../wxAPI/WxDataSetManager';
 import { Loader } from './loader';
 import { Painter, type WxRasterData } from './painter';
@@ -325,7 +325,7 @@ export class WxLayer {
 	 * */
 	protected _getCurrentVariableMeta(): WxVariableMeta {
 		const variablesMetas = this.variables.map((v) => {
-			const variableMeta = this.wxdatasetManager.getVariableMeta(v); // meta <-> instance!!!
+			const variableMeta = this.wxdatasetManager.getInstanceVariableMeta(v, this._time); // meta <-> instance!!!
 			if (!variableMeta) throw new Error(`datasetName ${this.wxdatasetManager.datasetName}: variable ${v} is not valid`);
 			return variableMeta;
 		});
