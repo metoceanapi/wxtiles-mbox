@@ -7,6 +7,12 @@ import { type FrameworkOptions } from './wxsourcetypes';
 import { type WxRasterData } from '../wxlayer/painter';
 import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
 
+export type ListenerMethod = <T extends keyof WxEventType>(arg?: WxEventType[T]) => void;
+
+export type WxEventType = {
+	changed: void;
+};
+
 /**
  * A custom layer source implementation
  * It is used to load and display weather data from the WxTiles server.
@@ -27,6 +33,12 @@ import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
  * ```
  */
 export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAPI, mapboxgl.CustomSourceInterface<any> {
+	/**
+	 * @ignore
+	 * evented listeners
+	 * */
+	protected _listeners: { [eventName: string]: ListenerMethod[] } = {};
+
 	/**
 	 * @internal
 	 * @param {WxLayerOptions} wxLayerOptions - The options for the {@link WxLayerBaseImplementation}.
@@ -140,4 +152,43 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 		this._animation = false;
 		this.clearCache();
 	} // onRemove
+
+	// evented methods
+	/**
+	 * add a listener for the event
+	 * @param {string} type - event name
+	 * @param {ListenerMethod} listener - listener function
+	 * @returns {this}
+	 * */
+	on<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
+		// push listener to the list of listeners
+		(this._listeners[type] ||= []).push(listener);
+		return this;
+	}
+
+	off<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
+		// remove listener from the list of listeners
+		if (this._listeners[type]) {
+			this._listeners[type] = this._listeners[type].filter((l) => l !== listener);
+		}
+		return this;
+	}
+
+	once<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
+		// push listener to the list of listeners
+		const onceListener = (...args: any[]) => {
+			listener(...args);
+			this.off(type, onceListener);
+		};
+		this.on(type, onceListener);
+		return this;
+	}
+
+	protected _fire<T extends keyof WxEventType>(type: T, data?: WxEventType[T]) {
+		// fire runs all listeners asynchroniously, so my algos don't stuck
+		// call all listeners for the type
+		if (this._listeners[type]) {
+			this._listeners[type].forEach(async (l) => l(data));
+		}
+	}
 }

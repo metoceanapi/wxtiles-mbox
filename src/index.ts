@@ -79,8 +79,6 @@ export {
 export {
 	//
 	WxLayerBaseImplementation,
-	type WxEventType,
-	type ListenerMethod,
 	type WxLayerAPI,
 	type WxLayerBaseAPI,
 } from './wxlayer/WxImplementation';

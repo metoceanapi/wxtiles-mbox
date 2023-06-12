@@ -25,9 +25,9 @@ export async function initFrameWork() {
 	mapboxgl.accessToken = 'pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A';
 	const map = new mapboxgl.Map({
 		container: 'map',
-		style: 'mapbox://styles/mapbox/light-v10',
+		// style: 'mapbox://styles/mapbox/light-v10',
 		// style: 'mapbox://styles/mapbox/satellite-v9',
-		// style: { version: 8, name: 'Empty', sources: {}, layers: [] },
+		style: { version: 8, name: 'Empty', sources: {}, layers: [] },
 		// center: [180, 0],
 		center: [174.5, -41.3],
 		zoom: 5,
@@ -132,8 +132,8 @@ export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: stri
 
 export async function addLayer(map: mapboxgl.Map, idL: string, source: any) {
 	map.addSource(source.id, source);
-	const baseL = map.getLayer('baseL') && 'baseL';
-	map.addLayer(new CustomWxTilesLayer(idL, source.id, OPACITY), baseL);
+	// const baseL = map.getLayer('baseL') && 'baseL';
+	map.addLayer(new CustomWxTilesLayer(idL, source.id, OPACITY)); //, baseL);
 	/*
 	map.addLayer(
 		{
