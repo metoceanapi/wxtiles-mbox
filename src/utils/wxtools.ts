@@ -233,7 +233,7 @@ export function WxGetColorSchemes(): WxColorSchemes {
 }
 
 /** A function type with extra properties. */
-export interface Converter {
+export interface Converter extends Function {
 	/** interface of a function - unit cinverter*/
 	(x: number): number;
 	/** true if the converter is a trivial one */
@@ -320,12 +320,20 @@ function unrollStylesParent(stylesArrInc: WxColorStylesWeakMixed): WxColorStyles
 }
 
 /** Function type to load image from URL, with additional properties */
-export type UriLoaderPromiseFunc<T> = (url: string, ...props: any) => Promise<T>;
+// export type UriLoaderPromiseFunc<T> = (url: string, ...props: any) => Promise<T>;
+interface UriLoaderPromiseFunc<T> extends Function {
+	(url: string, ...props: any): Promise<T>;
+}
+
+export interface CachedUriLoaderPromiseFunc<T> extends UriLoaderPromiseFunc<T> {
+	(url: string, ...props: any): Promise<T>;
+	clearCache: () => void;
+}
 
 /** Makes a cachable function that loads image from URL, with additional properties */
-export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): UriLoaderPromiseFunc<T> {
+export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): CachedUriLoaderPromiseFunc<T> {
 	const cache = new Map<string, Promise<T>>();
-	return (url, ...props): Promise<T> => {
+	const cachedFunc = (url: string, ...props: any[]): Promise<T> => {
 		const cached = cache.get(url);
 		if (cached) return cached;
 		const promise = fn(url, ...props);
@@ -335,6 +343,9 @@ export function cacheUriPromise<T>(fn: UriLoaderPromiseFunc<T>): UriLoaderPromis
 		promise.catch((e) => e.name === 'AbortError' && cache.delete(url));
 		return promise;
 	};
+
+	cachedFunc.clearCache = () => cache.clear();
+	return cachedFunc;
 }
 
 /**
@@ -406,7 +417,7 @@ export type DataPictures = [DataPicture] | [DataPicture, DataPicture, DataPictur
  * class implements {@link DataPictures} with lazy calculation of {@link IntegralPare} for fast box blur algorithm
  * */
 export class DataIntegral implements DataPicture {
-	private integral_?: IntegralPare;
+	protected integral_?: IntegralPare;
 	radius: number = 0;
 	constructor(public raw: Uint16Array, public dmin: number, public dmax: number, public dmul: number) {}
 	get integral(): IntegralPare {
@@ -949,10 +960,6 @@ export function WxTilesLogging(on?: boolean | ((...args: any[]) => void)) {
 	console.log('WXLOGing', wxlogging);
 	WXLOG = typeof on === 'function' ? on : wxlogging ? console.log : () => {};
 }
-
-// export function WXLOG(...str: any) {
-// 	wxlogging && console.log(...str);
-// }
 
 /**
  * Helper to convert short form of web color from '#RGB' to '#RRGGBB'

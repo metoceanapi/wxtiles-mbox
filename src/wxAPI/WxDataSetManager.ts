@@ -26,16 +26,16 @@ export class WxDataSetManager {
 	readonly wxAPI: WxAPI;
 
 	/** @ignore Get dataset's current instance. */
-	private _datasetCurrentInstance: string;
+	protected _datasetCurrentInstance: string;
 
 	/**  @ignore dataset's meta */
-	private _datasetCurrentMeta: WxDatasetMeta;
+	protected _datasetCurrentMeta: WxDatasetMeta;
 
 	/** @ignore if not empty, returns dataset's instances to be used as time steps in the dataset */
-	private _instanced?: string[];
+	protected _instanced?: string[];
 
 	/**  @ignore dataset's metas for an instanced dataset */
-	private _metas: Map<string, WxDatasetMeta>;
+	protected _metas?: Map<string, WxDatasetMeta>;
 
 	/** @internal Do not use this constructor directly, use {@link WxAPI} instead.*/
 	constructor({ datasetName, datasetCurrentInstance, instanced, datasetCurrentMeta, metas, wxAPI }: WxDataSetManagerOptions) {
@@ -157,7 +157,7 @@ export class WxDataSetManager {
 	 */
 	getInstanceMeta(instance?: string): WxDatasetMeta {
 		WXLOG(`WxDataSetManager.getInstanceMeta: ${this.datasetName}, ${instance}`);
-		return (instance && this._instanced && this._metas.get(instance)) || this._datasetCurrentMeta;
+		return (instance && this._metas?.get(instance)) || this._datasetCurrentMeta;
 	}
 
 	/**
@@ -217,11 +217,11 @@ export class WxDataSetManager {
  * @internal
  */
 export class WxAllDatasetsManager {
-	private _allDatasetsShortMetas: WxAllDatasetsShortMetas = {};
-	private _ready: Promise<WxAllDatasetsShortMetas>;
+	allDatasetsShortMetas: WxAllDatasetsShortMetas = {};
+	ready: Promise<WxAllDatasetsShortMetas>;
 
-	constructor(private readonly wxAPI: WxAPI) {
-		this._ready = this.updateAll(); // init _ready
+	constructor(protected readonly wxAPI: WxAPI) {
+		this.ready = this.updateAll(); // init _ready
 	}
 
 	/**
@@ -229,9 +229,9 @@ export class WxAllDatasetsManager {
 	 * @returns a promise that resolves when all datasets are loaded
 	 */
 	updateAll(): Promise<WxAllDatasetsShortMetas> {
-		this._ready = fetchJson(this.wxAPI.dataServerURL + 'meta.json', this.wxAPI.requestInit);
-		this._ready.then((dms) => (this._allDatasetsShortMetas = dms));
-		return this._ready;
+		this.ready = fetchJson(this.wxAPI.dataServerURL + 'meta.json', this.wxAPI.requestInit);
+		this.ready.then((dms) => (this.allDatasetsShortMetas = dms));
+		return this.ready;
 	}
 
 	/**
@@ -242,26 +242,11 @@ export class WxAllDatasetsManager {
 	 */
 	async updateOne(datasetName: string): Promise<WxAllDatasetsShortMetas> {
 		try {
-			const r = await fetchJson(this.wxAPI.dataServerURL + datasetName + '/meta.json', this.wxAPI.requestInit);
-			return Object.assign(this._allDatasetsShortMetas, r);
+			const urlMeta = this.wxAPI.dataServerURL + datasetName + '/meta.json';
+			const datasetMeta = await fetchJson(urlMeta, this.wxAPI.requestInit);
+			return Object.assign(this.allDatasetsShortMetas, datasetMeta);
 		} catch {
 			return this.updateAll(); // if failed, update all
 		}
-	}
-
-	/**
-	 * Promise that resolves when all datasets are loaded
-	 * @returns a promise
-	 */
-	get ready(): Promise<WxAllDatasetsShortMetas> {
-		return this._ready;
-	}
-
-	/**
-	 * Get all datasets metadata
-	 * @returns {WxAllDatasetsShortMetas} all datasets metadata
-	 */
-	get datasetsMetas(): WxAllDatasetsShortMetas {
-		return this._allDatasetsShortMetas;
 	}
 }

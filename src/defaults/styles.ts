@@ -5,7 +5,7 @@ export const __colorStyles_default_preset: WxColorStylesStrict = {
 		parent: undefined,
 		name: 'base',
 		fill: 'gradient',
-		isolineColor: 'inverted',
+		isolineColor: 'none',
 		isolineText: true,
 		vectorType: 'arrows',
 		vectorColor: 'inverted',

@@ -10,7 +10,7 @@ import { WxTileSource } from '../index';
 
 export class WxTimeControl {
 	private readonly _div: HTMLDivElement;
-	private readonly button: HTMLButtonElement;
+	private readonly buttonPlayStop: HTMLButtonElement;
 	private readonly timesEl: HTMLSelectElement;
 	onchange: (time: string) => void = () => {};
 	constructor(public readonly delay: number, private wxsource?: WxTileSource) {
@@ -24,8 +24,8 @@ export class WxTimeControl {
 		div.style.flexDirection = 'column';
 		this._div = div;
 		div.innerText = 'Time animation';
-		this.button = document.createElement('button');
-		div.appendChild(this.button);
+		this.buttonPlayStop = document.createElement('button');
+		div.appendChild(this.buttonPlayStop);
 		this.timesEl = document.createElement('select');
 		div.appendChild(this.timesEl);
 		this.timesEl.onchange = async () => {
@@ -38,18 +38,18 @@ export class WxTimeControl {
 
 		this.wxsource && this.updateSource(this.wxsource);
 
-		this.button.innerHTML = 'Start';
+		this.buttonPlayStop.innerHTML = 'Start';
 		let t = 0;
 		const holder = { abortController: new AbortController() };
 
-		this.button.onclick = async () => {
-			if (this.button.innerHTML === 'Start') {
-				this.button.innerHTML = 'Stop'; // change button text
+		this.buttonPlayStop.onclick = async () => {
+			if (this.buttonPlayStop.innerHTML === 'Start') {
+				this.buttonPlayStop.innerHTML = 'Stop'; // change button text
 				const nextTimeStep = async () => {
 					// recursive time steps renderer function
 					if (!this.wxsource) return;
 					this.timesEl.style.backgroundColor = 'yellow';
-					if (this.button.innerHTML === 'Stop') {
+					if (this.buttonPlayStop.innerHTML === 'Stop') {
 						const nextTimeIndex = t++ % this.wxsource.getAllTimes().length;
 						await this.wxsource.setTime(nextTimeIndex, holder.abortController);
 						setTimeout(nextTimeStep, this.delay);
@@ -67,7 +67,7 @@ export class WxTimeControl {
 			} else {
 				holder.abortController.abort();
 				holder.abortController = new AbortController(); // recreate new abort controller
-				this.button.innerHTML = 'Start';
+				this.buttonPlayStop.innerHTML = 'Start';
 			}
 		};
 	}
@@ -86,7 +86,7 @@ export class WxTimeControl {
 	}
 
 	updateSource(wxsource?: WxTileSource) {
-		this.button.innerHTML = 'Start';
+		this.buttonPlayStop.innerHTML = 'Start';
 		this.wxsource = wxsource;
 		this.timesEl.options.length = 0;
 		const times = this.wxsource?.getAllTimes() || [];

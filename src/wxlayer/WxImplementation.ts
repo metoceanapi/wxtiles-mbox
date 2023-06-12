@@ -24,10 +24,6 @@ export interface WxLayerBaseAPI {
 	unsetCoarseLevel(): Promise<void>;
 	setStyleByName(wxstyleName: string, reload: boolean): Promise<void>;
 	updateCurrentStyleObject(style?: WxColorStyleWeak, reload?: boolean, requestInit?: WxRequestInit): Promise<void>;
-	// evented methods
-	on(type: string, listener: ListenerMethod): this;
-	off(type: string, listener: ListenerMethod): this;
-	once(type: string, listener: ListenerMethod): this;
 }
 
 /**
@@ -40,12 +36,6 @@ export interface WxLayerAPI extends WxLayerBaseAPI {
 	update(): void;
 	coveringTiles(): XYZ[];
 }
-
-export type ListenerMethod = <T extends keyof WxEventType>(arg?: WxEventType[T]) => void;
-
-export type WxEventType = {
-	changed: void;
-};
 
 /**
  * Implementation of universal methods for the layer (for Mapbox and Leaflet)
@@ -76,12 +66,6 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * used to avoid multiple animation requests
 	 * */
 	protected _redrawRequested?: Promise<void>;
-
-	/**
-	 * @ignore
-	 * evented listeners
-	 * */
-	protected _listeners: { [eventName: string]: ListenerMethod[] } = {};
 
 	/**
 	 * @internal
@@ -309,44 +293,4 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * Force reload and redraw all tiles.
 	 */
 	protected update() {}
-
-	// evented methods
-	/**
-	 * add a listener for the event
-	 * @param {string} type - event name
-	 * @param {ListenerMethod} listener - listener function
-	 * @returns {this}
-	 * */
-	on<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
-		// push listener to the list of listeners
-		this._listeners[type] = this._listeners[type] || [];
-		this._listeners[type].push(listener);
-		return this;
-	}
-
-	off<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
-		// remove listener from the list of listeners
-		if (this._listeners[type]) {
-			this._listeners[type] = this._listeners[type].filter((l) => l !== listener);
-		}
-		return this;
-	}
-
-	once<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
-		// push listener to the list of listeners
-		const onceListener = (...args: any[]) => {
-			listener(...args);
-			this.off(type, onceListener);
-		};
-		this.on(type, onceListener);
-		return this;
-	}
-
-	protected _fire<T extends keyof WxEventType>(type: T, data?: WxEventType[T]) {
-		// fire runs all listeners asynchroniously, so my algos don't stuck
-		// call all listeners for the type
-		if (this._listeners[type]) {
-			this._listeners[type].forEach(async (l) => l(data));
-		}
-	}
 }

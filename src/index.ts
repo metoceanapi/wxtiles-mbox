@@ -79,8 +79,6 @@ export {
 export {
 	//
 	WxLayerBaseImplementation,
-	type WxEventType,
-	type ListenerMethod,
 	type WxLayerAPI,
 	type WxLayerBaseAPI,
 } from './wxlayer/WxImplementation';
@@ -104,7 +102,7 @@ export {
 	type DataPictures,
 	DataIntegral,
 	type DataIntegrals,
-	type UriLoaderPromiseFunc,
+	type CachedUriLoaderPromiseFunc,
 	type IntegralPare,
 	type WxUnits,
 	type WxUnitTuple,
