@@ -83,7 +83,9 @@ export async function start() {
 	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: '<a href="https://metoceanapi.github.io/wxtiles-mbox/docs">WxTiles DOCS</a>' };
 	const apiControl = new WxAPIControl(wxapi, datasetName, variable);
 	addControl(map, apiControl, 'top-left');
-	apiControl.onchange = async (datasetName, variable, resetStyleAndFlyTo = true): Promise<void> => {
+	apiControl.onchange = async (_datasetName, _variable, resetStyleAndFlyTo = true): Promise<void> => {
+		datasetName = _datasetName;
+		variable = _variable;
 		WXLOG('apiControl.onchange datasetName=', datasetName, 'variable=', variable);
 		// remove existing source and layer
 		removeLayer(map, frameworkOptions.id, wxsourceLayer);
