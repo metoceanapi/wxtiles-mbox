@@ -10,8 +10,9 @@ import { WxAPI, WxTileInfo, WxTileSource } from '../index';
 
 export class WxAPIControl {
 	private readonly _div: HTMLDivElement;
-	private readonly datasets: HTMLSelectElement;
-	private readonly variables: HTMLSelectElement;
+	readonly datasets: HTMLSelectElement;
+	readonly variables: HTMLSelectElement;
+	protected _busy = false;
 
 	onchange?: (dataset: string, variable: string, resetStyleAndFlyTo?: boolean) => Promise<void>;
 
@@ -34,8 +35,15 @@ export class WxAPIControl {
 		div.appendChild(this.datasets);
 		this.fillDatasets(dataset, variable);
 		this.datasets.addEventListener('change', async () => {
+			if (this._busy) return;
+			this.setBusy(true);
+			const dataset = this.datasets.value;
 			await this.fillVariables();
+			const variables = this.variables.value;
 			await this.onchange?.(this.datasets.value, this.variables.value);
+			this.datasets.value = dataset;
+			this.variables.value = variables;
+			this.setBusy(false);
 		});
 
 		const variableslabel = document.createElement('label');
@@ -44,12 +52,22 @@ export class WxAPIControl {
 
 		this.variables = document.createElement('select');
 		div.appendChild(this.variables);
-		this.variables.addEventListener('change', () => {
-			this.onchange?.(this.datasets.value, this.variables.value);
+		this.variables.addEventListener('change', async () => {
+			if (this._busy) return;
+			this.setBusy(true);
+			const variables = this.variables.value;
+			await this.onchange?.(this.datasets.value, this.variables.value);
+			this.variables.value = variables;
+			this.setBusy(false);
 		});
 
 		this.datasets.value = dataset || '';
 		this.variables.value = variable || '';
+	}
+
+	setBusy(b: boolean) {
+		this._busy = b;
+		this._div.style.backgroundColor = b ? 'yellow' : 'lightgray';
 	}
 
 	async fillDatasets(dataset?: string, variable?: string): Promise<void> {
