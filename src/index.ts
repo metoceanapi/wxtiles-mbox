@@ -104,7 +104,7 @@ export {
 	type DataPictures,
 	DataIntegral,
 	type DataIntegrals,
-	type UriLoaderPromiseFunc,
+	type CachedUriLoaderPromiseFunc,
 	type IntegralPare,
 	type WxUnits,
 	type WxUnitTuple,

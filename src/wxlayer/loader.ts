@@ -6,10 +6,10 @@ import {
 	type DataIntegrals,
 	type DataPictures,
 	loadDataIntegral,
-	UriLoaderPromiseFunc,
 	uriXYZ,
 	type XYZ,
 	WXLOG,
+	CachedUriLoaderPromiseFunc,
 } from '../utils/wxtools';
 import { type WxBoundaryMeta } from '../wxAPI/WxAPItypes';
 import { applyMask, makeBox, splitCoords, subData, subDataDegree, subMask } from './loadertools';
@@ -40,14 +40,14 @@ export interface WxData {
  */
 export class Loader {
 	/** refference to the Layer {@link WxLayer} in which this loader is used */
-	protected readonly layer: WxLayer;
+	protected readonly _layer: WxLayer;
 
 	/** function to load, decode and cache data from URL */
-	protected loadDataFunc: UriLoaderPromiseFunc<DataIntegral> = /*loadDataIntegral; //*/ cacheUriPromise(loadDataIntegral);
+	protected _loadDataFunc: CachedUriLoaderPromiseFunc<DataIntegral> = cacheUriPromise(loadDataIntegral);
 
 	/** Do not use constructor directly */
 	constructor(layer: WxLayer) {
-		this.layer = layer;
+		this._layer = layer;
 	}
 
 	/**
@@ -57,12 +57,12 @@ export class Loader {
 	 * @returns {Promise<WxData | null> } data of the tile
 	 * */
 	async load(tile: XYZ, requestInit?: WxRequestInit): Promise<WxData | null> {
-		const preloaded = await this.cacheLoad(tile, this.layer.tilesURIs, requestInit);
+		const preloaded = await this.cacheLoad(tile, this._layer.tilesURIs, requestInit);
 		if (!preloaded) return null; // tile is cut by boundaries or mask QTree
 		const { rawdata, subCoords, tileType } = preloaded;
-		const { units } = this.layer.currentVariableMeta;
+		const { units } = this._layer.currentVariableMeta;
 		const interpolator = units === 'degree' ? subDataDegree : subData;
-		const processor = (d: DataIntegral) => interpolator(blurData(d, this.layer.style.blurRadius), subCoords);
+		const processor = (d: DataIntegral) => interpolator(blurData(d, this._layer.style.blurRadius), subCoords);
 		const data = <DataPictures>rawdata.map(processor); // preprocess all loaded data
 		this._vectorMagnitudesPrepare(data); // if vector data, prepare magnitudes
 		await this._applyMask(data, tile, tileType, !subCoords && rawdata.length === 1); // apply mask if needed
@@ -79,22 +79,22 @@ export class Loader {
 		const tileType = this._checkTypeAndMask(tile);
 		if (!tileType) return null; // tile is cut by mask
 
-		const { upCoords, subCoords } = splitCoords(tile, this.layer.getCoarseMaxZoom());
+		const { upCoords, subCoords } = splitCoords(tile, this._layer.getCoarseMaxZoom());
 		const URLs = <WxURIs>uris.map((uri) => uriXYZ(uri, upCoords));
-		const requestInitCopy = Object.assign({}, this.layer.wxdatasetManager.wxAPI.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
-		const rawdata = <DataIntegrals>await Promise.all(URLs.map((url: string) => this.loadDataFunc(url, requestInitCopy)));
+		const requestInitCopy = Object.assign({}, this._layer.wxdatasetManager.wxAPI.requestInit, { signal: requestInit?.signal }); // make initCopy, copy only signal
+		const rawdata = <DataIntegrals>await Promise.all(URLs.map((url: string) => this._loadDataFunc(url, requestInitCopy)));
 		return { rawdata, subCoords, tileType };
 		// we don't need to process data, as it's for cache preloading only
 	}
 
 	/** Clear cache */
 	clearCache(): void {
-		this.loadDataFunc = cacheUriPromise(loadDataIntegral);
+		this._loadDataFunc.clearCache();
 	}
 
 	/** @ignore */
 	protected async _applyMask(data: DataPictures, tile: XYZ, tileType: TileType, needCopy: boolean): Promise<void> {
-		const { style } = this.layer;
+		const { style } = this._layer;
 		if ((style.mask === 'land' || style.mask === 'sea') && tileType === TileType.Mixed) {
 			if (needCopy) {
 				// !!make a copy before masking!! or original data will be spoiled
@@ -104,7 +104,7 @@ export class Loader {
 			}
 
 			let maskImage: ImageData;
-			const { wxAPI } = this.layer.wxdatasetManager;
+			const { wxAPI } = this._layer.wxdatasetManager;
 			try {
 				const { upCoords, subCoords } = splitCoords(tile, wxAPI.maskDepth);
 				maskImage = await wxAPI.loadMaskFunc(upCoords);
@@ -139,9 +139,9 @@ export class Loader {
 
 	/** @ignore */
 	protected _checkTypeAndMask(coords: XYZ): TileType | undefined {
-		const { mask } = this.layer.style;
+		const { mask } = this._layer.style;
 		if (mask === 'land' || mask === 'sea') {
-			const tileType = this.layer.wxdatasetManager.wxAPI.qtree.check(coords); // check 'type' of the tile
+			const tileType = this._layer.wxdatasetManager.wxAPI.qtree.check(coords); // check 'type' of the tile
 			return mask === tileType ? undefined /* cut by QTree */ : tileType;
 		}
 
@@ -150,7 +150,7 @@ export class Loader {
 
 	/** @ignore */
 	protected _checkInsideBoundaries(coords: XYZ): boolean {
-		const boundaries = this.layer.getBoundaries();
+		const boundaries = this._layer.getBoundaries();
 		if (boundaries?.boundaries180) {
 			const bbox = makeBox(coords);
 			const rectIntersect = (b: WxBoundaryMeta) => !(bbox.west > b.east || b.west > bbox.east || bbox.south > b.north || b.south > bbox.north);
@@ -165,7 +165,7 @@ export class Loader {
 	/** @ignore */
 	protected _createStreamLines(data: DataPictures): SLine[] {
 		if (data.length !== 3) return [];
-		const { style } = this.layer;
+		const { style } = this._layer;
 		if (style.streamLineColor === 'none') return [];
 		const streamLines: SLine[] = []; // an array of stremllines. Each section of streamline represents a position and size of a particle.
 

@@ -319,8 +319,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * */
 	on<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
 		// push listener to the list of listeners
-		this._listeners[type] = this._listeners[type] || [];
-		this._listeners[type].push(listener);
+		(this._listeners[type] ||= []).push(listener);
 		return this;
 	}
 

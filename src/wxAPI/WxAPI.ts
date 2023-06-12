@@ -9,7 +9,8 @@ import { WxDataSetManager } from './WxDataSetManager';
 import { WxAllDatasetsManager } from './WxDataSetManager';
 import { WxAPIOptions, WxDatasetMeta, WxAllDatasetsShortMetas, WxDatasetShortMeta } from './WxAPItypes';
 
-/** WxAPI is an initialisation object for the library. See {@link WxAPIOptions} for options.
+/**
+ * WxAPI is an initialisation object for the library. See {@link WxAPIOptions} for options.
  * @example
  * ```typescript
  * import { WxAPI } from 'wx-tiles';
@@ -99,14 +100,24 @@ export class WxAPI {
 		await this.initDone;
 		await this._allDatasetsManager.updateOne(datasetName);
 		WXLOG('WxAPI.createDatasetManager', datasetName);
-		const datasetShortMeta = this.getDatasetShortMeta(datasetName);
+		const datasetShortMeta = this._allDatasetsManager.allDatasetsShortMetas[datasetName];
 		const datasetCurrentInstance = datasetShortMeta?.instance;
 		if (!datasetCurrentInstance) throw new Error('Dataset/instance not found:' + datasetName);
 		const instanced = datasetShortMeta.instanced;
 		const metasArray = await fetchJson<WxDatasetMeta[]>(this.dataServerURL + datasetName + '/metafull.json');
 		const datasetCurrentMeta = metasArray[0];
-		const metas = new Map<string, WxDatasetMeta>();
-		metasArray.forEach((meta) => metas.set(meta.instance, meta));
+		// const metas = new Map({ // fency way to create a map from an array
+		// 	[Symbol.iterator]() {
+		// 		const ff = metasArray.values(); // iterator
+		// 		return {
+		// 			next(): IteratorResult<[string, WxDatasetMeta]> {
+		// 				const { value, done } = ff.next();
+		// 				return { value: [value.instance, value], done };
+		// 			},
+		// 		};
+		// 	},
+		// });
+		const metas = instanced && new Map(metasArray.map((meta) => [meta.instance, meta]));
 		return new WxDataSetManager({ datasetName, datasetCurrentInstance, datasetCurrentMeta, instanced, metas, wxAPI: this });
 	}
 
@@ -117,7 +128,7 @@ export class WxAPI {
 	async getDatasetAllVariables(datasetName: string): Promise<string[] | undefined> {
 		await this.initDone;
 		WXLOG('WxAPI.getDatasetVariables', datasetName);
-		return this.datasetsMetas[datasetName]?.variables;
+		return this._allDatasetsManager.allDatasetsShortMetas[datasetName]?.variables;
 	}
 
 	/**
@@ -127,7 +138,8 @@ export class WxAPI {
 	async filterDatasetsByVariableName(varName: string): Promise<string[]> {
 		await this.initDone;
 		WXLOG('WxAPI.filterDatasetsByVariableName:', varName);
-		return Object.keys(this.datasetsMetas).filter((dsName) => this.datasetsMetas[dsName]!.variables.includes(varName));
+		const { allDatasetsShortMetas } = this._allDatasetsManager;
+		return Object.keys(allDatasetsShortMetas).filter((dsName) => allDatasetsShortMetas[dsName]!.variables.includes(varName));
 	}
 
 	/**
@@ -137,26 +149,6 @@ export class WxAPI {
 	async getAllDatasetsNames(): Promise<string[]> {
 		await this.initDone;
 		WXLOG('WxAPI.getAllDatasetsNames');
-		return Object.keys(this.datasetsMetas);
-	}
-
-	/**
-	 * @internal
-	 * Get the list of all available datasets' names with short description
-	 * @returns {WxAllDatasetsShortMetas} - list of all available datasets' names with short description
-	 * */
-	protected get datasetsMetas(): WxAllDatasetsShortMetas {
-		return this._allDatasetsManager.datasetsMetas;
-	}
-
-	/**
-	 * @internal
-	 * Get short meta for a given dataset name
-	 * @param datasetName - name of the dataset
-	 * @returns {WxDatasetShortMeta} - short meta for the dataset
-	 * */
-	protected getDatasetShortMeta(datasetName: string): WxDatasetShortMeta | undefined {
-		WXLOG('WxAPI.getDatasetShortMeta', datasetName);
-		return this.datasetsMetas[datasetName];
+		return Object.keys(this._allDatasetsManager.allDatasetsShortMetas);
 	}
 }

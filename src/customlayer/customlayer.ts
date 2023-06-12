@@ -165,19 +165,21 @@ class CustomWxTilesLayerUniforms extends UniformsManager {
 export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 	type: 'custom' = 'custom';
 	renderingMode: '2d' | '3d' = '2d';
-	private opacity: number;
-	private map: any;
-	private program: WebGLProgram | null = null;
-	private attributes: { a_pos: number; a_texture_pos: number } = { a_pos: 0, a_texture_pos: 0 }; // must be here
 	/**@ignore */
-	private uniforms: CustomWxTilesLayerUniforms = new CustomWxTilesLayerUniforms();
+	protected map: any;
+	/**@ignore */
+	protected program: WebGLProgram | null = null;
+	/**@ignore */
+	protected attributes: { a_pos: number; a_texture_pos: number } = { a_pos: 0, a_texture_pos: 0 }; // must be here
+	/**@ignore */
+	protected uniforms: CustomWxTilesLayerUniforms = new CustomWxTilesLayerUniforms();
 
-	private noiseTexture: WebGLTexture | null = null;
-	private noiseTexturePow: number = 5;
+	/**@ignore */
+	protected noiseTexture: WebGLTexture | null = null;
+	/**@ignore */
+	protected noiseTexturePow: number = 5;
 
-	constructor(public id: string, public sourceID: string, opacity?: number) {
-		this.opacity = opacity || 1.0;
-	}
+	constructor(public id: string, public sourceID: string, public opacity: number = 1) {}
 
 	onRemove(map: any, gl: WebGLRenderingContext): void {
 		if (map.style?._layers?.[this.id]?.source) {
@@ -195,7 +197,7 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 		this.noiseTexturePow = pow;
 	}
 
-	onAdd(map, gl: WebGLRenderingContext) {
+	onAdd(map: any, gl: WebGLRenderingContext) {
 		this.map = map;
 		this.program = createShaderProgram(gl);
 		// The VertexBuffer assumes that 'this' looks like a Program, at least that it has attributes
@@ -250,7 +252,7 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 
 		for (let coord of visibleCoordsMapBox) {
 			const tile = sourceCache.getTile(coord);
-			tile.registerFadeDuration(300); // Was stored in the paint properties, here is hardcoded
+			tile.registerFadeDuration(300);
 			const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ, true, gl.LESS);
 			const colorMode = painter.colorModeForRenderPass();
 

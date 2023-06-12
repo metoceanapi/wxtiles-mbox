@@ -174,7 +174,7 @@ export interface WxDataSetManagerOptions {
 	 * @internal
 	 * Dataset's metas for an instanced dataset
 	 * */
-	metas: Map<string, WxDatasetMeta>;
+	metas?: Map<string, WxDatasetMeta>;
 
 	/**
 	 * @internal

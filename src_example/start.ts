@@ -82,15 +82,13 @@ export async function start() {
 	const frameworkOptions = { id: 'wxsource', opacity: OPACITY, attribution: '<a href="https://metoceanapi.github.io/wxtiles-mbox/docs">WxTiles DOCS</a>' };
 	const apiControl = new WxAPIControl(wxapi, datasetName, variable);
 	addControl(map, apiControl, 'top-left');
-	apiControl.onchange = async (datasetName_, variable_, resetStyleAndFlyTo = true): Promise<void> => {
-		WXLOG('apiControl.onchange datasetName=', datasetName_, 'variable=', variable_);
+	apiControl.onchange = async (datasetName, variable, resetStyleAndFlyTo = true): Promise<void> => {
+		WXLOG('apiControl.onchange datasetName=', datasetName, 'variable=', variable);
 		// remove existing source and layer
 		removeLayer(map, frameworkOptions.id, wxsourceLayer);
 		//
 		resetStyleAndFlyTo && (sth.style = {}); // reset style if change dataset/variable
 		wxsourceLayer = undefined;
-		datasetName = datasetName_;
-		variable = variable_;
 		const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 		const boundaries = wxdatasetManager.getBoundaries();
 		if (boundaries && resetStyleAndFlyTo) {
@@ -106,7 +104,7 @@ export async function start() {
 			legendControl.clear();
 		} else {
 			wxsourceLayer = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: sth.style }, frameworkOptions);
-			wxsourceLayer.setCoarseLevel(-8);
+			wxsourceLayer.setCoarseLevel(0);
 			await addLayer(map, 'wxtiles', wxsourceLayer);
 			// wxsource.startAnimation();
 			const styleCopy = wxsourceLayer.getCurrentStyleObjectCopy();
@@ -114,9 +112,10 @@ export async function start() {
 			styleCopy.levels = sth.style?.levels; // no need to show defaults it in the editor and URL
 			styleCopy.colors = sth.style?.colors; // no need to show defaults it in the editor and URL
 			await customStyleEditorControl.onchange?.(styleCopy, true);
+			timeControl.updateSource(wxsourceLayer);
 		}
-
-		timeControl.updateSource(wxsourceLayer);
+		// apiControl.datasets.value = datasetName;
+		// apiControl.variables.value = variable;
 	};
 
 	const timeControl = new WxTimeControl(50);

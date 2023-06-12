@@ -24,9 +24,9 @@ export enum TileType {
 
 /**  class QTree utilizes quad-tree structure to get the type of the tile at the given coord */
 export class QTree {
-	private _qtree: Tree = { nodes: null }; // by default a tree with no nodes and depth 0 always gives TileType.Mixed
-	private _qtreedepth: number = 0;
-	private _ready: Promise<void>;
+	protected _qtree: Tree = { nodes: null }; // by default a tree with no nodes and depth 0 always gives TileType.Mixed
+	protected _qtreedepth: number = 0;
+	protected _ready: Promise<void>;
 
 	constructor(input: RequestInfo, requestInit?: RequestInit | undefined) {
 		WXLOG('QTree.constructor');
@@ -37,7 +37,7 @@ export class QTree {
 		return this._ready;
 	}
 
-	private async _load(input: RequestInfo, requestInit?: RequestInit | undefined): Promise<void> {
+	protected async _load(input: RequestInfo, requestInit?: RequestInit | undefined): Promise<void> {
 		if (input == 'none') return;
 		try {
 			const _seamask = await fetchJson<string>(input, requestInit);

@@ -21,7 +21,7 @@ import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
 	const wxdatasetManager = await wxapi.createDatasetManager(datasetName);
 	
 	// create a layer source
-	// Scalar example.For ve ctor variables use either of the vector components (e.g. 'wind.eastward.at-10m')
+	// Scalar example.For vector variables use either of the vector components (e.g. 'wind.eastward.at-10m')
 	const variable = 'air.temperature.at-2m'; 
 	const wxsource = wxdatasetManager.createSourceLayer({ variable }, { id: 'wxsource', attribution: 'WxTiles' }); //new WxTileSource(wxLayerOptions, mboxSourceOptions);
  * ```
@@ -91,6 +91,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 		// mapbox-gl-js implementation: return (this.map.getSource(this.id) as any)?._update?.();
 	}
 
+	loadTileReady?: Promise<any>;
 	/**
 	 * @internal
 	 * Used by framework. Creates a representation of a tile for the framework.
@@ -99,17 +100,20 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	 * @returns {Promise<Picture>} - A picture of the tile.
 	 */
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<any> {
+		if (this.loadTileReady) await this.loadTileReady;
 		let raster_data: WxRasterData | null = null;
 		try {
+			// try to  load tile
 			raster_data = await this._layer.loadTile(tile, requestInit);
 		} catch (e) {
 			if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
 			if (e.reason === 'instance-not-found') {
+				this.loadTileReady = new Promise((resolve) => {});
 				// TODO: finish processing new instances 'instance-not-found'
 				WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Trying to update wxdatasetManager and load again.`);
 				try {
 					await this.wxdatasetManager.update(); // try to update wxdatasetManager
-					// TODO clear the CACHE!!!!!!!!!!!!!
+					this.clearCache();
 					raster_data = await this._layer.loadTile(tile, requestInit); // try to load again
 					this._fire('changed');
 				} catch (e) {
