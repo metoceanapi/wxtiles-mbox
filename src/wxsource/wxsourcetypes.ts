@@ -22,6 +22,8 @@ export class FrameworkParentClass {
 	/** MAPBOX API */
 	readonly attribution?: string;
 
+	readonly opacity?: number;
+
 	/**
 	 * @param {FrameworkOptions} frwOptions - Framework's basic options to construct the layer.
 	 */
@@ -31,6 +33,7 @@ export class FrameworkParentClass {
 		this.maxzoom = frwOptions.maxzoom;
 		this.bounds = frwOptions.bounds;
 		this.attribution = frwOptions.attribution;
+		this.opacity = frwOptions.opacity;
 	}
 }
 
@@ -50,4 +53,5 @@ export interface FrameworkOptions {
 	maxzoom?: number; // MAPBOX API
 	bounds?: [number, number, number, number]; // MAPBOX API
 	attribution?: string; // MAPBOX API
+	opacity?: number; // dummy
 }

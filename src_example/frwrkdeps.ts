@@ -1,7 +1,6 @@
 import { IControl } from 'mapbox-gl';
 import mapboxgl from 'mapbox-gl';
 import { WxGetColorStyles } from '../src/utils/wxtools';
-import { OPACITY } from './start';
 import { CustomWxTilesLayer } from '../src/customlayer/customlayer';
 
 export function flyTo(map: mapboxgl.Map, zoom: number, lng: number, lat: number, bearing: number, pitch: number) {
@@ -133,7 +132,7 @@ export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: stri
 export async function addLayer(map: mapboxgl.Map, idL: string, source: any) {
 	map.addSource(source.id, source);
 	// const baseL = map.getLayer('baseL') && 'baseL';
-	map.addLayer(new CustomWxTilesLayer(idL, source.id, OPACITY)); //, baseL);
+	map.addLayer(new CustomWxTilesLayer(idL, source.id, source.opacity)); //, baseL);
 	/*
 	map.addLayer(
 		{
