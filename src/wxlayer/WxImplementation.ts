@@ -1,10 +1,10 @@
 import { type WxColorStyleWeak, WxGetColorStyles, type XYZ, type WxColorStyleStrict, WXLOG } from '../utils/wxtools';
-import type { WxRequestInit, WxDate, WxLayerVarsNames, WxLngLat, WxTileInfo, TilesCache, WxLayerOptions } from './wxlayer';
+import type { WxRequestInit, WxDate, WxLayerVarsNames, WxLngLat, WxTileInfo, WxRasterDataCache, WxLayerOptions } from './wxlayer';
 import { WxLayer } from './wxlayer';
 import type { WxDatasetMeta, WxVariableMeta } from '../wxAPI/WxAPItypes';
 import { FrameworkParentClass, type FrameworkOptions } from '../wxsource/wxsourcetypes';
 import type { WxDataSetManager } from '../wxAPI/WxDataSetManager';
-import { WxTileSource } from '../wxsource/wxsource';
+import type { WxTileSource } from '../wxsource/wxsource';
 
 /**
  * Mandatory Interface to be implemented by a {@link WxLayerBaseImplementation}
@@ -26,6 +26,12 @@ export interface WxLayerBaseAPI {
 	updateCurrentStyleObject(style?: WxColorStyleWeak, reload?: boolean, requestInit?: WxRequestInit): Promise<void>;
 }
 
+export type ListenerMethod = <T extends keyof WxEventType>(arg?: WxEventType[T]) => void;
+
+export type WxEventType = {
+	changed: WxTileSource;
+};
+
 /**
  * Mandatory Interface to be implemented by a {@link WxTileSource} implementation
  * These methods *Requires* framework specific implementation
@@ -35,6 +41,9 @@ export interface WxLayerAPI extends WxLayerBaseAPI {
 	_reloadVisible(requestInit?: WxRequestInit): Promise<void>;
 	update(): void;
 	coveringTiles(): XYZ[];
+	on<T extends keyof WxEventType>(type: T, listener: ListenerMethod): void;
+	off<T extends keyof WxEventType>(type: T, listener: ListenerMethod): void;
+	once<T extends keyof WxEventType>(type: T, listener: ListenerMethod): void;
 }
 
 /**
@@ -126,8 +135,8 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 		this._layer.clearCache();
 	}
 
-	getCache(): TilesCache {
-		return this._layer.tilesCache;
+	getCache(): WxRasterDataCache {
+		return this._layer.tilesRasterCache;
 	}
 
 	/**

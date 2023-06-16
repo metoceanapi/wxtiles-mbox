@@ -6,12 +6,7 @@ import { WxLayerBaseImplementation, type WxLayerAPI } from '../wxlayer/WxImpleme
 import { type FrameworkOptions } from './wxsourcetypes';
 import { type WxRasterData } from '../wxlayer/painter';
 import { WxDataSetManager } from '../wxAPI/WxDataSetManager';
-
-export type ListenerMethod = <T extends keyof WxEventType>(arg?: WxEventType[T]) => void;
-
-export type WxEventType = {
-	changed: void;
-};
+import type { ListenerMethod, WxEventType } from '../wxlayer/WxImplementation';
 
 /**
  * A custom layer source implementation
@@ -37,7 +32,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	 * @ignore
 	 * evented listeners
 	 * */
-	protected _listeners: { [eventName: string]: ListenerMethod[] } = {};
+	protected _listeners: { [eventName: string]: ListenerMethod[] | undefined } = {};
 
 	/**
 	 * @internal
@@ -103,42 +98,51 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 		// mapbox-gl-js implementation: return (this.map.getSource(this.id) as any)?._update?.();
 	}
 
-	loadTileReady?: Promise<any>;
+	//protected async _loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData | null> {}
+
+	needUpdateDSManager: boolean = false;
+	needUpdateCycle: number = 0;
 	/**
 	 * @internal
 	 * Used by framework. Creates a representation of a tile for the framework.
-	 * @param tile - The tile coordinates to be loaded.
+	 * @param coords - The tile coordinates to be loaded.
 	 * @param requestInit - The request options.
 	 * @returns {Promise<Picture>} - A picture of the tile.
 	 */
-	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<any> {
-		if (this.loadTileReady) await this.loadTileReady;
+	async loadTile(coords: XYZ, requestInit?: WxRequestInit): Promise<any> {
 		let raster_data: WxRasterData | null = null;
-		try {
+
+		if (!this.needUpdateDSManager) {
+			// if we a re not in the middle of updating wxdatasetManager
 			// try to  load tile
-			raster_data = await this._layer.loadTile(tile, requestInit);
-		} catch (e) {
-			if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
-			if (e.reason === 'instance-not-found') {
-				this.loadTileReady = new Promise((resolve) => {});
-				// TODO: finish processing new instances 'instance-not-found'
-				WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Trying to update wxdatasetManager and load again.`);
-				try {
-					await this.wxdatasetManager.update(); // try to update wxdatasetManager
-					this.clearCache();
-					raster_data = await this._layer.loadTile(tile, requestInit); // try to load again
-					this._fire('changed');
-				} catch (e) {
-					if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
-					if (e.reason === 'instance-not-found') {
-						// this time we a re sure that the something is wrong with the dataset
-						WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Failed to load tile.`, e);
+			try {
+				raster_data = await this._layer.loadTile(coords, requestInit);
+				this.needUpdateCycle = 0;
+			} catch (e) {
+				// can be rejected if the tile does not exist or loading aborted
+				if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
+				if (e.reason === 'instance-not-found') {
+					// process new instances
+					if (this.needUpdateCycle > 1) {
+						// panic!! we're in the infinite loop
+						WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Tried to update wxdatasetManager and load again, but failed. Aborting.`);
+						throw 'panic';
 					}
-					// this time return AKA null tile
-				}
-			}
-		} finally {
-		}
+
+					if (!this.needUpdateDSManager) {
+						// if we a re not in the middle of updating wxdatasetManager (others may initiate update as well)
+						this.needUpdateDSManager = true;
+						this.needUpdateCycle++;
+						WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Trying to update wxdatasetManager and load again.`);
+						// try to update wxdatasetManager. No need to await for it to finish
+						this.wxdatasetManager.update().then(() => {
+							this.needUpdateDSManager = false;
+							this.setTime(this.getTime()).then(() => this._fire('changed', this)); // reload tiles with new time (instead of this._reloadVisible)
+						}); // update wxdatasetManager
+					} // if (!this.needUpdateDSManager)
+				} // if (e.reason === 'instance-not-found')
+			} // catch loadTile error
+		} // if (!this.needUpdateDSManager)
 
 		return raster_data ? this._layer.getPaintedCanvas(raster_data, this._animation, this._animationSeed) : new ImageData(1, 1);
 	} // loadTile
@@ -160,35 +164,29 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	 * @param {ListenerMethod} listener - listener function
 	 * @returns {this}
 	 * */
-	on<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
+	on<T extends keyof WxEventType>(type: T, listener: ListenerMethod): void {
 		// push listener to the list of listeners
 		(this._listeners[type] ||= []).push(listener);
-		return this;
 	}
 
-	off<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
+	off<T extends keyof WxEventType>(type: T, listener: ListenerMethod): void {
 		// remove listener from the list of listeners
-		if (this._listeners[type]) {
-			this._listeners[type] = this._listeners[type].filter((l) => l !== listener);
-		}
-		return this;
+		this._listeners[type] = this._listeners[type]?.filter((l) => l !== listener);
 	}
 
-	once<T extends keyof WxEventType>(type: T, listener: ListenerMethod): this {
+	once<T extends keyof WxEventType>(type: T, listener: ListenerMethod): void {
 		// push listener to the list of listeners
 		const onceListener = (...args: any[]) => {
 			listener(...args);
 			this.off(type, onceListener);
 		};
+
 		this.on(type, onceListener);
-		return this;
 	}
 
-	protected _fire<T extends keyof WxEventType>(type: T, data?: WxEventType[T]) {
+	protected _fire<T extends keyof WxEventType>(type: T, data: WxEventType[T]) {
 		// fire runs all listeners asynchroniously, so my algos don't stuck
 		// call all listeners for the type
-		if (this._listeners[type]) {
-			this._listeners[type].forEach(async (l) => l(data));
-		}
+		this._listeners[type]?.forEach(async (l) => l(data));
 	}
 }

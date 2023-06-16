@@ -66,9 +66,9 @@ export interface WxLngLat {
 
 /**
  * @internal
- * Used in {@link WxLayerBaseImplementation} cache of tiles
+ * Used in {@link WxLayerBaseImplementation} cache of the renderes tiles
  * */
-export class TilesCache extends Map<string, WxRasterData> {
+export class WxRasterDataCache extends Map<string, WxRasterData> {
 	clear(): void {
 		WXLOG(`TilesCache.clear()`);
 		this.forEach((v) => {
@@ -128,8 +128,8 @@ export class WxLayer {
 	/** @internal Current "Color lookup table" object */
 	CLUT: RawCLUT;
 
-	/** @internal cahced URI->data */
-	tilesCache: TilesCache = new TilesCache();
+	/** @internal cahce: URI->rendered data on canvases */
+	tilesRasterCache: WxRasterDataCache = new WxRasterDataCache();
 
 	/** @internal current coarsing zoom level */
 	coarseLevel: number = 0;
@@ -216,7 +216,7 @@ export class WxLayer {
 	 * Not to use when loading is in progress. */
 	clearCache(): void {
 		WXLOG(`WxLayer.clearCache`);
-		this.tilesCache.clear();
+		this.tilesRasterCache.clear();
 		this._loader.clearCache();
 	} // clearCache
 
@@ -235,7 +235,7 @@ export class WxLayer {
 	/** @internal Used by {@link WxTileSource.getLayerInfoAtLatLon} */
 	getTileData(tileCoord: XYZ, tilePixel: { x: number; y: number }): WxTileInfo | undefined {
 		// WXLOG(`WxLayer.getTileData tileCoord: ${tileCoord.x}, ${tileCoord.y}, ${tileCoord.z}, tilePixel: ${tilePixel.x}, ${tilePixel.y}`);
-		const tile = this.tilesCache.get(HashXYZ(tileCoord));
+		const tile = this.tilesRasterCache.get(HashXYZ(tileCoord));
 		if (!tile) return; // no tile
 		const tileData = this._getPixelInfo(tilePixel, tile.data.data);
 		if (!tileData) return; // oops! no data at the pixel
@@ -265,7 +265,7 @@ export class WxLayer {
 	 *  load, cache, draw the tile. Abortable
 	 * */
 	async loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
-		return this._loadCacheDrawTile(tile, this.tilesCache, requestInit);
+		return this._loadCacheDrawTile(tile, this.tilesRasterCache, requestInit);
 	} // _loadTile
 
 	/**
@@ -289,22 +289,22 @@ export class WxLayer {
 	 * @returns {Promise<viod>} */
 	async reloadTiles(tiles: XYZ[], requestInit?: WxRequestInit): Promise<void> {
 		WXLOG(`WxLayer.reloadTiles`);
-		const tilesCache = new TilesCache();
-		await Promise.allSettled(tiles.map((tile) => this._loadCacheDrawTile(tile, tilesCache, requestInit))); // fill up cache
+		const tilesRasterCache = new WxRasterDataCache(); // new tiles visual data cache
+		await Promise.allSettled(tiles.map((tile) => this._loadCacheDrawTile(tile, tilesRasterCache, requestInit))); // fill up cache
 
 		if (!requestInit?.signal?.aborted) {
-			this.tilesCache.clear(); // clear old cache
-			this.tilesCache = tilesCache; // replace cache
-		} else tilesCache.clear(); // clear unneeded cache
+			this.tilesRasterCache.clear(); // clear old visual data cache
+			this.tilesRasterCache = tilesRasterCache; // replace cache
+		} else tilesRasterCache.clear(); // clear unneeded cache
 	} // _reloadTiles
 
 	/**
 	 * @internal
 	 * @ignore
 	 * */
-	protected async _loadCacheDrawTile(tile: XYZ, tilesCache: TilesCache, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
-		const tileData = tilesCache.get(HashXYZ(tile));
-		if (tileData) return tileData;
+	protected async _loadCacheDrawTile(tile: XYZ, tilesRasterCache: WxRasterDataCache, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
+		const tileRasterData = tilesRasterCache.get(HashXYZ(tile));
+		if (tileRasterData) return tileRasterData;
 
 		const data = await this._loader.load(tile, requestInit);
 		if (!data) return null; // also happens when tile is cut by qTree or by Mask
@@ -314,7 +314,7 @@ export class WxLayer {
 		const ctxStreamLines = this.variables.length === 2 ? create2DContext(256, 256) : ctxFill;
 		const raster_data: WxRasterData = { ctxFill, ctxText, ctxStreamLines, data };
 		this._painter.paint(raster_data);
-		tilesCache.set(HashXYZ(tile), raster_data);
+		tilesRasterCache.set(HashXYZ(tile), raster_data);
 		return raster_data;
 	} // _loadCacheDrawTile
 

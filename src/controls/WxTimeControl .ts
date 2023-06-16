@@ -86,13 +86,13 @@ export class WxTimeControl {
 	}
 
 	updateSource(wxsource?: WxTileSource) {
-		this.buttonPlayStop.innerHTML = 'Start';
+		this.buttonPlayStop.innerHTML = 'Start'; // stop time animation
 		this.wxsource = wxsource;
-		this.timesEl.options.length = 0;
 		const times = this.wxsource?.getAllTimes() || [];
 		this.setTimes(times);
 		this.timesEl.value = this.wxsource?.getTime() || '';
 		this.onchange(this.timesEl.value);
+		wxsource?.on('changed', () => this.updateSource(wxsource));
 	}
 
 	onAdd(/* map */) {

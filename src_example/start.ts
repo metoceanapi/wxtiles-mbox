@@ -6,7 +6,7 @@ import { WxTimeControl } from '../src/controls/WxTimeControl ';
 import { WxAPIControl } from '../src/controls/WxAPIControl';
 import { initFrameWork, addRaster, flyTo, setURL, addControl, removeLayer, addLayer, position } from './frwrkdeps';
 
-export const OPACITY = 0.8;
+const OPACITY = 0.8;
 
 // this is universal function for Leaflet and Mapbox.
 // Functions below are just framework specific wrappers for this universal function
