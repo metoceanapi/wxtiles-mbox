@@ -16,13 +16,13 @@ export async function start() {
 	addRaster(map, 'baseS', 'baseL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 3);
 	// addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	// WxTilesLogging(console.trace);
-	const dataServerURL = 'data/'; // different sources manged in 'start' script in package.json
+	// const dataServerURL = 'data/'; // different sources manged in 'start' script in package.json
 	// const dataServerURL = 'https://tilestest.metoceanapi.com/data/';
 	// const dataServerURL = 'http://localhost:9191/data/';
 	// const dataServerURL = 'https://68.171.214.87/data/'; // hihi1
 	// const dataServerURL = 'https://68.171.214.81/data/'; // hihi2
 	// const dataServerURL = 'https://hihi2.metoceanapi.com/data/';
-	// const dataServerURL = 'https://tilesdev.metoceanapi.com/data/';
+	const dataServerURL = 'https://tilesdev.metoceanapi.com/data/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
 	const wxapi = new WxAPI({
@@ -120,8 +120,7 @@ export async function start() {
 		} else {
 			wxsourceLayer = wxdatasetManager.createSourceLayer({ variable, time, wxstyle: sth.style }, frameworkOptions);
 			wxsourceLayer.setCoarseLevel(0);
-			await addLay		// bounds: boundariesnorm && [boundariesnorm.east, boundariesnorm.south, boundariesnorm.west, boundariesnorm.north],
-			er(map, 'wxtiles', wxsourceLayer);
+			await addLayer(map, 'wxtiles', wxsourceLayer);
 			// wxsource.startAnimation();
 			const styleCopy = wxsourceLayer.getCurrentStyleObjectCopy();
 			legendControl.drawLegend(styleCopy); // first draw legend with current style
