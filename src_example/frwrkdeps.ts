@@ -11,7 +11,10 @@ export function flyTo(map: mapboxgl.Map, zoom: number, lng: number, lat: number,
 export function setURL(map: mapboxgl.Map, time: string, datasetName: string, variable: string, style: any) {
 	const base = WxGetColorStyles()['base'];
 	for (const i in style) style[i] === base[i] && delete style[i]; // remove default values
-
+	if (style.gl) {
+		for (const i in style.gl) style.gl[i] === base.gl?.[i] && delete style.gl[i]; // remove default values from gl
+		Object.keys(style.gl).length === 0 && delete style.gl; // remove gl if empty
+	}
 	const center = map.getCenter().wrap();
 	const href =
 		`##${datasetName}/${variable}/${time}/${map.getZoom().toFixed(2)}/${center.lng.toFixed(2)}/${center.lat.toFixed(2)}/${map.getBearing().toFixed(2)}/${map

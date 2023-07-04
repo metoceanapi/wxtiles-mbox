@@ -25,10 +25,10 @@ export const __colorStyles_default_preset: WxColorStylesStrict = {
 		extraUnits: undefined,
 		mask: 'none',
 		gl: {
+			animationIntensity: 5,
 			animationSpeed: 1,
 			noiseTexturePow: 5,
 			vectorFieldFactor: 1,
-			animationIntensity: 5,
 			wavesCount: 4,
 		},
 	},
