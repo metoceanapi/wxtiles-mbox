@@ -5,6 +5,7 @@ import type { WxDatasetMeta, WxVariableMeta } from '../wxAPI/WxAPItypes';
 import { FrameworkParentClass, type FrameworkOptions } from '../wxsource/wxsourcetypes';
 import type { WxDataSetManager } from '../wxAPI/WxDataSetManager';
 import type { WxTileSource } from '../wxsource/wxsource';
+import { WxRasterData } from './painter';
 
 /**
  * Mandatory Interface to be implemented by a {@link WxLayerBaseImplementation}
@@ -29,7 +30,7 @@ export interface WxLayerBaseAPI {
 export type ListenerMethod = <T extends keyof WxEventType>(arg?: WxEventType[T]) => void;
 
 export type WxEventType = {
-	changed: WxTileSource;
+	changed: any;
 };
 
 /**
@@ -302,4 +303,61 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * Force reload and redraw all tiles.
 	 */
 	protected update() {}
+
+	/**
+	 * A boolean flag indicating whether the dataset manager needs to be updated or not.
+	 */
+	protected _needUpdateDSManager: boolean = false;
+
+	/**
+	 * @ignore
+	 * @internal
+	 * Helper method that loads a tile with the given coordinates and request options.
+	 * It returns null during datasetManager update or in case of any other error (e.g. network error, not found, etc.)
+	 * It tries to update datasetManager if e.reason === 'instance-not-found' and update the layer
+	 * (MAY BE COPY-PASTED!!!)
+	 *
+	 * @param {XYZ} coords - The tile coordinates to be loaded.
+	 * @param {WxRequestInit} requestInit - The request options.
+	 * @returns {Promise<WxRasterData | null>} - A promise that resolves with the loaded tile or null.
+	 */
+	protected async _loadTileHelper(coords: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
+		let raster_data: WxRasterData | null = null;
+
+		// in case of DSManager update, return empty tile
+		// After update is complete, the framework will try to reload all tiles again
+		if (!this._needUpdateDSManager) {
+			try {
+				raster_data = await this._layer.loadTile(coords, requestInit);
+			} catch (e) {
+				// it's ok if the tile is not found. Just return empty tile, or...
+
+				// ...or, rethrow 'AbortError' to the framework to handle
+				if (e.name === 'AbortError') {
+					throw e;
+				}
+
+				// ...or, if the loadTile->loadImage->throw  'reason' is 'instance-not-found', try to update wxdatasetManager, then update the layer
+				// if we aren't in the middle of updating wxdatasetManager (others may initiate update as well)
+				if (e.reason === 'instance-not-found' && !this._needUpdateDSManager) {
+					this._needUpdateDSManager = true;
+					WXLOG(`WxTileSource.loadTile (${this.id}) instance-not-found. Trying to update wxdatasetManager and load again.`);
+					// try to update wxdatasetManager. No need to await for it to finish
+					this.wxdatasetManager
+						.update() // attempt to update wxdatasetManager
+						.then(() => {
+							this._needUpdateDSManager = false;
+							this.setTime(this.getTime()) // reload tiles with new time close to the current time
+								.then(() => this.fire('changed', this)); // and fire 'changed' event
+						}) // update wxdatasetManager
+						.catch((e) => {
+							// it leaves needUpdateDSManager = true, so the layer will appear empty after failed update.
+							WXLOG(`WxTileSource.loadTile (${this.id}) instance-not-found. wxdatasetManager update failed.`, e);
+						});
+				} // if (e.reason === 'instance-not-found')
+			} // catch loadTile error
+		} // if (!this.needUpdateDSManager) - outer
+
+		return raster_data;
+	}
 }
