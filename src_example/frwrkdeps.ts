@@ -2,6 +2,7 @@ import { IControl } from 'mapbox-gl';
 import mapboxgl from 'mapbox-gl';
 import { WxGetColorStyles } from '../src/utils/wxtools';
 import { CustomWxTilesLayer } from '../src/customlayer/customlayer';
+import { WxBoundaryMeta } from '../src/wxAPI/WxAPItypes';
 
 export function flyTo(map: mapboxgl.Map, zoom: number, lng: number, lat: number, bearing: number, pitch: number) {
 	map.flyTo({ zoom, center: [lng, lat], bearing, pitch });
@@ -112,20 +113,21 @@ export function removeLayer(map: mapboxgl.Map, idS: string, source?: any) {
 	console.log('removeLayer', idS, source);
 }
 
-export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: string, maxZoom: number) {
+export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: string, maxZoom: number, boundariesnorm?: WxBoundaryMeta) {
 	map.addSource(idS, {
 		type: 'raster',
 		tiles: [URL],
 		tileSize: 256,
 		maxzoom: maxZoom,
 	});
+
 	map.addLayer(
 		{
 			id: idL,
 			type: 'raster',
 			source: idS,
-		},
-		idL !== 'baseL' ? 'baseL' : undefined
+		}
+		// idL !== 'baseL' ? 'baseL' : undefined
 	);
 }
 
@@ -133,18 +135,18 @@ export async function addLayer(map: mapboxgl.Map, idL: string, source: any) {
 	map.addSource(source.id, source);
 	// const baseL = map.getLayer('baseL') && 'baseL';
 	map.addLayer(new CustomWxTilesLayer(idL, source.id, source.opacity)); //, baseL);
-	/*
-	map.addLayer(
-		{
-			id: idL,
-			type: 'raster',
-			source: source.id,
-			paint: {
-				'raster-fade-duration': 0, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
-				'raster-opacity': OPACITY,
-			},
-		},
-		baseL
-	); //*/
-	await new Promise((done) => map.once('idle', done));
+
+	// map.addLayer(
+	// 	{
+	// 		id: idL,
+	// 		type: 'raster',
+	// 		source: source.id,
+	// 		paint: {
+	// 			'raster-fade-duration': 0, //kinda helps to avoid bug https://github.com/mapbox/mapbox-gl-js/issues/12159
+	// 			'raster-opacity': source.opacity,
+	// 		},
+	// 	}
+	// 	// baseL
+	// ); //
+	// await new Promise((done) => map.once('idle', done));
 }

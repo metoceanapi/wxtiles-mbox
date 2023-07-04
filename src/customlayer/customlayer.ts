@@ -4,7 +4,7 @@ import { WxTileSource } from '../wxsource/wxsource';
 import { HashXYZ } from '../utils/wxtools';
 import mapboxgl from 'mapbox-gl';
 
-class VertexArrayObject {
+class WxVertexArrayObject {
 	boundProgram: any;
 	boundLayoutVertexBuffer: any;
 	boundPaintVertexBuffers: any[] = [];
@@ -92,12 +92,12 @@ class VertexArrayObject {
 			vertexBuffer.enableAttributes(gl, program);
 		}
 
-		if (dynamicVertexBuffer) {
-			dynamicVertexBuffer.enableAttributes(gl, program);
-		}
-		if (dynamicVertexBuffer2) {
-			dynamicVertexBuffer2.enableAttributes(gl, program);
-		}
+		// if (dynamicVertexBuffer) {
+		// 	dynamicVertexBuffer.enableAttributes(gl, program);
+		// }
+		// if (dynamicVertexBuffer2) {
+		// 	dynamicVertexBuffer2.enableAttributes(gl, program);
+		// }
 
 		layoutVertexBuffer.bind();
 		layoutVertexBuffer.setVertexAttribPointers(gl, program, vertexOffset);
@@ -106,17 +106,19 @@ class VertexArrayObject {
 			vertexBuffer.setVertexAttribPointers(gl, program, vertexOffset);
 		}
 
-		if (dynamicVertexBuffer) {
-			dynamicVertexBuffer.bind();
-			dynamicVertexBuffer.setVertexAttribPointers(gl, program, vertexOffset);
-		}
+		// if (dynamicVertexBuffer) {
+		// 	dynamicVertexBuffer.bind();
+		// 	dynamicVertexBuffer.setVertexAttribPointers(gl, program, vertexOffset);
+		// }
+
 		if (indexBuffer) {
 			indexBuffer.bind();
 		}
-		if (dynamicVertexBuffer2) {
-			dynamicVertexBuffer2.bind();
-			dynamicVertexBuffer2.setVertexAttribPointers(gl, program, vertexOffset);
-		}
+
+		// if (dynamicVertexBuffer2) {
+		// 	dynamicVertexBuffer2.bind();
+		// 	dynamicVertexBuffer2.setVertexAttribPointers(gl, program, vertexOffset);
+		// }
 
 		context.currentNumAttributes = numNextAttributes;
 	}
@@ -183,11 +185,17 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 
 	onRemove(map: any, gl: WebGLRenderingContext): void {
 		if (map.style?._layers?.[this.id]?.source) {
-			delete map.style._layers[this.id].source;
+			delete map.style._layers[this.id].source; // remove reference to the source from style
 		}
+
 		// delete gl resources
 		gl.deleteTexture(this.noiseTexture);
 		gl.deleteProgram(this.program);
+
+		// delete vaos for all segments for this layer
+		for (const segment of this.map.painter.mercatorBoundsSegments.get()) {
+			delete segment.vaos[this.id];
+		}
 	}
 
 	checkCreateNoiseTexture(gl: WebGLRenderingContext, pow: number) {
@@ -316,7 +324,7 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 			const primitiveSize = 3; // ибо triangles
 			for (const segment of mercatorBoundsSegments.get()) {
 				const vaos = segment.vaos || (segment.vaos = {});
-				const vao: VertexArrayObject = vaos[layerID] || (vaos[layerID] = new VertexArrayObject());
+				const vao: WxVertexArrayObject = vaos[layerID] || (vaos[layerID] = new WxVertexArrayObject());
 
 				vao.bind(
 					context,
@@ -325,8 +333,8 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 					[], // paintVertexBuffers
 					quadTriangleIndexBuffer, // indexBuffer
 					segment.vertexOffset, // vertexOffset
-					null, // dynamicVertexBuffer
-					null // dynamicVertexBuffer2
+					[], // dynamicVertexBuffer
+					[] // dynamicVertexBuffer2
 				);
 
 				gl.drawElements(

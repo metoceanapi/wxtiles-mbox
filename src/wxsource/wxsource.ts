@@ -47,7 +47,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	/**
 	 * Get comprehensive information about the current point on map.
 	 * @param {WxLngLat} lnglat - Coordinates of the point.
-	 * @param map - map instance.
+	 * @param {any} anymap - map instance.
 	 * @returns {WxTileInfo | undefined }
 	 * */
 	getLayerInfoAtLatLon(lnglat: WxLngLat, anymap: any): WxTileInfo | undefined {
@@ -66,8 +66,10 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 
 	/**
 	 * @ignore
-	 * Reloads the tiles that are currently visible on the map. Used for time/particles animation.
-	 **/
+	 * Reloads the visible tiles with new data. Used for time/particles animation.
+	 * @param {WxRequestInit} requestInit The request options.
+	 * @returns {Promise<void>} A promise that resolves when the tiles have been reloaded and redrawn.
+	 */
 	async _reloadVisible(requestInit?: WxRequestInit): Promise<void> {
 		WXLOG(`WxTileSource _reloadVisible (${this.id})`);
 		await this._layer.reloadTiles(this.coveringTiles(), requestInit); // reload tiles with new time
@@ -81,9 +83,10 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 
 	/**
 	 * @ignore
-	 * Get the tiles that are currently visible on the map.
-	 * <MBOX API> get assigned by map.addSource
-	 * */
+	 * Returns an array of tile coordinates that cover the visible portion of the map.
+	 * **Note**: MBOX API reassign this func in "map.addSource"
+	 * @returns {XYZ[]} - An array of tile coordinates.
+	 */
 	coveringTiles(): XYZ[] {
 		return [];
 		// mapbox-gl-js implementation: return (this.map.getSource(this.id) as any)?._coveringTiles?.() || [];
@@ -91,58 +94,71 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 
 	/**
 	 * @ignore
-	 * reload tiles that are currently visible on the map.
-	 * 	<MBOX API> get assigned by map.addSource
+	 * Updates/reloads the source layer with new data.
+	 * **Note**: MBOX API reassign this func in "map.addSource"
+	 * @returns {void}
 	 */
 	update() {
 		// mapbox-gl-js implementation: return (this.map.getSource(this.id) as any)?._update?.();
 	}
 
-	//protected async _loadTile(tile: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData | null> {}
-
 	needUpdateDSManager: boolean = false;
-	needUpdateCycle: number = 0;
+
 	/**
 	 * @internal
+	 * Loads a tile with the given coordinates and request options.
 	 * Used by framework. Creates a representation of a tile for the framework.
-	 * @param coords - The tile coordinates to be loaded.
-	 * @param requestInit - The request options.
-	 * @returns {Promise<Picture>} - A picture of the tile.
+	 * It rethrows 'AbortError' errors.
+	 * It returns empty tile during datasetManager update or in case of any other error (e.g. network error, not found, etc.)
+	 * It tries to update datasetManager if e.reason === 'instance-not-found' and update the layer
+	 *
+	 * @param {XYZ} coords - The tile coordinates to be loaded.
+	 * @param {WxRequestInit} requestInit - The request options.
+	 * @returns {Promise<any>} - A promise that resolves with the loaded tile.
 	 */
 	async loadTile(coords: XYZ, requestInit?: WxRequestInit): Promise<any> {
+		if (this.needUpdateDSManager) {
+			// return empty tile during datasetManager update
+			// After update is complete, the framework will try to reload all tiles again
+			return new ImageData(1, 1);
+		}
+
 		let raster_data: WxRasterData | null = null;
 
-		if (!this.needUpdateDSManager) {
-			// if we a re not in the middle of updating wxdatasetManager
-			// try to  load tile
-			try {
-				raster_data = await this._layer.loadTile(coords, requestInit);
-				this.needUpdateCycle = 0;
-			} catch (e) {
-				// can be rejected if the tile does not exist or loading aborted
-				if (e.name === 'AbortError') throw e; // re-throw abort in case MapBox wants to handle it
-				if (e.reason === 'instance-not-found') {
-					// process new instances
-					if (this.needUpdateCycle > 1) {
-						// panic!! we're in the infinite loop
-						WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Tried to update wxdatasetManager and load again, but failed. Aborting.`);
-						throw 'panic';
-					}
+		try {
+			raster_data = await this._layer.loadTile(coords, requestInit);
+		} catch (e) {
+			// it's ok if the tile is not found. Just return empty tile, or...
 
-					if (!this.needUpdateDSManager) {
-						// if we a re not in the middle of updating wxdatasetManager (others may initiate update as well)
-						this.needUpdateDSManager = true;
-						this.needUpdateCycle++;
-						WXLOG(`WxTileSource loadTile (${this.id}) instance-not-found. Trying to update wxdatasetManager and load again.`);
-						// try to update wxdatasetManager. No need to await for it to finish
-						this.wxdatasetManager.update().then(() => {
-							this.needUpdateDSManager = false;
-							this.setTime(this.getTime()).then(() => this._fire('changed', this)); // reload tiles with new time (instead of this._reloadVisible)
-						}); // update wxdatasetManager
-					} // if (!this.needUpdateDSManager)
-				} // if (e.reason === 'instance-not-found')
-			} // catch loadTile error
-		} // if (!this.needUpdateDSManager)
+			// ...or, rethrow 'AbortError' errors to the framework to handle
+			if (e.name === 'AbortError') {
+				throw e;
+			}
+
+			// ...or, if the loadImage throws with 'reason' is 'instance-not-found', try to update wxdatasetManager, then update the layer
+			if (e.reason === 'instance-not-found') {
+				// if we a re in the middle of updating wxdatasetManager (others may initiate update as well)
+				if (this.needUpdateDSManager) {
+					// return empty tile
+					return new ImageData(1, 1);
+				}
+
+				this.needUpdateDSManager = true;
+				WXLOG(`WxTileSource.loadTile (${this.id}) instance-not-found. Trying to update wxdatasetManager and load again.`);
+				// try to update wxdatasetManager. No need to await for it to finish
+				this.wxdatasetManager
+					.update() // attempt to update wxdatasetManager
+					.then(() => {
+						this.needUpdateDSManager = false;
+						this.setTime(this.getTime()) // reload tiles with new time close to the current time
+							.then(() => this._fire('changed', this)); // and fire 'changed' event
+					}) // update wxdatasetManager
+					.catch((e) => {
+						// it leaves needUpdateDSManager = true, so the layer will appear empty after failed update.
+						WXLOG(`WxTileSource.loadTile (${this.id}) instance-not-found. wxdatasetManager update failed.`, e);
+					});
+			} // if (e.reason === 'instance-not-found')
+		} // catch loadTile error
 
 		return raster_data ? this._layer.getPaintedCanvas(raster_data, this._animation, this._animationSeed) : new ImageData(1, 1);
 	} // loadTile
