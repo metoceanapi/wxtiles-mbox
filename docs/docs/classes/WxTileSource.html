@@ -36,7 +36,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <li><a href="../interfaces/WxLayerAPI.html" class="tsd-signature-type" data-tsd-kind="Interface">WxLayerAPI</a></li>
 <li><span class="tsd-signature-type">CustomSourceInterface</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L37">src/wxsource/wxsource.ts:37</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L30">src/wxsource/wxsource.ts:30</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -52,8 +52,9 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <a href="WxTileSource.html#bounds" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>bounds?</span></a>
 <a href="WxTileSource.html#dataType" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>data<wbr/>Type</span></a>
 <a href="WxTileSource.html#id" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>id</span></a>
-<a href="WxTileSource.html#loadTileReady" class="tsd-index-link tsd-kind-property tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>load<wbr/>Tile<wbr/>Ready?</span></a>
 <a href="WxTileSource.html#maxzoom" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>maxzoom?</span></a>
+<a href="WxTileSource.html#needUpdateDSManager" class="tsd-index-link tsd-kind-property tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>need<wbr/>UpdateDSManager</span></a>
+<a href="WxTileSource.html#opacity" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>opacity?</span></a>
 <a href="WxTileSource.html#tileSize" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>tile<wbr/>Size</span></a>
 <a href="WxTileSource.html#type" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>type</span></a>
 </div></section>
@@ -109,7 +110,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <h4 class="tsd-returns-title">Returns <a href="WxTileSource.html" class="tsd-signature-type" data-tsd-kind="Class">WxTileSource</a></h4><aside class="tsd-sources">
 <p>Overrides <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#constructor">constructor</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L49">src/wxsource/wxsource.ts:49</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L42">src/wxsource/wxsource.ts:42</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a id="attribution" class="tsd-anchor"></a>
@@ -148,11 +149,6 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#id">id</a></p>
 <ul>
 <li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsourcetypes.ts#L11">src/wxsource/wxsourcetypes.ts:11</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="loadTileReady" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>load<wbr/>Tile<wbr/>Ready</span><a href="#loadTileReady" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
-<div class="tsd-signature">load<wbr/>Tile<wbr/>Ready<span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L108">src/wxsource/wxsource.ts:108</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a id="maxzoom" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>maxzoom</span><a href="#maxzoom" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">maxzoom<span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
@@ -162,6 +158,17 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#maxzoom">maxzoom</a></p>
 <ul>
 <li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsourcetypes.ts#L19">src/wxsource/wxsourcetypes.ts:19</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="needUpdateDSManager" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>need<wbr/>UpdateDSManager</span><a href="#needUpdateDSManager" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
+<div class="tsd-signature">need<wbr/>UpdateDSManager<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L105">src/wxsource/wxsource.ts:105</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a id="opacity" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>opacity</span><a href="#opacity" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
+<div class="tsd-signature">opacity<span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
+<p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#opacity">opacity</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsourcetypes.ts#L25">src/wxsource/wxsourcetypes.ts:25</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a id="tileSize" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>tile<wbr/>Size</span><a href="#tileSize" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">tile<wbr/>Size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 256</span></div>
@@ -195,13 +202,13 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#wxdatasetManager">wxdatasetManager</a></p>
 <p>Inherited from WxLayerBaseImplementation.wxdatasetManager</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L84">src/wxlayer/WxImplementation.ts:84</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L93">src/wxlayer/WxImplementation.ts:93</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a id="_fire" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_fire</span><a href="#_fire" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
-<li class="tsd-signature tsd-anchor-link" id="_fire._fire-1">_fire<span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span>, data<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">WxEventType</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_fire._fire-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="_fire._fire-1">_fire<span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span>, data<span class="tsd-signature-symbol">: </span><a href="../types/WxEventType.html" class="tsd-signature-type" data-tsd-kind="Type alias">WxEventType</a><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_fire._fire-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <section class="tsd-panel tsd-type-parameters">
 <h4>Type Parameters</h4>
@@ -214,10 +221,10 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <li>
 <h5>type: <span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span></h5></li>
 <li>
-<h5><code class="tsd-tag ts-flagOptional">Optional</code> data: <span class="tsd-signature-type">WxEventType</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">]</span></h5></li></ul></div>
+<h5>data: <a href="../types/WxEventType.html" class="tsd-signature-type" data-tsd-kind="Type alias">WxEventType</a><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L189">src/wxsource/wxsource.ts:189</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L203">src/wxsource/wxsource.ts:203</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="clearCache" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>clear<wbr/>Cache</span><a href="#clearCache" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -229,7 +236,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#clearCache">clearCache</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#clearCache">clearCache</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L124">src/wxlayer/WxImplementation.ts:124</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L133">src/wxlayer/WxImplementation.ts:133</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getAllTimes" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>All<wbr/>Times</span><a href="#getAllTimes" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -238,7 +245,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getAllTimes">getAllTimes</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L151">src/wxlayer/WxImplementation.ts:151</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L160">src/wxlayer/WxImplementation.ts:160</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getCache" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Cache</span><a href="#getCache" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -247,7 +254,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <h4 class="tsd-returns-title">Returns <a href="TilesCache.html" class="tsd-signature-type" data-tsd-kind="Class">TilesCache</a></h4><aside class="tsd-sources">
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getCache">getCache</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L129">src/wxlayer/WxImplementation.ts:129</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L138">src/wxlayer/WxImplementation.ts:138</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getCurrentStyleObjectCopy" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Current<wbr/>Style<wbr/>Object<wbr/>Copy</span><a href="#getCurrentStyleObjectCopy" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -261,7 +268,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getCurrentStyleObjectCopy">getCurrentStyleObjectCopy</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getCurrentStyleObjectCopy">getCurrentStyleObjectCopy</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L137">src/wxlayer/WxImplementation.ts:137</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L146">src/wxlayer/WxImplementation.ts:146</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getCurrentVariableMeta" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Current<wbr/>Variable<wbr/>Meta</span><a href="#getCurrentVariableMeta" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -277,7 +284,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getCurrentVariableMeta">getCurrentVariableMeta</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getCurrentVariableMeta">getCurrentVariableMeta</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L93">src/wxlayer/WxImplementation.ts:93</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L102">src/wxlayer/WxImplementation.ts:102</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getDatasetMeta" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Dataset<wbr/>Meta</span><a href="#getDatasetMeta" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -286,7 +293,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <h4 class="tsd-returns-title">Returns <a href="../interfaces/WxDatasetMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxDatasetMeta</a></h4><aside class="tsd-sources">
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getDatasetMeta">getDatasetMeta</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L98">src/wxlayer/WxImplementation.ts:98</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L107">src/wxlayer/WxImplementation.ts:107</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getLayerInfoAtLatLon" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Layer<wbr/>Info<wbr/>At<wbr/>Lat<wbr/>Lon</span><a href="#getLayerInfoAtLatLon" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -303,11 +310,13 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <div class="tsd-comment tsd-typography"><p>Coordinates of the point.</p>
 </div></li>
 <li>
-<h5>anymap: <span class="tsd-signature-type">any</span></h5></li></ul></div>
+<h5>anymap: <span class="tsd-signature-type">any</span></h5>
+<div class="tsd-comment tsd-typography"><p>map instance.</p>
+</div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/WxTileInfo.html" class="tsd-signature-type" data-tsd-kind="Interface">WxTileInfo</a></h4><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getLayerInfoAtLatLon">getLayerInfoAtLatLon</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L60">src/wxsource/wxsource.ts:60</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L53">src/wxsource/wxsource.ts:53</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getMetadata" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Metadata</span><a href="#getMetadata" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -323,7 +332,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <h4 class="tsd-returns-title">Returns <a href="../interfaces/WxVariableMeta.html" class="tsd-signature-type" data-tsd-kind="Interface">WxVariableMeta</a></h4><aside class="tsd-sources">
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getMetadata">getMetadata</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L107">src/wxlayer/WxImplementation.ts:107</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L116">src/wxlayer/WxImplementation.ts:116</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getTime" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Time</span><a href="#getTime" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -337,7 +346,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getTime">getTime</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getTime">getTime</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L146">src/wxlayer/WxImplementation.ts:146</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L155">src/wxlayer/WxImplementation.ts:155</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="getVariablesNames" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Variables<wbr/>Names</span><a href="#getVariablesNames" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -351,23 +360,27 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#getVariablesNames">getVariablesNames</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#getVariablesNames">getVariablesNames</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L116">src/wxlayer/WxImplementation.ts:116</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L125">src/wxlayer/WxImplementation.ts:125</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="loadTile" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>load<wbr/>Tile</span><a href="#loadTile" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="loadTile.loadTile-1">load<wbr/>Tile<span class="tsd-signature-symbol">(</span>tile<span class="tsd-signature-symbol">: </span><a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a>, requestInit<span class="tsd-signature-symbol">?: </span><a href="../interfaces/WxRequestInit.html" class="tsd-signature-type" data-tsd-kind="Interface">WxRequestInit</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><a href="#loadTile.loadTile-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="loadTile.loadTile-1">load<wbr/>Tile<span class="tsd-signature-symbol">(</span>coords<span class="tsd-signature-symbol">: </span><a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a>, requestInit<span class="tsd-signature-symbol">?: </span><a href="../interfaces/WxRequestInit.html" class="tsd-signature-type" data-tsd-kind="Interface">WxRequestInit</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><a href="#loadTile.loadTile-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description"><code class="tsd-tag ts-flagInternal">Internal</code> 
-<div class="tsd-comment tsd-typography"><p>Used by framework. Creates a representation of a tile for the framework.</p>
+<div class="tsd-comment tsd-typography"><p>Loads a tile with the given coordinates and request options.
+Used by framework. Creates a representation of a tile for the framework.
+It rethrows &#39;AbortError&#39; errors.
+It returns empty tile during datasetManager update or in case of any other error (e.g. network error, not found, etc.)
+It tries to update datasetManager if e.reason === &#39;instance-not-found&#39; and update the layer</p>
 
 <h3>Returns</h3><ul>
-<li>A picture of the tile.</li>
+<li>A promise that resolves with the loaded tile.</li>
 </ul>
 </div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5>tile: <a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a></h5>
+<h5>coords: <a href="../interfaces/XYZ.html" class="tsd-signature-type" data-tsd-kind="Interface">XYZ</a></h5>
 <div class="tsd-comment tsd-typography"><p>The tile coordinates to be loaded.</p>
 </div></li>
 <li>
@@ -377,11 +390,11 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.loadTile</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L116">src/wxsource/wxsource.ts:116</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L119">src/wxsource/wxsource.ts:119</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="off" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>off</span><a href="#off" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="off.off-1">off<span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span>, listener<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ListenerMethod</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="WxTileSource.html" class="tsd-signature-type" data-tsd-kind="Class">WxTileSource</a><a href="#off.off-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="off.off-1">off<span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span>, listener<span class="tsd-signature-symbol">: </span><a href="../types/ListenerMethod.html" class="tsd-signature-type" data-tsd-kind="Type alias">ListenerMethod</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#off.off-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <section class="tsd-panel tsd-type-parameters">
 <h4>Type Parameters</h4>
@@ -394,14 +407,15 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <li>
 <h5>type: <span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span></h5></li>
 <li>
-<h5>listener: <span class="tsd-signature-type">ListenerMethod</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="WxTileSource.html" class="tsd-signature-type" data-tsd-kind="Class">WxTileSource</a></h4><aside class="tsd-sources">
+<h5>listener: <a href="../types/ListenerMethod.html" class="tsd-signature-type" data-tsd-kind="Type alias">ListenerMethod</a></h5></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#off">off</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L171">src/wxsource/wxsource.ts:171</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L188">src/wxsource/wxsource.ts:188</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="on" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>on</span><a href="#on" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="on.on-1">on<span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span>, listener<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ListenerMethod</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="WxTileSource.html" class="tsd-signature-type" data-tsd-kind="Class">WxTileSource</a><a href="#on.on-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="on.on-1">on<span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span>, listener<span class="tsd-signature-symbol">: </span><a href="../types/ListenerMethod.html" class="tsd-signature-type" data-tsd-kind="Type alias">ListenerMethod</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#on.on-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>add a listener for the event</p>
 
@@ -419,12 +433,13 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <div class="tsd-comment tsd-typography"><p>event name</p>
 </div></li>
 <li>
-<h5>listener: <span class="tsd-signature-type">ListenerMethod</span></h5>
+<h5>listener: <a href="../types/ListenerMethod.html" class="tsd-signature-type" data-tsd-kind="Type alias">ListenerMethod</a></h5>
 <div class="tsd-comment tsd-typography"><p>listener function</p>
 </div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="WxTileSource.html" class="tsd-signature-type" data-tsd-kind="Class">WxTileSource</a></h4><aside class="tsd-sources">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#on">on</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L165">src/wxsource/wxsource.ts:165</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L183">src/wxsource/wxsource.ts:183</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="onRemove" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>on<wbr/>Remove</span><a href="#onRemove" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -440,11 +455,11 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of mapboxgl.CustomSourceInterface.onRemove</p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L152">src/wxsource/wxsource.ts:152</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L170">src/wxsource/wxsource.ts:170</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="once" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>once</span><a href="#once" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="once.once-1">once<span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span>, listener<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ListenerMethod</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="WxTileSource.html" class="tsd-signature-type" data-tsd-kind="Class">WxTileSource</a><a href="#once.once-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="once.once-1">once<span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span>, listener<span class="tsd-signature-symbol">: </span><a href="../types/ListenerMethod.html" class="tsd-signature-type" data-tsd-kind="Type alias">ListenerMethod</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#once.once-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <section class="tsd-panel tsd-type-parameters">
 <h4>Type Parameters</h4>
@@ -457,10 +472,11 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <li>
 <h5>type: <span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span></h5></li>
 <li>
-<h5>listener: <span class="tsd-signature-type">ListenerMethod</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="WxTileSource.html" class="tsd-signature-type" data-tsd-kind="Class">WxTileSource</a></h4><aside class="tsd-sources">
+<h5>listener: <a href="../types/ListenerMethod.html" class="tsd-signature-type" data-tsd-kind="Type alias">ListenerMethod</a></h5></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#once">once</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L179">src/wxsource/wxsource.ts:179</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxsource/wxsource.ts#L193">src/wxsource/wxsource.ts:193</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="preloadTime" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>preload<wbr/>Time</span><a href="#preloadTime" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -485,7 +501,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#preloadTime">preloadTime</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#preloadTime">preloadTime</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L177">src/wxlayer/WxImplementation.ts:177</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L186">src/wxlayer/WxImplementation.ts:186</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="setCoarseLevel" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Coarse<wbr/>Level</span><a href="#setCoarseLevel" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -502,7 +518,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#setCoarseLevel">setCoarseLevel</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#setCoarseLevel">setCoarseLevel</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L223">src/wxlayer/WxImplementation.ts:223</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L232">src/wxlayer/WxImplementation.ts:232</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="setStyleByName" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Style<wbr/>By<wbr/>Name</span><a href="#setStyleByName" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -527,7 +543,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#setStyleByName">setStyleByName</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#setStyleByName">setStyleByName</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L240">src/wxlayer/WxImplementation.ts:240</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L249">src/wxlayer/WxImplementation.ts:249</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="setTime" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Time</span><a href="#setTime" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -552,7 +568,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#setTime">setTime</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#setTime">setTime</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L162">src/wxlayer/WxImplementation.ts:162</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L171">src/wxlayer/WxImplementation.ts:171</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="startAnimation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>start<wbr/>Animation</span><a href="#startAnimation" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -564,7 +580,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#startAnimation">startAnimation</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#startAnimation">startAnimation</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L185">src/wxlayer/WxImplementation.ts:185</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L194">src/wxlayer/WxImplementation.ts:194</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="stopAnimation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>stop<wbr/>Animation</span><a href="#stopAnimation" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -576,7 +592,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#stopAnimation">stopAnimation</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#stopAnimation">stopAnimation</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L216">src/wxlayer/WxImplementation.ts:216</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L225">src/wxlayer/WxImplementation.ts:225</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="unsetCoarseLevel" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>unset<wbr/>Coarse<wbr/>Level</span><a href="#unsetCoarseLevel" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -588,7 +604,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#unsetCoarseLevel">unsetCoarseLevel</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#unsetCoarseLevel">unsetCoarseLevel</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L229">src/wxlayer/WxImplementation.ts:229</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L238">src/wxlayer/WxImplementation.ts:238</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a id="updateCurrentStyleObject" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>update<wbr/>Current<wbr/>Style<wbr/>Object</span><a href="#updateCurrentStyleObject" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
@@ -617,7 +633,7 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <p>Implementation of <a href="../interfaces/WxLayerAPI.html">WxLayerAPI</a>.<a href="../interfaces/WxLayerAPI.html#updateCurrentStyleObject">updateCurrentStyleObject</a></p>
 <p>Inherited from <a href="WxLayerBaseImplementation.html">WxLayerBaseImplementation</a>.<a href="WxLayerBaseImplementation.html#updateCurrentStyleObject">updateCurrentStyleObject</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L252">src/wxlayer/WxImplementation.ts:252</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/metoceanapi/wxtiles-mbox/blob/main/src/wxlayer/WxImplementation.ts#L261">src/wxlayer/WxImplementation.ts:261</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
@@ -647,8 +663,9 @@ Dont use this  directly, use <a href="WxDataSetManager.html#createSourceLayer">c
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="WxTileSource.html#bounds" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>bounds?</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="WxTileSource.html#dataType" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>data<wbr/>Type</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="WxTileSource.html#id" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>id</a></li>
-<li class="tsd-kind-property tsd-parent-kind-class"><a href="WxTileSource.html#loadTileReady" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>load<wbr/>Tile<wbr/>Ready?</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="WxTileSource.html#maxzoom" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>maxzoom?</a></li>
+<li class="tsd-kind-property tsd-parent-kind-class"><a href="WxTileSource.html#needUpdateDSManager" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>need<wbr/>UpdateDSManager</a></li>
+<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="WxTileSource.html#opacity" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>opacity?</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="WxTileSource.html#tileSize" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>tile<wbr/>Size</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="WxTileSource.html#type" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>type</a></li>
 <li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><a href="WxTileSource.html#wxdatasetManager" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-262144-path"></use><use href="#icon-262144-text"></use></svg>wxdataset<wbr/>Manager</a></li>
