@@ -6,8 +6,10 @@ import { WxLayerOptions } from '../wxlayer/wxlayer';
 import { WxAPI } from './WxAPI';
 
 export type WxInstances = string[];
+
 /**
- * Short description of a dataset */
+ * Short description of a dataset
+ */
 export interface WxDatasetShortMeta {
 	/** represents instances as timesteps for some datasets like NZ Radar */
 	instanced?: WxInstances;
@@ -16,10 +18,11 @@ export interface WxDatasetShortMeta {
 	/** list of variables in a dataset */
 	variables: string[];
 }
+
 /** Short description of all available datasets */
 export interface WxAllDatasetsShortMetas {
 	/** a list of datasets with short description */
-	[name: string]: WxDatasetShortMeta | undefined /* | string[] */;
+	[name: string]: WxDatasetShortMeta | undefined;
 }
 
 /** Meta data of a variable */
@@ -134,17 +137,17 @@ export interface WxAPIOptions extends WxTilesLibOptions {
 	/** parameters to be passed to every fetch() aka _headers, credentials, cors, etc_ for interaction with backend data server */
 	requestInit?: RequestInit;
 }
+
 /**
  * Options to pass to the {@link WxDataSetManager.createSourceLayer} method.
- * */
-
+ **/
 export interface WxSourceLayerOptions extends Omit<WxLayerOptions, 'variables' | 'wxdatasetManager'> {
 	variable: string;
 }
+
 /**
  * Options to pass to the constructor of {@link WxDataSetManager}
  */
-
 export interface WxDataSetManagerOptions {
 	/**
 	 * @internal

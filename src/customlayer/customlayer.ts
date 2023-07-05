@@ -131,6 +131,10 @@ class WxVertexArrayObject {
 	}
 }
 
+/**
+ * A class that manages the uniforms for a WebGL program.
+ * Members of extended class starting with "u_" are filled with WebGLUniformLocation by fill() method.
+ */
 class UniformsManager {
 	fill(gl: WebGLRenderingContext, program: WebGLProgram) {
 		for (const d in this) {
@@ -142,6 +146,11 @@ class UniformsManager {
 	}
 }
 
+/**
+ * A class that manages the uniforms for the custom tileset renderer.
+ * Members of extended class starting with "u_" are filled with WebGLUniformLocation by fill() method
+ * inhrerited from UniformsManager.
+ */
 class CustomWxTilesLayerUniforms extends UniformsManager {
 	u_matrix: WebGLUniformLocation = {};
 	u_opacity: WebGLUniformLocation = {};
@@ -163,10 +172,10 @@ class CustomWxTilesLayerUniforms extends UniformsManager {
 	// u_image1: WebGLUniformLocation = {};
 }
 
-// Our custom tileset renderer!
+// Our custom tileset renderer.
 export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
-	type: 'custom' = 'custom';
-	renderingMode: '2d' | '3d' = '2d';
+	type: 'custom' = 'custom'; // must be here
+	renderingMode: '2d' | '3d' = '2d'; // must be here
 	/**@ignore */
 	protected map: any;
 	/**@ignore */
@@ -181,8 +190,22 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 	/**@ignore */
 	protected noiseTexturePow: number = 5;
 
+	/**
+	 * CustomWxTilesLayer constructor.
+	 * @constructor
+	 * @param {string} id - The ID of the custom layer.
+	 * @param {string} sourceID - The ID of the source for the custom layer.
+	 * @param {number} [opacity=1] - The opacity of the custom layer.
+	 */
 	constructor(public id: string, public sourceID: string, public opacity: number = 1) {}
 
+	/**
+	 * This method is called when the custom layer is removed from the map.
+	 * It removes the reference to the source from the map style, deletes WebGL resources, and deletes VAOs for all segments for this layer.
+	 * @param {any} map - The map object.
+	 * @param {WebGLRenderingContext} gl - The WebGL rendering context.
+	 * @returns {void}
+	 */
 	onRemove(map: any, gl: WebGLRenderingContext): void {
 		if (map.style?._layers?.[this.id]?.source) {
 			delete map.style._layers[this.id].source; // remove reference to the source from style
@@ -198,14 +221,30 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 		}
 	}
 
-	checkCreateNoiseTexture(gl: WebGLRenderingContext, pow: number) {
+	/**
+	 * Checks if the noise texture needs to be created or updated based on the given power value.
+	 * If the power value is the same as the current noise texture power value and the noise texture already exists, this method does nothing.
+	 * Otherwise, it deletes the current noise texture, creates a new one with the given power value, and updates the noise texture power value.
+	 * @param {WebGLRenderingContext} gl - The WebGL rendering context.
+	 * @param {number} pow - The power value to check against the current noise texture power value.
+	 * @returns {void}
+	 */
+	checkCreateNoiseTexture(gl: WebGLRenderingContext, pow: number): void {
 		if (pow === this.noiseTexturePow && this.noiseTexture) return;
 		gl.deleteTexture(this.noiseTexture);
 		this.noiseTexture = createNoiseTexture(gl, pow);
 		this.noiseTexturePow = pow;
 	}
 
-	onAdd(map: any, gl: WebGLRenderingContext) {
+	/**
+	 * This method is called when the custom layer is added to the map.
+	 * It sets up the WebGL program, attributes, and uniforms needed for rendering,
+	 * and adds the source ID to the map style for MapBox internal pipeline and caching.
+	 * @param {any} map - The map object.
+	 * @param {WebGLRenderingContext} gl - The WebGL rendering context.
+	 * @returns {void}
+	 */
+	onAdd(map: any, gl: WebGLRenderingContext): void {
 		this.map = map;
 		this.program = createShaderProgram(gl);
 		// The VertexBuffer assumes that 'this' looks like a Program, at least that it has attributes
@@ -220,6 +259,10 @@ export class CustomWxTilesLayer implements mapboxgl.CustomLayerInterface {
 		map.style._layers[this.id].source = this.sourceID; // needed for MapBox internal pipeline and caching
 	}
 
+	/**
+	 * Renders the custom layer on the map using the provided WebGL rendering context.
+	 * @param gl - The WebGL rendering context to use for rendering the layer.
+	 */
 	render(gl: WebGLRenderingContext /* , matrix */): void {
 		if (!this.program) return;
 		const sourceCache = this.map.style._otherSourceCaches[this.sourceID];

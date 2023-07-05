@@ -54,7 +54,11 @@ export class WxAPI {
 	/* NO EXPORT PART END */
 	/************************/
 
-	/** @param options - see {@link WxAPIOptions} */
+	/**
+	 * Creates a new instance of the WxAPI class.
+	 * @param {WxAPIOptions} options - An object {@link WxAPIOptions} containing options for configuring the WxAPI instance.
+	 * @returns A new instance of the WxAPI class.
+	 */
 	constructor({
 		dataServerURL,
 		maskURL = 'none',
@@ -93,9 +97,11 @@ export class WxAPI {
 	}
 
 	/**
-	 * Create {@link WxDataSetManager} object for the given dataset name.
-	 * @param datasetName - dataset name
-	 * @returns {Promise<WxDataSetManager>} - WxDataSetManager object for the given dataset name */
+	 * Creates a new instance of the WxDataSetManager class {@link WxDataSetManager} for the given dataset name.
+	 * @param {string} datasetName - The name of the dataset to create a manager for.
+	 * @returns {Promise<WxDataSetManager>} - A new instance of the WxDataSetManager class for the given dataset name.
+	 * @throws {Error} - If the dataset or instance is not found.
+	 */
 	async createDatasetManager(datasetName: string): Promise<WxDataSetManager> {
 		await this.initDone;
 		await this._allDatasetsManager.updateOne(datasetName);
@@ -122,9 +128,10 @@ export class WxAPI {
 	}
 
 	/**
-	 * Get all variables for the given dataset name.
-	 * @param datasetName - dataset name
-	 * @returns {Promise<string[]>} - list of all available variables for the dataset */
+	 * Returns the list of all available variables for the given dataset name.
+	 * @param {string} datasetName - The name of the dataset to get the variables for.
+	 * @returns {Promise<string[] | undefined>} - A list of all available variables for the given dataset name, or undefined if the dataset is not found.
+	 */
 	async getDatasetAllVariables(datasetName: string): Promise<string[] | undefined> {
 		await this.initDone;
 		WXLOG('WxAPI.getDatasetVariables', datasetName);
@@ -132,9 +139,10 @@ export class WxAPI {
 	}
 
 	/**
-	 * Returns datasets names which have given variable
-	 * @argument {string} varName - variable name to search for in datasets
-	 * @returns {Promise<string[]>} - list of datasets' names */
+	 * Filters the list of all available datasets' names by the given variable name.
+	 * @param {string} varName - The variable name to filter by.
+	 * @returns {Promise<string[]>} - A list of all available datasets' names that have the given variable name.
+	 */
 	async filterDatasetsByVariableName(varName: string): Promise<string[]> {
 		await this.initDone;
 		WXLOG('WxAPI.filterDatasetsByVariableName:', varName);
@@ -143,9 +151,9 @@ export class WxAPI {
 	}
 
 	/**
-	 * Get the list of all available datasets' names
-	 * @returns {Promise<string[]>} - list of all available datasets' names
-	 * */
+	 * Returns a list of all available datasets' names.
+	 * @returns {Promise<string[]>} - A list of all available datasets' names.
+	 */
 	async getAllDatasetsNames(): Promise<string[]> {
 		await this.initDone;
 		WXLOG('WxAPI.getAllDatasetsNames');

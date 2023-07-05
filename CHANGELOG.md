@@ -11,6 +11,10 @@ Write your changes below this section. `npm version [major|minor|patch]` will au
 
 ## [2.2.0] - 2023-07-05
 
+### Added
+
+- Auto apdate of datasetManager when instance is missing in the current dataset.
+
 ## [2.1.2] - 2023-04-28
 
 ## [2.1.1] - 2023-04-06

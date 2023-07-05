@@ -1,32 +1,31 @@
 # WXTiles API Product Documentation
 
-WXTiles API enable weather data visualization for programmers.
-This documentation provides instructions for how to use WXTiles API in your project.
+WXTiles API is a powerful tool for visualizing weather data in your programming projects. This documentation provides detailed instructions on how to use the WXTiles API to its fullest potential.
 
-There are three main components of the product:
+The WXTiles API is comprised of three main components:
 
-1. [Splitter](https://github.com/metocean/wxtile-splitter) - a service that splits the datasets into tiles (PNG) and some metadata (JSON) served by a fileserver backend aka NGINX.
-2. [WxTiles-mbox source code](https://github.com/metoceanapi/wxtiles-mbox), npm [@metoceanapi/wxtiles-mbox](https://www.npmjs.com/package/@metoceanapi/wxtiles-mbox) - a JS API providing work with metadata, dataset manager and an implementation of a Custom MapBox-gl-gs Layer for visualizing the tiles using [Mapbox-gl-gs](https://www.mapbox.com/).
+1. The Splitter service, which splits datasets into tiles and metadata served by a fileserver backend.
+2. The WxTiles-mbox source code, which provides a JavaScript API for working with metadata, dataset management, and an implementation of a Custom MapBox-gl-gs Layer for visualizing the tiles using Mapbox-gl-gs.
+3. The WxTiles-leaflet source code, which provides a JavaScript API for working with metadata, dataset management, and an implementation of a Custom Leaflet Layer for visualizing the tiles using Leaflet.
+
+With these components, you can easily integrate weather data visualization into your programming projects. The API is available for use with two different frameworks: Leaflet and Mapbox-gl-gs. While the API for both frameworks is similar in many ways, there are some differences in the framework-specific implementations of the Custom Source/Layer.
+
+To get started with the WXTiles API, check out the DOCS section for detailed usage and API documentation. You can also explore the Examples section to see the API in action and get inspiration for your own projects.
+
+1. [Splitter](https://github.com/metocean/wxtile-splitter) - a service that splits the datasets into tiles (PNG) and some metadata (JSON). A private project of MetOcean/MetService.
+2. [WxTiles-mbox source code](https://github.com/metoceanapi/wxtiles-mbox), [npm @metoceanapi/wxtiles-mbox](https://www.npmjs.com/package/@metoceanapi/wxtiles-mbox) - a JS API providing work with metadata, dataset manager and an implementation of a Custom MapBox-gl-gs Layer for visualizing the tiles using [Mapbox-gl-gs](https://www.mapbox.com/).
 3. [WxTiles-leaflet source code](https://github.com/metoceanapi/wxtiles-leaflet), npm [@metoceanapi/wxtiles-leaflet](https://www.npmjs.com/package/@metoceanapi/wxtiles-leaflet) - a JS API providing work with metadata, dataset manager and an implementation of a Custom Leaflet Layer for visualizing the tiles using [Leaflet](https://leafletjs.com/).
 
-## API Description
+## Online DOCS
 
-The API can be used with 2 different frameworks: Leaflet and Mapbox-gl-gs.
-API for Leaflet and Mapbox-gl-gs are similar in many ways.
-The difference is in the framework-specific implementations of the Custom Source/Layer.
+- WxTiles-mbox: https://metoceanapi.github.io/wxtiles-mbox/docs/
+- WxTiles-Leaflet: https://metoceanapi.github.io/wxtiles-leaflet/docs/
 
-Usage and API documentation is mainly the same for both frameworks.
-
-## DOCS
-
-- Mapbox-gl: https://metoceanapi.github.io/wxtiles-mbox/docs/
-- Leaflet: https://metoceanapi.github.io/wxtiles-leaflet/docs/
-
-## Examples
+## Online Examples
 
 1. [SimpleDemo](https://metoceanapi.github.io/wxtiles-mbox/examples/simpleDemo.html).
 2. [Animated blur parameter](https://metoceanapi.github.io/wxtiles-mbox/examples/seaMaskAndAnimatedBlur.html)
-3. [Mouse Interaction](https://metoceanapi.github.io/wxtiles-mbox/examples/interactive.html)
+3. [Mouse Interaction and masking](https://metoceanapi.github.io/wxtiles-mbox/examples/interactive.html)
 
 ### MapBox-gl-js
 
@@ -47,7 +46,7 @@ Usage and API documentation is mainly the same for both frameworks.
 	const { WxTilesLogging, WxAPI, CustomWxTilesLayer } = window.wxtilesmbox;
 	// WxTilesLogging(true); // log WxTiles info to console if needed
 
-	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+	const dataServerURL = 'https://tilesdev.metoceanapi.com/data/';
 	// Specify RequestInit object such as headers, mode, credentials, etc
 	const requestInit = {
 		/* headers: new Headers({ 'x-api-key': '--proper-key-value--' }) //*/
@@ -72,7 +71,7 @@ Usage and API documentation is mainly the same for both frameworks.
 	//// Add wxlayer using 'native raster' layer type
 	// map.addLayer({ id: 'wxlayer', type: 'raster', source: wxsource.id, paint: { 'raster-fade-duration': 0 /* necessary */ } });
 
-	//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
+	//// ...or add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
 	map.addLayer(new CustomWxTilesLayer('wxlayer', wxsource.id), 'baseL');
 })()
 
@@ -120,7 +119,7 @@ await wxsource.updateCurrentStyleObject({ units: 'm/s', levels: undefined }); //
 ### Preload the time steps
 
 ```ts
-// load the time step 10 to the cache but do not not render it
+// load the time step number 10 to the cache but do not render it
 const prom = wxsource.preloadTime(10);
 // do stuff asyncronously
 // ...

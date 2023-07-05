@@ -13,6 +13,7 @@
  * - {@link WxVariableMeta} interface for variable's meta data.
  * - {@link WxAllBoundariesMeta} interface for boundaries of a dataset.
  * - {@link WxTileInfo} interface for tile's information.
+ * - {@link WxTilesLogging} ON/OFF logging.
  * ### Note
  * In case of use **async** member functions, you must use the **await** syntax.
  * @module

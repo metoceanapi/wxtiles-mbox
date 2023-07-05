@@ -1,12 +1,21 @@
 import { HEXtoRGBA, RGBtoHEX, makeConverter, WxGetColorSchemes, mixColor, createLevels, WXLOG } from './wxtools';
 import type { Converter, WxColorStyleStrict } from './wxtools';
 
-/** classic clamp */
+/**
+ * Clamps a value between a minimum and maximum value.
+ * @param {number} val The value to clamp.
+ * @param {number} min The minimum value to clamp to.
+ * @param {number} max The maximum value to clamp to.
+ * @returns {number} The clamped value.
+ */
 function clamp(val: number, min: number, max: number): number {
 	return val > max ? max : val < min ? min : val;
 }
 
-/** data values of the legend */
+/**
+ * Interface representing a tick on the legend of a color style.
+ * @interface
+ */
 export interface WxTick {
 	/** the data value */
 	data: number;
@@ -24,9 +33,9 @@ export interface WxTick {
  * Based on the idea of CLUT (Color Look Up Table) to fill tiles with colors from the style
  */
 export class RawCLUT {
-	/** convert data value to level index */
+	/** An array that converts a data value to a level index. */
 	levelIndex: Uint32Array;
-	/** convert data value to color index */
+	/** An array that converts data value to color in U32 representation */
 	colorsI: Uint32Array;
 	/** convert data value to style value */
 	DataToStyle: Converter;
@@ -114,29 +123,33 @@ function numToString(n: number) {
 	const ns = n.toString();
 	if (ns.split('.')[1]?.length > 2) return n.toFixed(2);
 	return ns;
-}
+} // numToString
 
-/** Legend - data structure that contains information for rendering legends */
+/**
+ * Interface representing a legend for a color style usef for rendering legends.
+ * @interface
+ */
 export interface WxLegend {
-	/** size of the legend in pixels */
+	/** The size of the legend in pixels. */
 	size: number;
-	/** show color for values below min */
+	/** Whether to show the color for values below the minimum. */
 	showBelowMin: boolean;
-	/** show color for values above max */
+	/** Whether to show the color for values above the maximum. */
 	showAboveMax: boolean;
-	/** units of the legend */
+	/** The units of the legend. */
 	units: string;
-	/** array of colors */
+	/** An array of colors. */
 	colors: Uint32Array;
-	/** array of ticks */
+	/** An array of ticks. */
 	ticks: WxTick[];
 }
 
-/** Create a legend for a given color style
- * @param legendSize - number of colors in the legend
- * @param style - color style
- * @returns legend
- * */
+/**
+ * Creates a legend for a given color style.
+ * @param {number} legendSize - The number of color-values in the legend.
+ * @param {WxColorStyleStrict} style - The color style to create the legend for.
+ * @returns {WxLegend} The legend for the given color style.
+ */
 export function WxCreateLegend(legendSize: number, style: WxColorStyleStrict): WxLegend {
 	const legend: WxLegend = {
 		size: legendSize,

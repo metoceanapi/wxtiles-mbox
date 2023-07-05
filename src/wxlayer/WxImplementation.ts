@@ -136,6 +136,11 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 		this._layer.clearCache();
 	}
 
+	/**
+	 * Get the raster data cache of the layer. Used in CustomWxTilesLayer.render.
+	 * @internal
+	 * @returns {WxRasterDataCache} The raster data cache of the layer.
+	 */
 	getCache(): WxRasterDataCache {
 		return this._layer.tilesRasterCache;
 	}
@@ -158,6 +163,10 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 		return this._layer.getTime();
 	}
 
+	/**
+	 * Get all available times for the source.
+	 * @returns {string[]} An array of all available times for the source.
+	 */
 	getAllTimes(): string[] {
 		WXLOG(`WxLayerBaseImplementation.getTimes (${this.id})`);
 		return this._layer.wxdatasetManager.getAllTimes();
@@ -179,10 +188,10 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	}
 
 	/**
-	 * Cache tiles for faster rendering for {@link setTime}. If the time is not available, the closest time will be used.
-	 * @param time - Time to preload.
-	 * @param requestInit - Request options.
-	 * @returns {Promise<void>} A promise that resolves when finished preload.
+	 * Preloads tiles for faster rendering for a specific time is set {@link setTime}. If the time is not available, the closest time will be used.
+	 * @param {WxDate} time - The time to preload.
+	 * @param {WxRequestInit | undefined} requestInit - Request options for fetch.
+	 * @returns {Promise<void>} A promise that resolves when the tiles are preloaded.
 	 */
 	async preloadTime(time: WxDate, requestInit?: WxRequestInit): Promise<void> {
 		WXLOG(`WxLayerBaseImplementation.preloadTime (${this.id}) time=${time}`);
@@ -229,7 +238,11 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 		return this._redrawTiles();
 	}
 
-	/** set coarse maximum zoom level to make tiles load faster during animation */
+	/**
+	 * Set the coarse maximum zoom level to make tiles load faster during animation.
+	 * @param {number} level - The coarse maximum zoom level to set.
+	 * @returns {Promise<void>} A promise that resolves when the coarse maximum zoom level is set.
+	 */
 	async setCoarseLevel(level: number = 2): Promise<void> {
 		this._layer.coarseLevel = Math.max(0, Math.min(level, this.wxdatasetManager.getMaxZoom()));
 		// return this._reloadVisible(); // NOT needed? Hmmm... ибо used before loading new tile anyway
@@ -315,7 +328,6 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * Helper method that loads a tile with the given coordinates and request options.
 	 * It returns null during datasetManager update or in case of any other error (e.g. network error, not found, etc.)
 	 * It tries to update datasetManager if e.reason === 'instance-not-found' and update the layer
-	 * (MAY BE COPY-PASTED!!!)
 	 *
 	 * @param {XYZ} coords - The tile coordinates to be loaded.
 	 * @param {WxRequestInit} requestInit - The request options.

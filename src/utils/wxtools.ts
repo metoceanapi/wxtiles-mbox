@@ -954,6 +954,12 @@ export let WXLOG = (...args: any[]) => {};
 /**
  * Set logging on/off
  * @param logging - true to turn on logging
+ * @example
+ * WxTilesLogging(true); // turn on logging to console
+ * 
+ * WxTilesLogging(false); // turn off logging
+ * 
+ * WxTilesLogging(console.trace); // set logging using console.trace
  * */
 export function WxTilesLogging(on?: boolean | ((...args: any[]) => void)) {
 	wxlogging = !!on;
