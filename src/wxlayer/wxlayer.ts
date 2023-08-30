@@ -187,6 +187,11 @@ export class WxLayer {
 		return this.wxdatasetManager.isInstanced() ? this.wxdatasetManager.getInstanceMeta(this.getTime()).maxZoom : this.wxdatasetManager.getMaxZoom();
 	} // getMaxZoom
 
+	/**
+	 * @internal
+	 * Get maximum zoom according to the layer's Dataset manager and the current coarse level
+	 * @returns {number} maximum zoom
+	 * */
 	getCoarseMaxZoom(): number {
 		WXLOG(`WxLayer.getCoarseMaxZoom`);
 		return this.getMaxZoom() - this.coarseLevel;

@@ -7,7 +7,7 @@ import { fetchJson, loadImageData, cacheUriPromise, uriXYZ, XYZ, WxTilesLibSetup
 import { QTree } from '../utils/qtree';
 import { WxDataSetManager } from './WxDataSetManager';
 import { WxAllDatasetsManager } from './WxDataSetManager';
-import { WxAPIOptions, WxDatasetMeta, WxAllDatasetsShortMetas, WxDatasetShortMeta } from './WxAPItypes';
+import { WxAPIOptions, WxDatasetMeta } from './WxAPItypes';
 
 /**
  * WxAPI is an initialisation object for the library. See {@link WxAPIOptions} for options.
@@ -26,6 +26,9 @@ export class WxAPI {
 
 	/** see {@link WxAPIOptions}*/
 	readonly dataServerURL: string;
+
+	/** see {@link WxAPIOptions}*/
+	readonly ext: string;
 
 	/** see {@link WxAPIOptions}*/
 	readonly requestInit?: RequestInit;
@@ -61,6 +64,7 @@ export class WxAPI {
 	 */
 	constructor({
 		dataServerURL,
+		ext = 'png',
 		maskURL = 'none',
 		maskChannel = 'R',
 		maskDepth = 11,
@@ -78,6 +82,7 @@ export class WxAPI {
 		if (maskURL === 'auto') maskURL = dataServerURL + 'masks/{z}/{x}/{y}.png';
 
 		this.dataServerURL = dataServerURL;
+		this.ext = ext;
 		this.requestInit = requestInit;
 
 		this.maskURL = maskURL;

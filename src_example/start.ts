@@ -13,7 +13,7 @@ const OPACITY = 0.8;
 // start() is the fully interchangable function for Leaflet and Mapbox
 export async function start() {
 	const map = await initFrameWork();
-	addRaster(map, 'baseS', 'baseL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 3);
+	addRaster(map, 'baseS', 'baseL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png');
 	// addRaster(map, 'baseS', 'baseL', 'https://tiles.metoceanapi.com/base-lines/{z}/{x}/{y}', 5);
 	// WxTilesLogging(console.trace);
 	// const dataServerURL = 'data/'; // different sources manged in 'start' script in package.json
@@ -27,6 +27,7 @@ export async function start() {
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
 	const wxapi = new WxAPI({
 		dataServerURL,
+		ext: 'any', // wxtiles server doesn't bother about extensions, but in case regular NGINX servier you may need to set up proper extension.
 		maskURL: 'auto',
 		maskChannel: 'R',
 		qtreeURL: 'auto',
@@ -65,7 +66,7 @@ export async function start() {
 	const sth = { style: {} as WxColorStyleWeak };
 	try {
 		// get style from URL
-		sth.style = str && { ...JSON.parse(decodeURI(str)) }; // reset levels if change units
+		sth.style = str ? { ...JSON.parse(decodeURI(str)) } : {}; // reset levels if change units
 	} catch (e) {
 		/* ignore errors silently */
 		console.log("Can't parse style from URL");

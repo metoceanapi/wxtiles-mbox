@@ -116,12 +116,12 @@ export function removeLayer(map: mapboxgl.Map, idS: string, source?: any) {
 	console.log('removeLayer', idS, source);
 }
 
-export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: string, maxZoom: number, boundariesnorm?: WxBoundaryMeta) {
+export function addRaster(map: mapboxgl.Map, idS: string, idL: string, URL: string, maxzoom?: number, boundariesnorm?: WxBoundaryMeta) {
 	map.addSource(idS, {
 		type: 'raster',
 		tiles: [URL],
 		tileSize: 256,
-		maxzoom: maxZoom,
+		...(maxzoom ? { maxzoom } : {}), // if maxzoom is undefined, MapBox will throw an error
 	});
 
 	map.addLayer(

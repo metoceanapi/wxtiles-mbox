@@ -43,7 +43,7 @@ export class Loader {
 	protected readonly _layer: WxLayer;
 
 	/** function to load, decode and cache data from URL */
-	protected _loadDataFunc: CachedUriLoaderPromiseFunc<DataIntegral> = cacheUriPromise(loadDataIntegral);
+	protected readonly _loadDataFunc: CachedUriLoaderPromiseFunc<DataIntegral> = cacheUriPromise(loadDataIntegral);
 
 	/** Do not use constructor directly */
 	constructor(layer: WxLayer) {
@@ -69,6 +69,13 @@ export class Loader {
 		return { data, slines: this._createStreamLines(data) };
 	}
 
+	/**
+	 * Load and preprocess data for a single tile
+	 * @param tile - tile coordinates
+	 * @param uris - tile URIs
+	 * @param requestInit - requestInit for fetch
+	 * @returns {Promise<{ rawdata: DataIntegrals; subCoords?: XYZ | undefined; tileType: TileType } | null> } data of the tile
+	 * */
 	async cacheLoad(
 		tile: XYZ,
 		uris: WxURIs,
@@ -119,7 +126,7 @@ export class Loader {
 		}
 	}
 
-	/** @ignore */
+	/** @no_this @ignore */
 	protected _vectorMagnitudesPrepare(data: DataPictures): void {
 		if (data.length === 1) return; // no need to process
 		data.unshift({ raw: new Uint16Array(258 * 258), dmin: 0, dmax: 0, dmul: 0 });

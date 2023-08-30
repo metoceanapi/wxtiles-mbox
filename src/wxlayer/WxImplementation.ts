@@ -334,13 +334,11 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @returns {Promise<WxRasterData | null>} - A promise that resolves with the loaded tile or null.
 	 */
 	protected async _loadTileHelper(coords: XYZ, requestInit?: WxRequestInit): Promise<WxRasterData | null> {
-		let raster_data: WxRasterData | null = null;
-
 		// in case of DSManager update, return empty tile
 		// After update is complete, the framework will try to reload all tiles again
 		if (!this._needUpdateDSManager) {
 			try {
-				raster_data = await this._layer.loadTile(coords, requestInit);
+				return await this._layer.loadTile(coords, requestInit);
 			} catch (e) {
 				// it's ok if the tile is not found. Just return empty tile, or...
 
@@ -370,6 +368,6 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 			} // catch loadTile error
 		} // if (!this.needUpdateDSManager) - outer
 
-		return raster_data;
+		return null;
 	}
 }
