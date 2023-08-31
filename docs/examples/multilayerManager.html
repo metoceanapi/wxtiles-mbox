@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>WxTiles v2.0</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="shortcut icon" href="res/icon.png" type="image/x-icon" />
+
+		<!-- MAPBOX lib goes first -->
+		<link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet" />
+		<script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+
+		<!-- WxTile lib goes here -->
+		<script src="https://unpkg.com/@metoceanapi/wxtiles-mbox@2.1.3/dist/web/bundle.js"></script>
+		<link rel="stylesheet" href="https://unpkg.com/@metoceanapi/wxtiles-mbox@2.1.3/dist/web/bundle.css" />
+	</head>
+
+	<body style="margin: 0">
+		<div id="map" style="height: 100vh; width: 100vw"></div>
+		<script>
+			('use strict');
+			start();
+			async function start() {
+				//// MAPBOX initialization START
+				mapboxgl.accessToken = 'pk.eyJ1IjoibWV0b2NlYW4iLCJhIjoia1hXZjVfSSJ9.rQPq6XLE0VhVPtcD9Cfw6A';
+				const map = new mapboxgl.Map({ container: 'map', style: { version: 8, name: 'Empty', sources: {}, layers: [] } });
+				// add navigation controls
+				map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+				await map.once('load');
+				//// MAPBOX initialization END
+
+				//// Helpers
+				const addWxLayer = async (wxsource) => {
+					map.addSource(wxsource.id, wxsource);
+					//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
+					map.addLayer(new CustomWxTilesLayer(wxsource.id, wxsource.id, wxsource.opacity));
+					await new Promise((resolve) => map.once('idle', resolve));
+				};
+
+				const getCoords = (e) => e.lngLat.wrap();
+				//// Helpers END
+
+				//// WXTILES START
+				// grab the WxTiles API
+				const { WxTilesLogging, WxAPI, CustomWxTilesLayer, WxMultilayerManager } = window.wxtilesmbox;
+
+				WxTilesLogging(true); // log WxTiles info to console if needed
+
+				// const dataServerURL = 'http://localhost:8080/data/';
+				const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+
+				// Get the API ready - should be ONE per application
+				const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none' });
+
+				const wxdatasetManager = await wxapi.createDatasetManager('gfs.global');
+
+				const layerManager = new WxMultilayerManager();
+
+				const layer1 = wxdatasetManager.createSourceLayer({ variable: 'air.visibility' }, { id: 'wxsource1', opacity: 1.0 });
+				layerManager.addSource(layer1);
+				await addWxLayer(layer1);
+
+				const layer2 = wxdatasetManager.createSourceLayer({ variable: 'air.humidity.at-2m' }, { id: 'wxsource2', opacity: 0.7 });
+				layerManager.addSource(layer2);
+				await addWxLayer(layer2);
+
+				const times = layer1.getAllTimes().slice(0, 10);
+				await layerManager.preloadTimes(times);
+
+				let t = 0;
+				const nextTimeStep = async () => {
+					await layerManager.setTime(t++ % times.length); // await always !!
+					setTimeout(nextTimeStep, 0);
+				};
+
+				setTimeout(nextTimeStep);
+			}
+		</script>
+	</body>
+</html>
