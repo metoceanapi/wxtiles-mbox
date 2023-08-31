@@ -66,7 +66,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 	 * @param {WxRequestInit} requestInit The request options.
 	 * @returns {Promise<void>} A promise that resolves when the tiles have been reloaded and redrawn.
 	 */
-	async _reloadVisible(requestInit?: WxRequestInit): Promise<void> {
+	async _reloadVisible(requestInit?: WxRequestInit, redraw: boolean = true): Promise<void> {
 		WXLOG(`WxTileSource _reloadVisible (${this.id})`);
 		await this._layer.reloadTiles(this.coveringTiles(), requestInit); // reload tiles with new time
 		if (requestInit?.signal?.aborted) {
@@ -74,7 +74,7 @@ export class WxTileSource extends WxLayerBaseImplementation implements WxLayerAP
 			return;
 		}
 
-		return this._redrawTiles();
+		return redraw ? this._redrawTiles() : Promise.resolve();
 	}
 
 	/**

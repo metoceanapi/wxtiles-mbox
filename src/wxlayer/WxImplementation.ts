@@ -39,7 +39,7 @@ export type WxEventType = {
  * */
 export interface WxLayerAPI extends WxLayerBaseAPI {
 	getLayerInfoAtLatLon(lnglat: WxLngLat, anymap: any): WxTileInfo | undefined;
-	_reloadVisible(requestInit?: WxRequestInit): Promise<void>;
+	_reloadVisible(requestInit?: WxRequestInit, redraw?: boolean): Promise<void>;
 	update(): void;
 	coveringTiles(): XYZ[];
 	on<T extends keyof WxEventType>(type: T, listener: ListenerMethod): void;
@@ -178,11 +178,11 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @param {WxRequestInit | undefined} requestInit - Request options for fetch.
 	 * @returns {Promise<string>} A promise that resolves with current time step when the time is set and the source is loaded and rendered.
 	 */
-	async setTime(time?: WxDate, requestInit?: WxRequestInit): Promise<string> {
+	async setTime(time?: WxDate, requestInit?: WxRequestInit, redraw?: boolean): Promise<string> {
 		WXLOG(`WxLayerBaseImplementation.setTime (${this.id}) time=${time}`);
 		const oldtime = this.getTime();
 		this._layer.setURLsAndTime(time);
-		await this._reloadVisible(requestInit);
+		await this._reloadVisible(requestInit, redraw);
 		if (requestInit?.signal?.aborted) this._layer.setURLsAndTime(oldtime); // restore old time and URLs
 		return this.getTime();
 	}
@@ -280,7 +280,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	}
 
 	/** @ignore */
-	protected _redrawTiles(): Promise<void> {
+	_redrawTiles(): Promise<void> {
 		if (this._redrawRequested) return this._redrawRequested;
 		this._redrawRequested = new Promise((resolve) => {
 			requestAnimationFrame(() => {
@@ -300,7 +300,7 @@ export class WxLayerBaseImplementation extends FrameworkParentClass implements W
 	 * @ignore
 	 * A dummy function to be replaced by ancestor classes.
 	 */
-	protected async _reloadVisible(requestInit?: WxRequestInit): Promise<void> {}
+	protected async _reloadVisible(requestInit?: WxRequestInit, redraw?: boolean): Promise<void> {}
 
 	/**
 	 * @ignore
