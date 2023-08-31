@@ -229,7 +229,7 @@ export class WxAllDatasetsManager {
 	 * @returns a promise that resolves when all datasets are loaded
 	 */
 	updateAll(): Promise<WxAllDatasetsShortMetas> {
-		this.ready = fetchJson(this.wxAPI.dataServerURL + 'meta.json', this.wxAPI.requestInit);
+		this.ready = fetchJson(this.wxAPI.dataServerURL + 'datasetsmeta.json', this.wxAPI.requestInit);
 		this.ready.then((dms) => (this.allDatasetsShortMetas = dms));
 		return this.ready;
 	}

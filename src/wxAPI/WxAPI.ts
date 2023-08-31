@@ -115,7 +115,20 @@ export class WxAPI {
 		const datasetCurrentInstance = datasetShortMeta?.instance;
 		if (!datasetCurrentInstance) throw new Error('Dataset/instance not found:' + datasetName);
 		const instanced = datasetShortMeta.instanced;
-		const metasArray = await fetchJson<WxDatasetMeta[]>(this.dataServerURL + datasetName + '/metafull.json');
+		let metasArray: WxDatasetMeta[];
+		const preURL = this.dataServerURL + datasetName + '/';
+		try {
+			// using the new infrastructure with WxServer & WxAggregator
+			metasArray = await fetchJson<WxDatasetMeta[]>(preURL + 'metafull.json');
+		} catch (e) {
+			WXLOG("Can't load metafull.json. Trying old infrastructure with NGINX");
+			const instances = await fetchJson<string[]>(preURL + 'instances.json');
+			if (!Array.isArray(instances) || !instances.length) throw new Error('instances.json is not an array or empty');
+			metasArray = await Promise.all(
+				instances.reverse().map(async (instance) => Object.assign(await fetchJson<WxDatasetMeta>(preURL + instance + '/meta.json'), { instance }))
+			);
+		}
+
 		const datasetCurrentMeta = metasArray[0];
 		// const metas = new Map({ // fency way to create a map from an array
 		// 	[Symbol.iterator]() {
