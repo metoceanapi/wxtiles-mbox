@@ -1,12 +1,23 @@
-import { WxTileSource, WxAPI, WxTilesLogging, type WxTileInfo, FrameworkOptions, WxGetColorStyles, WXLOG, WxColorStyleWeak } from '../src/index';
+import {
+	WxTileSource,
+	WxAPI,
+	WxTilesLogging,
+	type WxTileInfo,
+	FrameworkOptions,
+	WxGetColorStyles,
+	WXLOG,
+	WxColorStyleWeak,
+	CustomWxTilesLayer,
+} from '../src/index';
 import { WxLegendControl } from '../src/controls/WxLegendControl';
 import { WxStyleEditorControl } from '../src/controls/WxStyleEditorControl';
 import { WxInfoControl } from '../src/controls/WxInfoControl';
 import { WxTimeControl } from '../src/controls/WxTimeControl ';
 import { WxAPIControl } from '../src/controls/WxAPIControl';
 import { initFrameWork, addRaster, flyTo, setURL, addControl, removeLayer, addLayer, position } from './frwrkdeps';
+import { WxMultilayerManager } from '../src/wxAPI/WxMultilayerManager';
 
-const OPACITY = 0.8;
+const OPACITY = 0.7;
 
 // this is universal function for Leaflet and Mapbox.
 // Functions below are just framework specific wrappers for this universal function
@@ -22,7 +33,7 @@ export async function start() {
 	// const dataServerURL = 'https://68.171.214.87/data/'; // hihi1
 	// const dataServerURL = 'https://68.171.214.81/data/'; // hihi2
 	// const dataServerURL = 'https://hihi2.metoceanapi.com/data/';
-	const dataServerURL = 'https://tilesdev.metoceanapi.com/data/';
+	const dataServerURL = 'https://tiles.metoceanapi.com/data/';
 	const myHeaders = new Headers();
 	// myHeaders.append('x-api-key', 'SpV3J1RypVrv2qkcJE91gG');
 	const wxapi = new WxAPI({
@@ -34,17 +45,56 @@ export async function start() {
 		requestInit: { headers: myHeaders },
 	});
 
-	// let datasetName = 'ecmwf.global'; /* 'mercator.global/';  */ /* 'gfs.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
-	// let variable = 'cloud.cover';
+	// WxMultilayerManager DEMO
+	if (false) {
+		const addWxLayer = async (wxsource) => {
+			map.addSource(wxsource.id, wxsource);
+			//// Add wxlayer using CustomWxTilesLayer. Implements GLSL shader for vector field animation
+			map.addLayer(new CustomWxTilesLayer(wxsource.id, wxsource.id, wxsource.opacity));
+			await new Promise((resolve) => map.once('idle', resolve));
+		};
+
+		// Get the API ready - should be ONE per application
+		const dataServerURL = 'https://tiles.metoceanapi.com/data/';
+		const wxapi = new WxAPI({ dataServerURL, maskURL: 'none', qtreeURL: 'none' });
+
+		const wxdatasetManager = await wxapi.createDatasetManager('gfs.global');
+
+		const layerManager = new WxMultilayerManager();
+
+		const layer1 = wxdatasetManager.createSourceLayer({ variable: 'air.visibility', time: 0 }, { id: 'wxsource1', opacity: 1.0 });
+		layerManager.addSource(layer1);
+		await addWxLayer(layer1);
+
+		const layer2 = wxdatasetManager.createSourceLayer({ variable: 'air.humidity.at-2m', time: 0 }, { id: 'wxsource2', opacity: 0.7 });
+		layerManager.addSource(layer2);
+		await addWxLayer(layer2);
+
+		const times = layer1.getAllTimes().slice(0, 10);
+		await layerManager.preloadTimes(times);
+
+		let t = 0;
+		const nextTimeStep = async () => {
+			await layerManager.setTime(t++ % times.length); // await always !!
+			setTimeout(nextTimeStep, 0);
+		};
+
+		setTimeout(nextTimeStep);
+
+		return;
+	}
+
+	let datasetName = 'gfs.global'; /* 'mercator.global/';  */ /* 'gfs.global/'; */ /* 'obs-radar.rain.nzl.national/'; */
 	// let variable = 'air.temperature.at-2m';
-	// let variable = 'wind.speed.eastward.at-10m';
+	// let variable = 'cloud.cover';
+	let variable = 'wind.speed.eastward.at-10m';
 	// let variable = 'wave.direction.peak';
 
 	// let datasetName = 'ww3-ecmwf.global';
 	// let variable = 'wave.direction.mean';
 
-	let datasetName = 'obs-radar.rain.nzl.national';
-	let variable = 'reflectivity';
+	// let datasetName = 'obs-radar.rain.nzl.national';
+	// let variable = 'reflectivity';
 
 	// let datasetName = 'him8_truecolor';
 	// let variable = 'h8_rgb';

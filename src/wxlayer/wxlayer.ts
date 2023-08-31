@@ -93,7 +93,7 @@ export interface WxLayerOptions {
 	wxdatasetManager: WxDataSetManager;
 
 	/** initial time step */
-	time: WxDate;
+	time?: WxDate;
 
 	/** initial style name */
 	wxstyleName?: string;

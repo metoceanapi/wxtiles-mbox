@@ -119,3 +119,4 @@ export {
 } from './utils/wxtools';
 
 export { CustomWxTilesLayer } from './customlayer/customlayer';
+export { WxMultilayerManager } from './wxAPI/WxMultilayerManager';
