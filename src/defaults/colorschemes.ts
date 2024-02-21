@@ -13,7 +13,7 @@ export const __colorSchemes_default_preset: WxColorSchemes = {
 	greenish: ['#ffff00ff', '#00ff00ff', '#00ffffff'],
 	blueish: ['#ff00ffff', '#0000ffff', '#00ffffff'],
 	hspastel: ['#AC6EA4FF', '#8E92BDFF', '#ACD4DEFF', '#E9DC8EFF', '#E7A97DFF', '#E59074FF', '#BE7E68FF', '#A88F86FF'],
-	black: ["#000000ff", "#000000ff"],
-	white: ["#ffffffff", "#ffffffff"],
-	peach_red_zero: ["#fdd49f00", "#fdd49fff", "#d7301fff"],
+	black: ['#000000ff', '#000000ff'],
+	white: ['#ffffffff', '#ffffffff'],
+	peach_red_zero: ['#fdd49f00', '#fdd49fff', '#d7301fff'],
 };
