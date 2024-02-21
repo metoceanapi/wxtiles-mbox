@@ -16,5 +16,4 @@ export const __colorSchemes_default_preset: WxColorSchemes = {
 	black: ["#000000ff", "#000000ff"],
 	white: ["#ffffffff", "#ffffffff"],
 	yellowredzero: ["#fdd49f00", "#fdd49fff", "#d7301fff"],
-	bomrain: ["#f5f5ffff", "#b5b4fdff", "#7b77fdff", "#280dfcff", "#3ad8c4ff", "#269690ff", "#176666ff", "#fdff2eff", "#fbc820ff", "#f99614ff", "#f86306ff", "#f80000ff", "#c20000ff", "#740000ff", "#270000ff"],
 };
