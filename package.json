@@ -1,6 +1,6 @@
 {
 	"name": "@metoceanapi/wxtiles-mbox",
-	"version": "2.1.4",
+	"version": "2.1.4-a",
 	"description": "WxTile MapBox lib to render wxtiles datalayers",
 	"main": "dist/es/bundle.js",
 	"types": "dist/es/index.d.ts",
