@@ -9,6 +9,8 @@ Write your changes below this section. `npm version [major|minor|patch]` will au
 
 ## [Unreleased]
 
+## [2.1.8] - 2024-03-21
+
 ## [2.1.7] - 2024-03-20
 
 ## [2.1.6] - 2024-02-21
