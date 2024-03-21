@@ -5,6 +5,8 @@ export const __colorSchemes_default_preset: WxColorSchemes = {
 	rainbow: ['#ff0000ff', '#ffff00ff', '#00ff00ff', '#00ffffff', '#0000ffff', '#ff00ffff'],
 	rainbowzerro: ['#ff000000', '#ff0000ff', '#ffff00ff', '#00ff00ff', '#00ffffff', '#0000ffff', '#ff00ffff'],
 	rainbow2: ['#ff0000ff', '#ffff00ff', '#00ff00ff', '#00ffffff', '#0000ffff', '#ff00ffff', '#ff0000ff'],
+	rainbow_backwards: ['#0000ffff', '#00ffffff', '#00ff00ff', '#ffff00ff', '#ff0000ff', '#ff00ffff'],
+	rainbow_backwards_zero: ['#0000ff00', '#0000ffff', '#00ffffff', '#00ff00ff', '#ffff00ff', '#ff0000ff', '#ff00ffff'],
 	bluebird: ['#0000ffff', '#ff00ffff', '#00ffffff', '#9000ffff', '#9090ffff'],
 	bluebirdzerro: ['#0000ff00', '#0000ffff', '#ff00ffff', '#00ffffff', '#9000ffff', '#9090ffff'],
 	bw: ['#000000ff', '#ffffffff'],
