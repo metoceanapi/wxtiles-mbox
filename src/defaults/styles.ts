@@ -15,7 +15,7 @@ export const __colorStyles_default_preset: WxColorStylesStrict = {
 		streamLineStatic: false,
 		showBelowMin: true,
 		showAboveMax: true,
-		colorScheme: 'divergingbluered',
+		colorScheme: 'diverging_blue_red',
 		colors: undefined,
 		colorMap: undefined,
 		levels: undefined,

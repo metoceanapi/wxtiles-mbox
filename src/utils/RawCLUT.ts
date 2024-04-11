@@ -74,7 +74,7 @@ export class RawCLUT {
 
 			// if no colors in the style, try predefined color schemes
 			const colorSchemes = WxGetColorSchemes();
-			style.colors ||= colorSchemes[(style.colorScheme && style.colorScheme in colorSchemes && style.colorScheme) || 'wb'];
+			style.colors ||= colorSchemes[style.colorScheme] || ['#ffffffff', '#000000ff'];
 
 			levels = style.levels.map(styleValToRAW);
 		}
