@@ -73,8 +73,8 @@ export class RawCLUT {
 				if (style.colorScheme && style.colorScheme in colorSchemes) {
 					style.colors = colorSchemes[style.colorScheme];
 				} else {
-					// if there is no scheme create random scheme
-					style.colors = colorSchemes.wb;
+					// if there is no scheme create white-black scheme
+					style.colors = colorSchemes.['#ffffffff', '#000000ff'];
 				}
 			}
 
