@@ -170,27 +170,53 @@ function _drawIsolines(imageBuffer: Uint32Array, data: DataPicture, { CLUT, styl
 } // _drawIsolines
 
 /** print isoline text */
-function _printIsolineText(info: IsoInfo[], ctx: CanvasRenderingContext2D, { CLUT }: WxLayer): void {
+function _printIsolineText(info: IsoInfo[], ctx: CanvasRenderingContext2D, { CLUT, style }: WxLayer): void {
 	// drawing Info
 	if (info.length) {
-		ctx.font = '1.1em Sans-serif';
+		const ems = style.isolineTextSizeEm || 1.1;
+		ctx.font = ems.toString() + 'em Sans-serif';
 		ctx.lineWidth = 2;
 		ctx.strokeStyle = 'white'; // RGBtoHEX(p.c); // alfa = 255
 		ctx.fillStyle = 'black';
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
+
+		const baseMetrics = ctx.measureText('-.0123456789');
+		const textHeight = (baseMetrics.actualBoundingBoxAscent + baseMetrics.actualBoundingBoxDescent);
+		const hScale = 1.5;
+		const height = hScale * textHeight;
+		const hOffset = baseMetrics.actualBoundingBoxAscent + (height - textHeight) / 2;
+		const wScale = 1.1;
+		const radii = ems * 2.5;
+		const printIsolineTextSurround = (style.isolineTextBackground || false) ? _printIsolineTextWithStroke : _printIsolineTextBackground;
+
 		for (const { x, y, d, dr, db, mli } of info) {
-			const val = CLUT.ticks[mli].dataString; // select value from levels/colorMap
 			const angle = Math.atan2(d - dr, db - d); // rotate angle: we can use RAW d, dd, and dr for atan2!
 			ctx.save();
 			ctx.translate(x, y);
 			ctx.rotate(angle < -1.57 || angle > 1.57 ? angle + 3.14 : angle); // so text is always up side up
-			ctx.strokeText(val, 0, 0);
+			const val = CLUT.ticks[mli].dataString; // select value from levels/colorMap
+			printIsolineTextSurround(val, ctx, { height, hOffset, wScale, radii });
 			ctx.fillText(val, 0, 0);
 			ctx.restore();
 		}
 	} // if info.length
 } // _printIsolineText
+
+function _printIsolineTextWithStroke(val: string, ctx: CanvasRenderingContext2D, z: any): void {
+	ctx.strokeText(val, 0, 0);
+} // _printIsolineTextWithStroke
+
+function _printIsolineTextBackground(val: string, ctx: CanvasRenderingContext2D, {height, hOffset, wScale, radii}: any): void {
+	const prevFill = ctx.fillStyle;
+	ctx.fillStyle = ctx.strokeStyle;
+	const width = wScale * ctx.measureText(val).width;
+	ctx.beginPath();
+	ctx.roundRect(-width/2, -hOffset, width, height, radii);
+	ctx.closePath();
+	ctx.fill();
+	ctx.fillStyle = prevFill;
+} // _printIsolineTextBackground
 
 /**
  * draw static vectors/barbs
