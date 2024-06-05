@@ -117,8 +117,8 @@ export interface WxAPIOptions extends WxTilesLibOptions {
 	/** extension of the tiles*/
 	ext?: string;
 
-	/** full masks tiles URL, Example: `https://server.com/masks/{z}/{x}/{y}.png`
-	 * @default 'auto' - will be set to `dataServerURL + 'masks/{z}/{x}/{y}.png'`
+	/** full masks tiles URL, Example: `https://server.com/masks/{z}/{x}/{y}.webp`
+	 * @default 'auto' - will be set to `dataServerURL + 'masks/{z}/{x}/{y}.webp'`
 	 * 'none' - will disable masks */
 	maskURL?: 'none' | 'auto' | string;
 

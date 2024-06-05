@@ -107,7 +107,7 @@ function ft_buildDataIntegralRandom(): DataIntegral {
 
 async function test_buildIntegralPare() {
 	console.log('test_buildIntegralPare');
-	const imU = ft_buildDataIntegralAscent(); //await loadDataIntegral('https://tilestest.metoceanapi.com/data/gfs.global/2023-04-26T18:00:00Z/cloud.cover/2023-05-06T15:00:00Z/3/0/3.png');
+	const imU = ft_buildDataIntegralAscent(); //await loadDataIntegral('https://tilestest.metoceanapi.com/data/gfs.global/2023-04-26T18:00:00Z/cloud.cover/2023-05-06T15:00:00Z/3/0/3.webp');
 
 	const inpNaive = ft_buildIntegralNaive(imU.raw); // naive algo
 
@@ -123,8 +123,8 @@ async function test_buildIntegralPare() {
 async function test_blurData() {
 	console.log('test_blurData');
 
-	// const imU = await loadDataIntegral('https://tilestest.metoceanapi.com/data/gfs.global/2023-04-26T18:00:00Z/cloud.cover/2023-05-06T15:00:00Z/3/0/3.png');
-	// const imD = await loadDataIntegral('https://tilestest.metoceanapi.com/data/gfs.global/2023-04-26T18:00:00Z/cloud.cover/2023-05-06T15:00:00Z/3/0/3.png');
+	// const imU = await loadDataIntegral('https://tilestest.metoceanapi.com/data/gfs.global/2023-04-26T18:00:00Z/cloud.cover/2023-05-06T15:00:00Z/3/0/3.webp');
+	// const imD = await loadDataIntegral('https://tilestest.metoceanapi.com/data/gfs.global/2023-04-26T18:00:00Z/cloud.cover/2023-05-06T15:00:00Z/3/0/3.webp');
 
 	const blurRadius = 4;
 	const imU = ft_buildDataIntegralRandom();

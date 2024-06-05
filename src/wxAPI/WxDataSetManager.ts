@@ -164,7 +164,7 @@ export class WxDataSetManager {
 	 * Createts dataset's current URI ready for fetching tiles.
 	 * @argument {string} variable - variable of the dataset
 	 * @argument {string} validTime - time step of the dataset
-	 * @argument {'png'} ext - must be PNG
+	 * @argument {'webp'} ext - must be WEBP
 	 * @returns {string} - dataset's current URI ready for fetching tiles
 	 * */
 	createURI(variable: string, validTime: string): string {

@@ -40,7 +40,7 @@ export class WxTileLayer implements mapboxgl.CustomLayerInterface {
 
 		// map.addSource(this.sourceID, {
 		// 	type: 'raster',
-		// 	tiles: ['https://tiles.metoceanapi.com/data/gfs.global/2021-05-02T12:00:00Z/air.temperature.at-2m/2021-05-02T12:00:00Z/{z}/{x}/{y}.png'],
+		// 	tiles: ['https://tiles.metoceanapi.com/data/gfs.global/2021-05-02T12:00:00Z/air.temperature.at-2m/2021-05-02T12:00:00Z/{z}/{x}/{y}.webp'],
 		// 	maxzoom: 4,
 		// 	minzoom: 0,
 		// 	tileSize: 256,
