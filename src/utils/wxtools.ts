@@ -601,7 +601,7 @@ export function blurData(im: DataIntegral, radius: number): DataIntegral {
 			  012345
 			0 A--B--
 			1 -+++--
-			2 -+o+--  - (2,2) r=1 
+			2 -+o+--  - (2,2) r=1
 			3 C++D--
 			4 ------
 
@@ -962,9 +962,9 @@ export let WXLOG = (...args: any[]) => {};
  * @param logging - true to turn on logging
  * @example
  * WxTilesLogging(true); // turn on logging to console
- * 
+ *
  * WxTilesLogging(false); // turn off logging
- * 
+ *
  * WxTilesLogging(console.trace); // set logging using console.trace
  * */
 export function WxTilesLogging(on?: boolean | ((...args: any[]) => void)) {
