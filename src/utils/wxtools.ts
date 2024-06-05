@@ -67,6 +67,12 @@ export interface WxColorStyleStrict {
 	/** if true then render isoline text values */
 	isolineText: boolean;
 
+	/** Font size of isoline text values in ems */
+	isolineTextSizeEm: number;
+
+	/** if true then render a solid background behind isoline text values */
+	isolineTextBackground: boolean;
+
 	/**
 	 * Representation of the wind/current field.
 	 * - **'none'** do not render vectors.
