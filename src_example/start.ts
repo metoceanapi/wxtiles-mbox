@@ -238,7 +238,7 @@ export async function start() {
 		await prom; // await always !! even if aborted
 		console.log('aborted');
 		await wxsource.setTime(5); // no abort
-		console.log('setTime(5) done'); 
+		console.log('setTime(5) done');
 	}//*/
 
 	/*/ DEMO: preload a timestep
