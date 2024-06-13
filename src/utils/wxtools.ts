@@ -1,6 +1,6 @@
-import { __units_default_preset } from '../defaults/uconv';
-import { __colorSchemes_default_preset } from '../defaults/colorschemes';
-import { __colorStyles_default_preset } from '../defaults/styles';
+import { __units_default_preset } from '../common/defaults/uconv';
+import { __colorSchemes_default_preset } from '../common/defaults/colorschemes';
+import { __colorStyles_default_preset } from '../common/defaults/styles';
 
 /** x,y,z */
 export interface XYZ {

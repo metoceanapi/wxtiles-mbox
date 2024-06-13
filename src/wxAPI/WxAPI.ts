@@ -1,8 +1,8 @@
-import './wxtiles.css';
+import '../common/wxtiles.css';
 
-import { __colorSchemes_default_preset } from '../defaults/colorschemes';
-import { __colorStyles_default_preset } from '../defaults/styles';
-import { __units_default_preset } from '../defaults/uconv';
+import { __colorSchemes_default_preset } from '../common/defaults/colorschemes';
+import { __colorStyles_default_preset } from '../common/defaults/styles';
+import { __units_default_preset } from '../common/defaults/uconv';
 import { fetchJson, loadImageData, cacheUriPromise, uriXYZ, XYZ, WxTilesLibSetup, WXLOG } from '../utils/wxtools';
 import { QTree } from '../utils/qtree';
 import { WxDataSetManager } from './WxDataSetManager';
