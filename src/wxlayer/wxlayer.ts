@@ -1,6 +1,6 @@
-import { RawCLUT } from '../utils/RawCLUT';
-import { WxGetColorStyles, HashXYZ, RGBtoHEX, create2DContext, WXLOG } from '../utils/wxtools';
-import type { WxColorStyleStrict, XYZ, DataPictures, WxColorStyleWeak } from '../utils/wxtools';
+import { RawCLUT } from '../common/utils/RawCLUT';
+import { WxGetColorStyles, HashXYZ, RGBtoHEX, create2DContext, WXLOG } from '../common/utils/wxtools';
+import type { WxColorStyleStrict, XYZ, DataPictures, WxColorStyleWeak } from '../common/utils/wxtools';
 import type { WxAllBoundariesMeta, WxVariableMeta } from '../wxAPI/WxAPItypes';
 import type { WxDataSetManager } from '../wxAPI/WxDataSetManager';
 import { Loader } from './loader';

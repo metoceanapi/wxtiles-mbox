@@ -1,7 +1,7 @@
 /**
  * type array of strings - available instances of a dataset */
 
-import { WxTilesLibOptions } from '../utils/wxtools';
+import { WxTilesLibOptions } from '../common/utils/wxtools';
 import { WxLayerOptions } from '../wxlayer/wxlayer';
 import { WxAPI } from './WxAPI';
 

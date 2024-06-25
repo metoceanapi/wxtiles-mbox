@@ -41,7 +41,7 @@ export {
 	type TreeN,
 	type SubTrees,
 	type SubTreesN,
-} from './utils/qtree';
+} from './common/utils/qtree';
 
 export { WxAPI } from './wxAPI/WxAPI';
 
@@ -92,7 +92,7 @@ export {
 	type WxLegend,
 	type WxTick,
 	type RawCLUT,
-} from './utils/RawCLUT';
+} from './common/utils/RawCLUT';
 
 export {
 	//
@@ -116,7 +116,7 @@ export {
 	type WxColorStylesWeakMixed,
 	type ColorStylesIncomplete,
 	type Converter,
-} from './utils/wxtools';
+} from './common/utils/wxtools';
 
 export { CustomWxTilesLayer } from './customlayer/customlayer';
 export { WxMultilayerManager } from './wxAPI/WxMultilayerManager';

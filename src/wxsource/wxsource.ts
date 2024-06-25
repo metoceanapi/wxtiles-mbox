@@ -1,6 +1,6 @@
 import mapboxgl from 'mapbox-gl';
 
-import { type XYZ, WXLOG } from '../utils/wxtools';
+import { type XYZ, WXLOG } from '../common/utils/wxtools';
 import { type WxRequestInit, type WxTileInfo, type WxLngLat, type WxLayerOptions } from '../wxlayer/wxlayer';
 import { WxLayerBaseImplementation, type WxLayerAPI } from '../wxlayer/WxImplementation';
 import { type FrameworkOptions } from './wxsourcetypes';

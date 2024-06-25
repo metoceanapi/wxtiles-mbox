@@ -1,4 +1,4 @@
-import { TileType } from '../utils/qtree';
+import { TileType } from '../common/utils/qtree';
 import {
 	blurData,
 	cacheUriPromise,
@@ -10,7 +10,7 @@ import {
 	type XYZ,
 	WXLOG,
 	CachedUriLoaderPromiseFunc,
-} from '../utils/wxtools';
+} from '../common/utils/wxtools';
 import { type WxBoundaryMeta } from '../wxAPI/WxAPItypes';
 import { applyMask, makeBox, splitCoords, subData, subDataDegree, subMask } from './loadertools';
 import { WxRequestInit, WxURIs, type WxLayer } from './wxlayer';

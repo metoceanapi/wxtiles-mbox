@@ -1,7 +1,7 @@
 import vertexSource from './customsahders/custom.vert';
 import fragmentSource from './customsahders/custom.frag';
 import { WxTileSource } from '../wxsource/wxsource';
-import { HashXYZ } from '../utils/wxtools';
+import { HashXYZ } from '../common/utils/wxtools';
 import mapboxgl from 'mapbox-gl';
 
 class WxVertexArrayObject {

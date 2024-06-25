@@ -1,4 +1,4 @@
-import { WXLOG } from '../utils/wxtools';
+import { WXLOG } from '../common/utils/wxtools';
 import { WxEventType, ListenerMethod } from '../wxlayer/WxImplementation';
 
 /**

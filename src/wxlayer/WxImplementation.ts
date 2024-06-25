@@ -1,4 +1,4 @@
-import { type WxColorStyleWeak, WxGetColorStyles, type XYZ, type WxColorStyleStrict, WXLOG } from '../utils/wxtools';
+import { type WxColorStyleWeak, WxGetColorStyles, type XYZ, type WxColorStyleStrict, WXLOG } from '../common/utils/wxtools';
 import type { WxRequestInit, WxDate, WxLayerVarsNames, WxLngLat, WxTileInfo, WxRasterDataCache, WxLayerOptions } from './wxlayer';
 import { WxLayer } from './wxlayer';
 import type { WxDatasetMeta, WxVariableMeta } from '../wxAPI/WxAPItypes';

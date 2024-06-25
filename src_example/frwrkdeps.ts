@@ -1,6 +1,6 @@
 import { IControl } from 'mapbox-gl';
 import mapboxgl from 'mapbox-gl';
-import { WxGetColorStyles } from '../src/utils/wxtools';
+import { WxGetColorStyles } from '../src/common/utils/wxtools';
 import { CustomWxTilesLayer } from '../src/customlayer/customlayer';
 import { WxBoundaryMeta } from '../src/wxAPI/WxAPItypes';
 

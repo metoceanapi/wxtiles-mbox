@@ -1,5 +1,5 @@
-import { coordToPixel, PixelsToLonLat } from '../utils/mercator';
-import { DataPicture, XYZ } from '../utils/wxtools';
+import { coordToPixel, PixelsToLonLat } from '../common/utils/mercator';
+import { DataPicture, XYZ } from '../common/utils/wxtools';
 import { WxBoundaryMeta } from '../wxAPI/WxAPItypes';
 
 function interpolatorDegreeLinear(start: number, end: number, amount: number): number {

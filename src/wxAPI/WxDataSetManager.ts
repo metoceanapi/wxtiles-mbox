@@ -1,4 +1,4 @@
-import { fetchJson, WXLOG } from '../utils/wxtools';
+import { fetchJson, WXLOG } from '../common/utils/wxtools';
 import type { WxDate, WxLayerOptions, WxLayerVarsNames } from '../wxlayer/wxlayer';
 import { WxTileSource } from '../wxsource/wxsource';
 import type { FrameworkOptions } from '../wxsource/wxsourcetypes';
